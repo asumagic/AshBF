@@ -7,6 +7,7 @@
 
 namespace bf
 {
+	// Available opcodes to the VM/compiler
 	enum Opcode
 	{
 		// Stackable instructions that relies on the instruction values. Does the operation n times.
@@ -29,14 +30,17 @@ namespace bf
 		bfEnd // End the program execution
 	};
 
+	// The struct defining an instruction.
+	// If argument is a 16-bit value for example, then jumps (i.e. loops) won't be able to refer to a pc higher than 65'365
+	// Note : Bytecode size is often smaller than sources in terms of amount of opcodes to run.
 	struct Instruction
 	{
 		uint8_t opcode;
 		uint16_t argument;
 	};
 
-	std::vector<Instruction> compile(const std::string& source);
-	void execute(std::vector<Instruction>& program);
+	std::vector<Instruction> compile(const std::string& source); // Compile a brainfuck source into AshBF bytecode (which may be interpreted by the execute() function)
+	void execute(std::vector<Instruction>& program); // Interprete code (typically processed by compile())
 
 	extern const unsigned memory_size;
 }
