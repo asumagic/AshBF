@@ -7,7 +7,7 @@ namespace bf
 		std::vector<Instruction> program;
 		program.reserve(source.size() + 1);
 
-		const std::string matches_stackable = "+-><";
+		const std::string matches_stackable = "+-><", matches_nonstackable = ".,";
 		std::vector<unsigned> loopJumps;
 		for (size_t i = 0; i < source.size(); ++i)
 		{
@@ -39,6 +39,14 @@ namespace bf
 				}
 			}
 
+			for (size_t j = 0; j < matches_nonstackable.size(); ++j)
+			{
+				if (matches_nonstackable[j] == source[i])
+				{
+					program.push_back({static_cast<Opcode>(j + static_cast<unsigned>(bfCharOut)), 0});
+				}
+			}
+
 			if (!charMatched)
 			{
 				switch(source[i])
@@ -55,12 +63,6 @@ namespace bf
 						program.push_back({bfJmpNotZero, loopBegin});
 						break;
 					}
-					case '.': // @TODO add it in the above loop somehow
-						program.push_back({bfCharOut, 0});
-						break;
-					case ',':
-						program.push_back({bfCharIn, 0});
-						break;
 				}
 			}
 		}
