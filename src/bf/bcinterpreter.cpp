@@ -8,14 +8,13 @@ namespace bf
 							  &&lAddO, &&lSubO, &&lShiftRightO, &&lShiftLeftO,
 							  &&lCharOut, &&lCharIn, &&lJmpZero, &&lJmpNotZero, &&lEnd };
 
-		uint8_t memory[memory_size] = {0};
+		std::vector<uint8_t> memory(memory_size);
 
 		unsigned pc = 0;
-		uint8_t* sp = memory;
+		uint8_t* sp = memory.data();
 
 		lBegin:
-		Instruction& instr = program[pc];
-		pc++;
+		Instruction& instr = program[pc++];
 		goto *jumpTable[static_cast<uint8_t>(instr.opcode)];
 
 		lAdd:
@@ -55,6 +54,7 @@ namespace bf
 		goto lBegin;
 
 		lCharIn:
+		*sp = getchar();
 		goto lBegin;
 
 		lJmpZero:
