@@ -2,7 +2,7 @@
 
 namespace bf
 {
-	void execute(std::vector<Instruction>& program)
+	void execute(std::vector<Instruction>& program, size_t memory_size)
 	{
 		void* jumpTable[] = { &&lAdd,  &&lSub,  &&lShiftRight , &&lShiftLeft,
 							  &&lAddO, &&lSubO, &&lShiftRightO, &&lShiftLeftO,
@@ -50,7 +50,7 @@ namespace bf
 		goto lBegin;
 
 		lCharOut:
-		printf("%c", *sp);
+		putchar(*sp);
 		goto lBegin;
 
 		lCharIn:
@@ -70,6 +70,4 @@ namespace bf
 		lEnd:
 		return;
 	}
-
-	const unsigned memory_size = 30000;
 }

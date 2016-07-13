@@ -40,9 +40,7 @@ namespace bf
 	};
 
 	std::vector<Instruction> compile(const std::string& source); // Compile a brainfuck source into AshBF bytecode (which may be interpreted by the execute() function)
-	void execute(std::vector<Instruction>& program); // Interprete code (typically processed by compile())
-
-	extern const unsigned memory_size;
+	void execute(std::vector<Instruction>& program, size_t memory_size = 30000); // Interprete code (typically processed by compile())
 }
 
 #endif
