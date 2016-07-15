@@ -1,5 +1,5 @@
 #include "bf.hpp"
-
+#include <iostream>
 namespace bf
 {
 	std::vector<Instruction> compile(const std::string& source)
@@ -7,61 +7,49 @@ namespace bf
 		std::vector<Instruction> program;
 		program.reserve(source.size() + 1);
 
-		const std::string matches_stackable = "+-><", matches_nonstackable = ".,";
-		std::vector<unsigned> loopJumps;
+		const std::array<CTInstruction, 8> instruction_list =
+		{{
+			{'+', bfIncr, true, bfAdd},
+			{'-', bfDecr, true, bfSub},
+			{'>', bfOnceShiftRight, true, bfShiftRight},
+			{'<', bfOnceShiftLeft, true, bfShiftLeft},
+			{'.', bfCharOut},
+			{',', bfCharIn},
+			{'[', bfLoopBegin},
+			{']', bfLoopEnd}
+		}};
+
 		for (size_t i = 0; i < source.size(); ++i)
 		{
-			bool charMatched = false;
-			for (size_t j = 0; j < matches_stackable.size(); ++j)
+			for (const CTInstruction& j : instruction_list)
 			{
-				if (matches_stackable[j] == source[i])
+				if (j.match == source[i])
 				{
-					unsigned k = i;
-					while (++k < source.size() && source[k] == matches_stackable[j]);
-
-					Instruction curInstr;
-					if ((k - i) == 1)
+					if (j.is_stackable) // @TODO : move stacking optimize-time?
 					{
-						curInstr.opcode = static_cast<Opcode>(j + static_cast<unsigned>(bfIncr)); // Interprete as a done-once instruction
-						curInstr.argument = 0;
+						unsigned k = i;
+						while (++k < source.size() && source[k] == j.match);
+
+						Instruction curInstr;
+						if ((k - i) == 1) // If there's only one
+						{
+							curInstr.opcode = static_cast<uint8_t>(j.base_opcode); // Interprete as a done-once instruction
+							curInstr.argument = 0;
+						}
+						else
+						{
+							curInstr.opcode = static_cast<uint8_t>(j.stacked_opcode);
+							curInstr.argument = k - i;
+						}
+
+						program.push_back(curInstr);
+
+						i = k - 1; // Skip the stacked instructions we processed
+						break;
 					}
 					else
 					{
-						curInstr.opcode = static_cast<Opcode>(j);
-						curInstr.argument = k - i;
-					}
-
-					program.push_back(curInstr);
-
-					i = k - 1; // Skip the stacked instructions we processed
-					charMatched = true; // Avoid running the non-stackable instruction loop
-					break;
-				}
-			}
-
-			for (size_t j = 0; j < matches_nonstackable.size(); ++j)
-			{
-				if (matches_nonstackable[j] == source[i])
-				{
-					program.push_back({static_cast<Opcode>(j + static_cast<unsigned>(bfCharOut)), 0});
-				}
-			}
-
-			if (!charMatched)
-			{
-				switch(source[i])
-				{
-					case '[':
-						program.push_back({bfJmpZero, 0});
-						loopJumps.push_back(program.size()); // Push the loop begin location ([ + 1)
-						break;
-					case ']':
-					{
-						uint16_t loopBegin = loopJumps.back();
-						loopJumps.pop_back();
-						program[loopBegin - 1].argument = program.size() + 1; // Push the end of the loop location (] + 1)
-						program.push_back({bfJmpNotZero, loopBegin});
-						break;
+						program.push_back({static_cast<uint8_t>(j.base_opcode), 0});
 					}
 				}
 			}
@@ -69,6 +57,8 @@ namespace bf
 
 		program.push_back({bfEnd, 0});
 		program.shrink_to_fit(); // Reduce the capacity to the vector size (c++11)
+		optimize(program);
+		link(program);
 		return program;
 	}
 }

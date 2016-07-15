@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace bf
 {
@@ -25,9 +26,25 @@ namespace bf
 		// Non stackable instructions
 		bfCharOut,
 		bfCharIn,
+
 		bfJmpZero, // Used by loop begins; jumps if the current cell is zero
 		bfJmpNotZero, // Used by loop endings; jumps if the current cell is not zero
-		bfEnd // End the program execution
+
+		bfSet, // Set the current cell value
+
+		bfMoveRight, // Zero out the current cell and move its value to the cell n times to the right
+		bfMoveLeft, // ^ to the left
+
+		bfMoveRightAdd, // Zero out the current cell and add its value to the cell n times to the right
+		bfMoveLeftAdd, // ^ to the left
+
+		bfEnd, // End the program execution
+
+		/** STEPS USED DURING COMPILATION - EXCLUDES RUNTIME - @TODO make those different enums? **/
+		bfLoopBegin,
+		bfLoopEnd,
+
+		bfNop
 	};
 
 	// The struct defining an instruction.
@@ -39,8 +56,26 @@ namespace bf
 		uint16_t argument;
 	};
 
+	// Compile-time instruction representation
+	struct CTInstruction 
+	{
+		char match;
+		Opcode base_opcode;
+		bool is_stackable = false;
+		Opcode stacked_opcode = bfNop;
+	};
+
+	struct OptimizationSequence
+	{
+		std::vector<uint8_t> seq;
+		std::function<std::vector<Instruction>(const std::vector<Instruction>&)> callback;
+	};
+
+	void link(std::vector<Instruction>& program); // Link stage, required for loops
+	void optimize(std::vector<Instruction>& program, const size_t passes = 5);
 	std::vector<Instruction> compile(const std::string& source); // Compile a brainfuck source into AshBF bytecode (which may be interpreted by the execute() function)
-	void execute(std::vector<Instruction>& program, size_t memory_size = 30000); // Interprete code (typically processed by compile())
+
+	void execute(std::vector<Instruction>& program, const size_t memory_size = 30000); // Interprete code (typically processed by compile())
 }
 
 #endif
