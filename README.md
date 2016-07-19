@@ -2,7 +2,7 @@
 
 ## Introduction
 
-AshBF is a C++ brainfuck interpreter designed for speed. It at least requires compiler support for the C++11 standard, and is best compiled with anything else than MVSC. It is developed with gcc, but should run fine with clang, and most likely icc.
+AshBF is an optimizing C++14 brainfuck interpreter designed for speed. It relies upon a virtual machine designed to use with Brainfuck.
 
 ## Compiling
 
@@ -15,18 +15,20 @@ cmake ..
 make -j # The -j flags allows for multicore building
 ```
 
-*Note :* If you experience any issue when compiling with clang, try removing the `-flto` flag in the CMakeLists.txt file and rerun `cmake ..` to attempt compiling again.
+*Note :* If you experience any issue when compiling with clang or an older gcc, try removing the `-flto` flag in the CMakeLists.txt file and rerun `cmake ..` to attempt compiling again.
 
 ## Usage
 
-As for now, the program doesn't take any other argument than the brainfuck source. Flags will be added in the future
-
+As for now, the program doesn't take any other argument than the brainfuck source. Flags will be added in the future.
 ``./AshBF <filename>``
 
 ## Planned features
 
-Brainfuck code optimizations are planned in order to use the bytecode VM built in the most efficient way as possible. Support for extended brainfuck may be added in the future.
+- More optimizations to the brainfuck code.
+- Possible support for Brainfuck Extended types.
+- Attaching a brainfuck debugger
+- Brainfuck IDE or a brainfuck Discord bot?
 
 ## Disclaimer
 
-This is *unstable* software. The interpreter or the compiler will crash if an invalid program is input. This, of course, will be improved in the future.
+This is *unstable* software. The interpreter or the compiler will crash if an invalid program is input. This behaviour will be improved in the future.
