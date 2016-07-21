@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
 	if (args.size() != 2) // Path & bf file path
 	{
-		printf("Syntax : bf <file.bf>\n");
+		printf("Syntax : ./AshBF <file.bf>\n");
 		return EXIT_FAILURE;
 	}
 
