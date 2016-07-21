@@ -64,5 +64,7 @@ namespace bf
 			}
 			putchar('\n');*/
 		}
+
+		program.shrink_to_fit();
 	}
 }
