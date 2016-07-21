@@ -54,10 +54,15 @@ namespace bf
 	{
 		uint8_t opcode;
 		uint16_t argument;
+
+		inline operator uint8_t() const // Implicit cast operator to opcode
+		{
+			return opcode;
+		}
 	};
 
 	// Compile-time instruction representation
-	struct CTInstruction 
+	struct CTInstruction
 	{
 		char match;
 		Opcode base_opcode;
