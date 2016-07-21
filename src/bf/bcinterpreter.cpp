@@ -19,7 +19,7 @@ namespace bf
 
 		lBegin:
 		Instruction& instr = program[pc++];
-		//const char* instrstr[] = {"add", "sub", "shr", "shl", "inc", "dec", "shro", "shrl", "cout", "cin", "jz", "jnz", "set", "end"};
+		//const char* instrstr[] = {"add", "sub", "shr", "shl", "inc", "dec", "shro", "shrl", "cout", "cin", "jz", "jnz", "set", "movr", "movl", "movra", "movla", "end"};
 		//printf("%s %d\n", instrstr[instr.opcode], instr.argument);
 		goto *jumpTable[static_cast<uint8_t>(instr.opcode)];
 
