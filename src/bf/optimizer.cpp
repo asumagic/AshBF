@@ -17,9 +17,9 @@ namespace bf
 			OptimizationSequence{ {bfLoopBegin, bfDecr, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfSet, 0}}; } },
 
 			// + or - and then set -> set
-			OptimizationSequence{ {bfAdd, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
+			OptimizationSequence{ {bfAdd, bfSet},  [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
 			OptimizationSequence{ {bfIncr, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
-			OptimizationSequence{ {bfSub, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
+			OptimizationSequence{ {bfSub, bfSet},  [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
 			OptimizationSequence{ {bfDecr, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
 
 			// [->+<] or [-<+>]
@@ -47,49 +47,22 @@ namespace bf
 			{
 				for (size_t i = 0; i < program.size(); ++i)
 				{
-					bool match = true;
-					for (size_t j = 0; j < optimizer.seq.size(); ++j)
-					{
-						if (static_cast<uint8_t>(optimizer.seq[j]) != program[i + j].opcode)
-						{
-							match = false;
-							break;
-						}
-					}
-
-					if (match)
+					if (std::equal(begin(program) + i, begin(program) + i + optimizer.seq.size(), begin(optimizer.seq), end(optimizer.seq)))
 					{
 						++passopt;
-						//replace_subvector(program, program.begin() + i, program.begin() + i + optimizer.seq.size(), )
-						// @TODO move to a replace_subvector function
-						ivec extract(program.begin() + i, program.begin() + i + optimizer.seq.size());
-						ivec optimized = optimizer.callback(extract);
 
-						size_t newProgramSize = program.size() - extract.size() + optimized.size();
-						if (program.size() < newProgramSize) // Resize first, keep the end of the vector to the end, insert the new subvector
-						{
-							size_t oldSize = program.size();
-							program.resize(newProgramSize); // Resize the vector because we know we won't lose data since we make it bigger
-							std::move_backward(program.begin() + i + extract.size(), program.begin() + oldSize, program.end()); // Move the end of the vector to the new boundaries
-							std::move(optimized.begin(), optimized.end(), program.begin() + i); // Insert the subvector
-						}
-						else // Insert the new subvector, stick the end of the vector to the new subvector, resize
-						{
-							std::move(optimized.begin(), optimized.end(), program.begin() + i); // Insert the subvvector
-							ivec lastchunk(program.begin() + i + extract.size(), program.end());
-							std::move(lastchunk.begin(), lastchunk.end(), program.begin() + i + optimized.size());
-							program.resize(newProgramSize);
-						}
+						ivec extract(program.begin() + i, program.begin() + i + optimizer.seq.size());
+						replace_subvector(program, begin(program) + i, begin(program) + i + extract.size(), optimizer.callback(extract));
 					}
 				}
 			}
-			printf("Optimizer pass %ld/%ld > Triggered %ld optimizers", p, passes, passopt);
+			/*printf("Optimizer pass %ld/%ld > Triggered %ld optimizers", p, passes, passopt);
 			if (passopt == 0)
 			{
 				printf(", stopping\n");
 				break;
 			}
-			putchar('\n');
+			putchar('\n');*/
 		}
 	}
 }
