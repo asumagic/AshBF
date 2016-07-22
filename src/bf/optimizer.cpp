@@ -3,7 +3,6 @@
 #include <vector>
 #include <functional>
 #include <algorithm>
-
 #include "../vecutils.hpp"
 
 namespace bf
@@ -34,7 +33,7 @@ namespace bf
 			OptimizationSequence{ {bfLoopBegin, bfDecr, bfOnceShiftLeft, bfIncr, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfMoveLeftAdd, 1}}; } }, // @TODO add bfMoveLeftIncr?
 			OptimizationSequence{ {bfLoopBegin, bfDecr, bfShiftLeft, bfIncr, bfShiftRight, bfLoopEnd}, [](const ivec& v) -> ivec {
 				if (v[2].argument == v[4].argument)
-					return {{bfMoveLeftAdd, v[2]. argument}};
+					return {{bfMoveLeftAdd, v[2].argument}};
 				else
 					return v;
 			} }
@@ -52,7 +51,7 @@ namespace bf
 						++passopt;
 
 						ivec extract(program.begin() + i, program.begin() + i + optimizer.seq.size());
-						replace_subvector(program, begin(program) + i, begin(program) + i + extract.size(), optimizer.callback(extract));
+						replace_subvector_smaller(program, begin(program) + i, begin(program) + i + extract.size(), optimizer.callback(extract));
 					}
 				}
 			}

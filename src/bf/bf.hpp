@@ -38,6 +38,23 @@ namespace bf
 		bfMoveRightAdd, // Zero out the current cell and add its value to the cell n times to the right
 		bfMoveLeftAdd, // ^ to the left
 
+		bfCopyTo, // Copy the current cell to the argument's pointed cell
+		bfCopyFrom, // Copy the argument's pointed cell to the current cell
+
+		bfCopyToStorage, // Copy the current cell to the storage
+		bfCopyFromStorage, // Copy the storage to the current cell
+
+		bfBitshiftRight, // Bitshift the current cell to the right n times
+		bfBitshiftLeft, // Bitshift the current cell to the left n times
+
+		bfBitshiftRightOnce, // Bitshift the current cell to the right once
+		bfBitshiftLeftOnce, // Bitshift the current cell to the left once
+
+		bfNot, // Revert bits on the current cell
+		bfXor, // XOR the current cell with the storage
+		bfAnd, // AND the current cell with the storage
+		bfOr, // OR the current cell with the storage
+
 		bfEnd, // End the program execution
 
 		/** STEPS USED DURING COMPILATION - EXCLUDES RUNTIME - @TODO make those different enums? **/
@@ -68,6 +85,8 @@ namespace bf
 		Opcode base_opcode;
 		bool is_stackable = false;
 		Opcode stacked_opcode = bfNop;
+		uint8_t extended_level = 0;
+		std::function<void(std::vector<Instruction>&)> customCallback = std::function<void(std::vector<Instruction>&)>(); // Custom callback that passes the incomplete instruction vector if needed
 	};
 
 	struct OptimizationSequence
@@ -78,9 +97,9 @@ namespace bf
 
 	void link(std::vector<Instruction>& program); // Link stage, required for loops
 	void optimize(std::vector<Instruction>& program, const size_t passes = 5);
-	std::vector<Instruction> compile(const std::string& source); // Compile a brainfuck source into AshBF bytecode (which may be interpreted by the execute() function)
+	std::vector<Instruction> compile(const std::string& source, const uint8_t extendedtype); // Compile a brainfuck source into AshBF bytecode (which may be interpreted by the execute() function)
 
-	void execute(std::vector<Instruction>& program, const size_t memory_size = 30000); // Interprete code (typically processed by compile())
+	void interprete(std::vector<Instruction>& program, const size_t memory_size, const uint8_t extended_level); // Interprete code (typically processed by compile())
 }
 
 #endif
