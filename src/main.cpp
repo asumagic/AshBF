@@ -6,6 +6,8 @@
 
 int main(int argc, char** argv)
 {
+	static_assert(bf::bfTOTAL < 255, "Fatal error : Opcodes can't fit in 8 bits");
+
 	std::vector<std::string> args(argc);
 	for (size_t i = 0; i < static_cast<size_t>(argc); ++i)
 		args[i] = argv[i];

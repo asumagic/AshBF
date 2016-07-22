@@ -64,7 +64,9 @@ namespace bf
 		bfLoopBegin,
 		bfLoopEnd,
 
-		bfNop
+		bfNop,
+
+		bfTOTAL
 	};
 
 	// The struct defining an instruction.
