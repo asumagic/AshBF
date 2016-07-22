@@ -32,7 +32,7 @@ Available flags:
 - ``x`` : Select the extended brainfuck type. (``-x1`` for example, ``-x0`` is the default)
 - ``Opasses`` : Select the amount of passes used by the optimizer. For now, nearly no optimization may benefit from more than a pass, and the optimizer will abort when no optimization was done for the current pass. (``-Opasses=5`` is the default)
 - ``O`` : Enable optimizations (``-O`` is the default, disable with ``-O0``)
-- ``msize`` : Define the amount of cells/bytes available by the program. From Extended Type II, it will define the program's available memory, not the entire memory.
+- ``msize`` : Define the amount of cells/bytes available by the program. From Extended Type II, it will define the program's available memory, not the entire memory. (``msize=30000`` is the default)
 
 ## Planned features
 
