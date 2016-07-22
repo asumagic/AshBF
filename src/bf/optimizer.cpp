@@ -36,7 +36,11 @@ namespace bf
 					return {{bfMoveLeftAdd, v[2].argument}};
 				else
 					return v;
-			} }
+			} },
+
+			// [>] and [<]
+			OptimizationSequence{ {bfLoopBegin, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroRight, 0}}; } },
+			OptimizationSequence{ {bfLoopBegin, bfOnceShiftLeft, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroLeft, 0}}; } },
 		};
 
 		for (size_t p = 0; p < passes; ++p)

@@ -38,6 +38,9 @@ namespace bf
 		bfMoveRightAdd, // Zero out the current cell and add its value to the cell n times to the right
 		bfMoveLeftAdd, // ^ to the left
 
+		bfLoopUntilZeroRight, // Set the cell pointer to the closest zero cell to the right
+		bfLoopUntilZeroLeft, // ^ to thte left
+
 		bfCopyTo, // Copy the current cell to the argument's pointed cell
 		bfCopyFrom, // Copy the argument's pointed cell to the current cell
 
