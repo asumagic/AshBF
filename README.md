@@ -37,7 +37,7 @@ Available flags:
 ## Planned features
 
 - More optimizations to the brainfuck code.
-- Possible support for Brainfuck Extended types.
+- Support for extended type II and III
 - Attaching a brainfuck debugger
 - Brainfuck IDE or a brainfuck Discord bot?
 
