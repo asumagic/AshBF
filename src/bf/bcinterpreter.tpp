@@ -31,7 +31,8 @@ namespace bf
 							  &&lLoopUntilZeroRight, &&lLoopUntilZeroLeft,
 							  &&lCopyTo, &&lCopyFrom, &&lCopyToStorage, &&lCopyFromStorage,
 							  &&lBitshiftRight, &&lBitshiftLeft, &&lBitshiftRightOnce, &&lBitshiftLeftOnce,
-							  &&lNot, &&lXor, &&lAnd, &&lOr,
+							  &&lNotStorage, &&lXorStorage, &&lAndStorage, &&lOrStorage,
+							  &&lMulStorage, &&lDivStorage, &&lAddStorage, &&lSubStorage, &&lModStorage,
 							  &&lEnd };
 
 		std::vector<uint8_t> memory(memory_size);
@@ -131,11 +132,11 @@ namespace bf
 		DISPATCHER();
 
 		lLoopUntilZeroRight:
-		while(++sp);
+		while(*sp) ++sp;
 		DISPATCHER();
 
 		lLoopUntilZeroLeft:
-		while(--sp);
+		while(*sp) --sp;
 		DISPATCHER();
 
 		lCopyTo:
@@ -170,28 +171,43 @@ namespace bf
 		(*sp) <<= 1;
 		DISPATCHER();
 
-		lNot:
+		lNotStorage:
 		*sp = ~(*sp);
 		DISPATCHER();
 
-		lXor:
+		lXorStorage:
 		(*sp) ^= *storage;
 		DISPATCHER();
 
-		lAnd:
+		lAndStorage:
 		(*sp) &= *storage;
 		DISPATCHER();
 
-		lOr:
+		lOrStorage:
 		(*sp) |= *storage;
 		DISPATCHER();
 
-		lEnd:
-#ifdef CLANG_EXIT_PERFORMANCE_HACK
-		exit(0);
+		lMulStorage:
+		(*sp) *= *storage;
 		DISPATCHER();
-#else
+
+		lDivStorage:
+		(*sp) /= *storage;
+		DISPATCHER();
+
+		lAddStorage:
+		(*sp) += *storage;
+		DISPATCHER();
+
+		lSubStorage:
+		(*sp) -= *storage;
+		DISPATCHER();
+
+		lModStorage:
+		(*sp) %= *storage;
+		DISPATCHER();
+
+		lEnd:
 		return;
-#endif
 	}
 }

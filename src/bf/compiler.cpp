@@ -6,7 +6,7 @@ namespace bf
 	{
 		program.reserve(source.size() + (!extended_level)); // Don't reserve a byte in extended levels (because of @)
 
-		const std::array<CTInstruction, 17> instruction_list =
+		const std::array<CTInstruction, 22> instruction_list =
 		{{
 			{'+', bfIncr, true, bfAdd},
 			{'-', bfDecr, true, bfSub},
@@ -23,10 +23,17 @@ namespace bf
 			{'!', bfCopyFromStorage, false, bfNop, 1},
 			{'}', bfBitshiftRightOnce, true, bfBitshiftRight, 1},
 			{'{', bfBitshiftLeftOnce, true, bfBitshiftLeft, 1},
-			{'~', bfNot, false, bfNop, 1},
-			{'^', bfXor, false, bfNop, 1},
-			{'&', bfAnd, false, bfNop, 1},
-			{'|', bfOr, false, bfNop, 1},
+			{'~', bfNotStorage, false, bfNop, 1},
+			{'^', bfXorStorage, false, bfNop, 1},
+			{'&', bfAndStorage, false, bfNop, 1},
+			{'|', bfOrStorage, false, bfNop, 1},
+
+			// Extended Type II
+			{'*', bfMulStorage, false, bfNop, 2},
+			{'/', bfDivStorage, false, bfNop, 2},
+			{'=', bfAddStorage, false, bfNop, 2},
+			{'_', bfSubStorage, false, bfNop, 2},
+			{'%', bfModStorage, false, bfNop, 2},
 		}};
 
 		for (size_t i = 0; i < source.size(); ++i)

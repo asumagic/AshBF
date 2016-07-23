@@ -7,8 +7,6 @@
 #include <functional>
 #include <memory>
 
-#define CLANG_EXIT_PERFORMANCE_HACK
-
 namespace bf
 {
 	// Available opcodes to the VM/compiler
@@ -56,10 +54,16 @@ namespace bf
 		bfBitshiftRightOnce, // Bitshift the current cell to the right once
 		bfBitshiftLeftOnce, // Bitshift the current cell to the left once
 
-		bfNot, // Revert bits on the current cell
-		bfXor, // XOR the current cell with the storage
-		bfAnd, // AND the current cell with the storage
-		bfOr, // OR the current cell with the storage
+		bfNotStorage, // Revert bits on the current cell
+		bfXorStorage, // XOR the current cell with the storage
+		bfAndStorage, // AND the current cell with the storage
+		bfOrStorage, // OR the current cell with the storage
+
+		bfMulStorage, // Multiply the current cell with the storage
+		bfDivStorage, // Divide the current cell with the storage
+		bfAddStorage, // Add the current cell with the storage
+		bfSubStorage, // Substract the current cell with the storage
+		bfModStorage, // Modulo the current cell with the storage
 
 		bfEnd, // End the program execution
 
