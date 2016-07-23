@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include <memory>
 
 namespace bf
 {
@@ -65,17 +64,14 @@ namespace bf
 		bfSubStorage, // Substract the current cell with the storage
 		bfModStorage, // Modulo the current cell with the storage
 
-		bfEnd, // End the program execution
-
-		bfVMTOTAL,
-
-		/** STEPS USED DURING COMPILATION - EXCLUDES RUNTIME - @TODO make those different enums? **/
 		bfLoopBegin,
 		bfLoopEnd,
 
-		bfNop,
+		bfEnd, // End the program execution
 
-		bfTOTAL
+		bfTOTAL,
+
+		bfNop // May NOT be interpreted by the VM
 	};
 
 	// The struct defining an instruction.
@@ -112,7 +108,7 @@ namespace bf
 	class Brainfuck
 	{
 	public:
-		Brainfuck(const uint8_t extended_level = 0);
+		Brainfuck(const uint8_t extended_level = 0, const bool warnings = true);
 
 		enum JumpMode
 		{
@@ -127,10 +123,12 @@ namespace bf
 		void interprete(const size_t memory_size);
 
 	private:
-		std::vector<Instruction> program;
-		std::unique_ptr<std::string> xsource;
-		uint8_t extended_level;
-		bool strict_memory_access;
+		std::vector<Instruction> program; // Program
+		std::string xsource; // Extended type II source
+		std::vector<uint8_t> memory_initializer; // Memory initializer in extended type II
+		size_t initializer_loopends = 0; // Loop ends located in the memory initializer in extended type II
+		uint8_t extended_level; // Extended brainfuck level
+		bool strict_memory_access, warnings; // Settings
 	};
 }
 

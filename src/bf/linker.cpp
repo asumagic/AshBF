@@ -1,5 +1,7 @@
 #include "bf.hpp"
 
+#include <cassert>
+
 namespace bf
 {
 	void Brainfuck::link()
@@ -15,6 +17,7 @@ namespace bf
 				break;
 
 				case bfLoopEnd:
+					assert(!jumps.empty());
 					program[i].opcode = static_cast<uint8_t>(bfJmpNotZero);
 					program[jumps.back()].argument = i + 1;
 					program[i].argument = jumps.back() + 1;
@@ -22,5 +25,22 @@ namespace bf
 				break;
 			}
 		}
+
+		if (extended_level >= 2)
+		{
+			while(!jumps.empty())
+			{
+				program[jumps.back()].opcode = static_cast<uint8_t>(bfLoopBegin);
+
+				assert(initializer_loopends--);
+
+				if (warnings)
+					puts("Warning : Found an orphan loop begin ('[') that will be ignored at runtime, because a matching loop end (']') was found in the memory initializer area, but not in the code area. (Ex. Type II)");
+
+				jumps.pop_back();
+			}
+		}
+
+		assert(jumps.empty());
 	}
 }

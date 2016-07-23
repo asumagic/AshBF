@@ -33,6 +33,7 @@ namespace bf
 							  &&lBitshiftRight, &&lBitshiftLeft, &&lBitshiftRightOnce, &&lBitshiftLeftOnce,
 							  &&lNotStorage, &&lXorStorage, &&lAndStorage, &&lOrStorage,
 							  &&lMulStorage, &&lDivStorage, &&lAddStorage, &&lSubStorage, &&lModStorage,
+							  &&lLoopBegin, &&lLoopEnd,
 							  &&lEnd };
 
 		std::vector<uint8_t> memory(memory_size);
@@ -48,9 +49,12 @@ namespace bf
 
 		case 2:
 		case 3:
-			sp += 1 + xsource->size(); // Free a byte for storage, and add the source size
+			sp += 1 + xsource.size(); // Free a byte for storage, and add the source size
 			break;
 		}
+
+		assert(memory_initializer.size() < memory.size() - (sp - memory.data())); // Make sure the copy won't go out of bounds
+		std::copy(begin(memory_initializer), end(memory_initializer), begin(memory) + (sp - memory.data()));
 
 		Instruction const *instr; // Pointer to const Instruction
 		const Instruction* const beginInstr = program.data(); // Const pointer to const instruction
@@ -205,6 +209,12 @@ namespace bf
 
 		lModStorage:
 		(*sp) %= *storage;
+		DISPATCHER();
+
+		lLoopBegin:
+		DISPATCHER();
+
+		lLoopEnd:
 		DISPATCHER();
 
 		lEnd:

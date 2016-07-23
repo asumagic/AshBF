@@ -8,8 +8,6 @@
 
 int main(int argc, char** argv)
 {
-	static_assert(bf::bfTOTAL < 255, "Fatal error : Opcodes can't fit in 8 bits");
-
 	std::vector<std::string> args(argc);
 	for (size_t i = 0; i < static_cast<size_t>(argc); ++i)
 		args[i] = argv[i];
@@ -36,6 +34,7 @@ int main(int argc, char** argv)
 		OPTIMIZATION,
 		CELLCOUNT,
 		STRICTMEMORYACCESS,
+		WARNINGLEVEL,
 		VERBOSE,
 	};
 
@@ -45,7 +44,8 @@ int main(int argc, char** argv)
 		InterpreterFlag{ "Opasses", "5" }, // Optimization pass count
 		InterpreterFlag{ "O", "1", {"0", "1"} }, // Optimization level (any or 1)
 		InterpreterFlag{ "msize", "30000" }, // Cells available to the program
-		InterpreterFlag{ "mstrict", "0", {"0", "1"} }, // Enable strict memory access to the brainfuck program (verifies for <0 and >size accesses and disables some optimizations)
+		InterpreterFlag{ "mstrict", "0", {"0", "1"} }, // Enable strict memory access to the brainfuck program (verifies for <0 and >size accesses and disables optimizations)
+		InterpreterFlag{ "W", "1", {"0", "1"} }, // Controls compiler warnings
 		//InterpreterFlag{ "v", "0" }, // Enable the verbose mode
 	};
 
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
 		flags[OPTIMIZATION].result = "0";
 	}
 
-	bf::Brainfuck bfi(extendedlevel);
+	bf::Brainfuck bfi(extendedlevel, flags[WARNINGLEVEL]);
 	bfi.compile(source);
 
 	if (flags[OPTIMIZATION])
