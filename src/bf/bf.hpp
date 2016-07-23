@@ -58,6 +58,9 @@ namespace bf
 		bfAndStorage, // AND the current cell with the storage
 		bfOrStorage, // OR the current cell with the storage
 
+		bfInsertPrev, // Insert a cell before the current pointer
+		bfEraseCurrent, // Erase the current cell (and shift following ones to the left)
+
 		bfMulStorage, // Multiply the current cell with the storage
 		bfDivStorage, // Divide the current cell with the storage
 		bfAddStorage, // Add the current cell with the storage

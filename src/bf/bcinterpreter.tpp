@@ -32,6 +32,7 @@ namespace bf
 							  &&lCopyTo, &&lCopyFrom, &&lCopyToStorage, &&lCopyFromStorage,
 							  &&lBitshiftRight, &&lBitshiftLeft, &&lBitshiftRightOnce, &&lBitshiftLeftOnce,
 							  &&lNotStorage, &&lXorStorage, &&lAndStorage, &&lOrStorage,
+							  &&lInsertPrev, &&lEraseCurrent,
 							  &&lMulStorage, &&lDivStorage, &&lAddStorage, &&lSubStorage, &&lModStorage,
 							  &&lLoopBegin, &&lLoopEnd,
 							  &&lEnd };
@@ -189,6 +190,14 @@ namespace bf
 
 		lOrStorage:
 		(*sp) |= *storage;
+		DISPATCHER();
+
+		lInsertPrev: // @TODO move only used memory (if it benefits performance)
+		std::move_backward(begin(memory) + (sp - memory.data()), end(memory) - 1, end(memory));
+		DISPATCHER();
+
+		lEraseCurrent: // @TODO move only used memory (if it benefits performance)
+		std::move(begin(memory) + (sp - memory.data()) + 1, end(memory), begin(memory) + (sp - memory.data()));
 		DISPATCHER();
 
 		lMulStorage:

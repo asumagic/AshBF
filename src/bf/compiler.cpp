@@ -8,7 +8,7 @@ namespace bf
 
 		bool do_append_input = false;
 
-		const std::array<CTInstruction, 22> instruction_list =
+		const std::array<CTInstruction, 24> instruction_list =
 		{{
 			{'+', bfIncr, true, bfAdd},
 			{'-', bfDecr, true, bfSub},
@@ -31,6 +31,8 @@ namespace bf
 			{'|', bfOrStorage, false, bfNop, 1},
 
 			// Extended Type II
+			{')', bfInsertPrev, false, bfNop, 2}, // @TODO:20 add successive support
+			{'(', bfEraseCurrent, false, bfNop, 2}, // @TODO:30 add successive support
 			{'*', bfMulStorage, false, bfNop, 2},
 			{'/', bfDivStorage, false, bfNop, 2},
 			{'=', bfAddStorage, false, bfNop, 2},
@@ -67,7 +69,7 @@ namespace bf
 						}
 						else
 						{
-							if (j.is_stackable) // @TODO : move stacking optimize-time?
+							if (j.is_stackable) // @TODO:40 move stacking optimize-time?
 							{
 								unsigned k = i;
 								while (++k < source.size() && source[k] == j.match);
