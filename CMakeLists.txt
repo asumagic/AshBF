@@ -8,4 +8,4 @@ add_executable(AshBF
 			   src/main.cpp
 			   src/fileutils.cpp
 				 src/bf/bf.cpp
-			   src/bf/bcinterpreter.cpp src/bf/compiler.cpp src/bf/optimizer.cpp src/bf/linker.cpp)
+			   src/bf/compiler.cpp src/bf/optimizer.cpp src/bf/linker.cpp)

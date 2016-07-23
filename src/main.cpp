@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <cmath>
 
 int main(int argc, char** argv)
 {
@@ -21,6 +23,10 @@ int main(int argc, char** argv)
 	struct InterpreterFlag
 	{
 		std::string match, result = "";
+		std::initializer_list<std::string> except = {};
+
+		operator bool() { return result == "1"; }
+		operator std::string() { return result; }
 	};
 
 	enum FlagEnum
@@ -29,15 +35,17 @@ int main(int argc, char** argv)
 		OPTIMIZATIONPASSES,
 		OPTIMIZATION,
 		CELLCOUNT,
+		STRICTMEMORYACCESS,
 		VERBOSE,
 	};
 
 	std::vector<InterpreterFlag> flags =
 	{
-		InterpreterFlag{ "x", "0" }, // Brainfuck extension level
+		InterpreterFlag{ "x", "0", {"0", "1", "2"} }, // Brainfuck extension level
 		InterpreterFlag{ "Opasses", "5" }, // Optimization pass count
-		InterpreterFlag{ "O", "1" }, // Optimization level (any or 1)
+		InterpreterFlag{ "O", "1", {"0", "1"} }, // Optimization level (any or 1)
 		InterpreterFlag{ "msize", "30000" }, // Cells available to the program
+		InterpreterFlag{ "mstrict", "0", {"0", "1"} }, // Enable strict memory access to the brainfuck program (verifies for <0 and >size accesses and disables some optimizations)
 		//InterpreterFlag{ "v", "0" }, // Enable the verbose mode
 	};
 
@@ -69,6 +77,13 @@ int main(int argc, char** argv)
 
 					flag.result.resize(args[i].size() - at);
 					std::move(begin(args[i]) + at, end(args[i]), begin(flag.result));
+
+					if (flag.except.size() != 0 && (std::find(begin(flag.except), end(flag.except), flag.result) == end(flag.except)))
+					{
+						printf("Passed '%s' the given flag '%s' does not accept.\n", flag.result.c_str(), flag.match.c_str());
+						return EXIT_FAILURE;
+					}
+
 					argfound = true;
 					break;
 				}
@@ -85,14 +100,25 @@ int main(int argc, char** argv)
 	size_t extendedlevel = std::stoi(flags[EXTENDEDLEVEL].result);
 
 	std::string source = read_file(args[1]);
+
+	if (flags[STRICTMEMORYACCESS] && flags[OPTIMIZATION])
+	{
+		puts("-mstrict and -O are incompatible. Disabling optimizations.");
+		flags[OPTIMIZATION].result = "0";
+	}
+
 	bf::Brainfuck bfi(extendedlevel);
 	bfi.compile(source);
 
-	if (flags[OPTIMIZATION].result != "0")
-		bfi.optimize(std::stoi(flags[OPTIMIZATIONPASSES].result));
+	if (flags[OPTIMIZATION])
+		bfi.optimize(std::stoi(flags[OPTIMIZATIONPASSES]));
 
 	bfi.link();
-	bfi.interprete(std::stoi(flags[CELLCOUNT].result));
+	size_t cell_count = std::stoi(flags[CELLCOUNT]);
+	if (flags[STRICTMEMORYACCESS])
+		bfi.interprete<bf::Brainfuck::JMSTRICT>(cell_count);
+	else
+		bfi.interprete<bf::Brainfuck::JMSTANDARD>(cell_count);
 
 	return EXIT_SUCCESS;
 }

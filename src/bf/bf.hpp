@@ -7,6 +7,8 @@
 #include <functional>
 #include <memory>
 
+#define CLANG_EXIT_PERFORMANCE_HACK
+
 namespace bf
 {
 	// Available opcodes to the VM/compiler
@@ -61,6 +63,8 @@ namespace bf
 
 		bfEnd, // End the program execution
 
+		bfVMTOTAL,
+
 		/** STEPS USED DURING COMPILATION - EXCLUDES RUNTIME - @TODO make those different enums? **/
 		bfLoopBegin,
 		bfLoopEnd,
@@ -106,16 +110,26 @@ namespace bf
 	public:
 		Brainfuck(const uint8_t extended_level = 0);
 
+		enum JumpMode
+		{
+			JMSTANDARD,
+			JMSTRICT
+		};
+
 		void compile(const std::string& source);
 		void optimize(const size_t passes = 5);
 		void link();
+		template<JumpMode jmpmodel>
 		void interprete(const size_t memory_size);
 
 	private:
 		std::vector<Instruction> program;
 		std::unique_ptr<std::string> xsource;
 		uint8_t extended_level;
+		bool strict_memory_access;
 	};
 }
+
+#include "bcinterpreter.tpp"
 
 #endif
