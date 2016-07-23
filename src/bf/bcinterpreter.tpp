@@ -192,11 +192,11 @@ namespace bf
 		(*sp) |= *storage;
 		DISPATCHER();
 
-		lInsertPrev: // @TODO move only used memory (if it benefits performance)
+		lInsertPrev: // @TODO move only used memory (if it benefits performance), enable parallelism once available in C++17 (if available)
 		std::move_backward(begin(memory) + (sp - memory.data()), end(memory) - 1, end(memory));
 		DISPATCHER();
 
-		lEraseCurrent: // @TODO move only used memory (if it benefits performance)
+		lEraseCurrent: // @TODO move only used memory (if it benefits performance), enable parallelism once available in C++17 (if available)
 		std::move(begin(memory) + (sp - memory.data()) + 1, end(memory), begin(memory) + (sp - memory.data()));
 		DISPATCHER();
 
