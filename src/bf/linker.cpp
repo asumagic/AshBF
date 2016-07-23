@@ -2,9 +2,9 @@
 
 namespace bf
 {
-	void link(std::vector<Instruction>& program)
+	void Brainfuck::link()
 	{
-		std::vector<uint16_t> jumps; 
+		std::vector<uint16_t> jumps;
 		for (size_t i = 0; i < program.size(); ++i)
 		{
 			switch (program[i].opcode)

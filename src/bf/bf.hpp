@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <memory>
 
 namespace bf
 {
@@ -100,11 +101,21 @@ namespace bf
 		std::function<std::vector<Instruction>(const std::vector<Instruction>&)> callback;
 	};
 
-	void link(std::vector<Instruction>& program); // Link stage, required for loops
-	void optimize(std::vector<Instruction>& program, const size_t passes = 5);
-	std::vector<Instruction> compile(const std::string& source, const uint8_t extendedtype); // Compile a brainfuck source into AshBF bytecode (which may be interpreted by the execute() function)
+	class Brainfuck
+	{
+	public:
+		Brainfuck(const uint8_t extended_level = 0);
 
-	void interprete(std::vector<Instruction>& program, const size_t memory_size, const uint8_t extended_level); // Interprete code (typically processed by compile())
+		void compile(const std::string& source);
+		void optimize(const size_t passes = 5);
+		void link();
+		void interprete(const size_t memory_size);
+
+	private:
+		std::vector<Instruction> program;
+		std::unique_ptr<std::string> xsource;
+		uint8_t extended_level;
+	};
 }
 
 #endif

@@ -7,7 +7,7 @@
 
 namespace bf
 {
-	void optimize(std::vector<Instruction>& program, const size_t passes)
+	void Brainfuck::optimize(const size_t passes)
 	{
 		typedef std::vector<Instruction> ivec;
 		std::vector<OptimizationSequence> optimizers =
@@ -59,13 +59,10 @@ namespace bf
 					}
 				}
 			}
-			/*printf("Optimizer pass %ld/%ld > Triggered %ld optimizers", p, passes, passopt);
+
 			if (passopt == 0)
-			{
-				printf(", stopping\n");
 				break;
-			}
-			putchar('\n');*/
+
 		}
 
 		program.shrink_to_fit();

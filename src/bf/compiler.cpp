@@ -2,10 +2,9 @@
 #include <iostream>
 namespace bf
 {
-	std::vector<Instruction> compile(const std::string& source, const uint8_t extended_level)
+	void Brainfuck::compile(const std::string& source)
 	{
-		std::vector<Instruction> program;
-		program.reserve(source.size() + (!extended_level));
+		program.reserve(source.size() + (!extended_level)); // Don't reserve a byte in extended levels (because of @)
 
 		const std::array<CTInstruction, 17> instruction_list =
 		{{
@@ -76,6 +75,9 @@ namespace bf
 		if (!extended_level)
 			program.push_back({bfEnd, 0});
 
-		return program;
+		if (extended_level >= 2)
+			xsource = std::make_unique<std::string>(source);
+
+		return;
 	}
 }

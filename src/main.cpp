@@ -29,14 +29,16 @@ int main(int argc, char** argv)
 		OPTIMIZATIONPASSES,
 		OPTIMIZATION,
 		CELLCOUNT,
+		VERBOSE,
 	};
 
 	std::vector<InterpreterFlag> flags =
 	{
-		InterpreterFlag{ "x", "0" },
+		InterpreterFlag{ "x", "0" }, // Brainfuck extension level
 		InterpreterFlag{ "Opasses", "5" }, // Optimization pass count
 		InterpreterFlag{ "O", "1" }, // Optimization level (any or 1)
-		InterpreterFlag{ "msize", "30000" } // Cells available to the program
+		InterpreterFlag{ "msize", "30000" }, // Cells available to the program
+		//InterpreterFlag{ "v", "0" }, // Enable the verbose mode
 	};
 
 	for (size_t i = 2; i < args.size(); ++i)
@@ -83,13 +85,14 @@ int main(int argc, char** argv)
 	size_t extendedlevel = std::stoi(flags[EXTENDEDLEVEL].result);
 
 	std::string source = read_file(args[1]);
-	std::vector<bf::Instruction> program = bf::compile(source, extendedlevel);
+	bf::Brainfuck bfi(extendedlevel);
+	bfi.compile(source);
 
 	if (flags[OPTIMIZATION].result != "0")
-		bf::optimize(program, std::stoi(flags[OPTIMIZATIONPASSES].result));
+		bfi.optimize(std::stoi(flags[OPTIMIZATIONPASSES].result));
 
-	bf::link(program);
-	bf::interprete(program, std::stoi(flags[CELLCOUNT].result), extendedlevel);
+	bfi.link();
+	bfi.interprete(std::stoi(flags[CELLCOUNT].result));
 
 	return EXIT_SUCCESS;
 }

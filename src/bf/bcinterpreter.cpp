@@ -2,7 +2,7 @@
 
 namespace bf
 {
-	void interprete(std::vector<Instruction>& program, const size_t memory_size, const uint8_t extended_level)
+	void Brainfuck::interprete(const size_t memory_size)
 	{
 		void* jumpTable[] = { &&lAdd,  &&lSub,  &&lShiftRight , &&lShiftLeft,
 							  &&lAddO, &&lSubO, &&lShiftRightO, &&lShiftLeftO,
@@ -24,11 +24,12 @@ namespace bf
 		switch(extended_level)
 		{
 		case 1:
-			++sp; // Free a byte for the storage
+			++sp; // Free a byte for storage
 			break;
 
 		case 2:
-			sp += 1 + program.size();
+		case 3:
+			sp += 1 + xsource->size(); // Free a byte for storage, and add the source size
 			break;
 		}
 
