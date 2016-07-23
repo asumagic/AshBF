@@ -33,6 +33,7 @@ Available flags:
 - ``Opasses`` : Select the amount of passes used by the optimizer. For now, nearly no optimization may benefit from more than a pass, and the optimizer will abort when no optimization was done for the current pass. (``-Opasses=5`` is the default)
 - ``O`` : Enable optimizations (``-O`` is the default, disable with ``-O0``)
 - ``msize`` : Define the amount of cells/bytes available by the program. From Extended Type II, it will define the program's available memory, not the entire memory. (``msize=30000`` is the default)
+- ``mstrict`` : Checks for instruction pointer and cell pointer <0 and >size every tick. Disables optimizations.
 
 ## Planned features
 
