@@ -6,6 +6,7 @@ set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra -fomit-frame-pointer -fstrict-aliasing -s
 
 add_executable(AshBF
 			   src/main.cpp
+				 src/logger.cpp
 			   src/fileutils.cpp
 				 src/bf/bf.cpp
 			   src/bf/compiler.cpp src/bf/optimizer.cpp src/bf/linker.cpp)

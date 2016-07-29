@@ -1,13 +1,12 @@
 #include "bf.hpp"
 
-#include <cassert>
+#include "../logger.hpp"
 
 #define DISPATCHER_STANDARD() instr = beginInstr + pc++; goto *jump_table[instr->opcode];
 
-#define DISPATCHER_STRICT() assert(beginInstr + pc >= beginInstr); \
-							assert(beginInstr + pc < beginInstr + program.size()); \
-							assert(sp >= memory.data()); \
-							assert(sp < memory.data() + memory.size()); \
+#define DISPATCHER_STRICT() lassert(sp >= memory.data(), bcinfo, "Program tried to access negative memory."); \
+							lassert(sp < memory.data() + memory.size(), bcinfo, "Program tried to access out-of-bounds memory."); \
+							lassert(pc < program.size(), bcinfo, "Program end reached without '@' (bfEnd)."); \
 							instr = beginInstr + pc++; \
 							goto *jump_table[instr->opcode];
 
@@ -22,7 +21,7 @@ namespace bf
 	template<Brainfuck::JumpMode jmpmodel>
 	void Brainfuck::interprete(const size_t memory_size)
 	{
-		void* jump_table[] = { &&lAdd,  &&lSub,  &&lShiftRight , &&lShiftLeft,
+		void* jump_table[] = { &&lAdd,  &&lSub,  &&lShiftRight, &&lShiftLeft,
 							  &&lAddO, &&lSubO, &&lShiftRightO, &&lShiftLeftO,
 							  &&lCharOut, &&lCharIn, &&lJmpZero, &&lJmpNotZero,
 							  &&lSet,
@@ -34,13 +33,15 @@ namespace bf
 							  &&lNotStorage, &&lXorStorage, &&lAndStorage, &&lOrStorage,
 							  &&lInsertPrev, &&lEraseCurrent,
 							  &&lMulStorage, &&lDivStorage, &&lAddStorage, &&lSubStorage, &&lModStorage,
+							  &&lResetStorage, &&lSetStorageCurrent,
 							  &&lLoopBegin, &&lLoopEnd,
 							  &&lEnd };
 
 		std::vector<uint8_t> memory(memory_size);
 
 		unsigned pc = 0;
-		uint8_t *sp = memory.data() + 1, *storage = memory.data(); // @HACK '+1' around [-<+>] optimizer bug
+		uint8_t *sp = memory.data() + 1, // @HACK '+1' around [-<+>] optimizer bug
+				*storage = memory.data();
 
 		switch(extended_level)
 		{
@@ -50,11 +51,13 @@ namespace bf
 
 		case 2:
 		case 3:
+			lassert(xsource.size() < (memory.size() - 1), bcinfo, "Source too large to fit in the memory.");
+			std::copy(begin(xsource), end(xsource), begin(memory) + 1);
 			sp += 1 + xsource.size(); // Free a byte for storage, and add the source size
 			break;
 		}
 
-		assert(memory_initializer.size() < memory.size() - (sp - memory.data())); // Make sure the copy won't go out of bounds
+		lassert(memory_initializer.size() < memory.size() - (sp - memory.data()), bcinfo, "Memory initialization data too large to fit in the memory."); // Make sure the copy won't go out of bounds
 		std::copy(begin(memory_initializer), end(memory_initializer), begin(memory) + (sp - memory.data()));
 
 		Instruction const *instr; // Pointer to const Instruction
@@ -95,11 +98,11 @@ namespace bf
 		DISPATCHER();
 
 		lCharOut:
-		putchar(*sp);
+		std::cout << *sp;
 		DISPATCHER();
 
 		lCharIn:
-		*sp = getchar();
+		std::cin >> *sp;
 		DISPATCHER();
 
 		lJmpZero:
@@ -218,6 +221,14 @@ namespace bf
 
 		lModStorage:
 		(*sp) %= *storage;
+		DISPATCHER();
+
+		lResetStorage:
+		storage = memory.data();
+		DISPATCHER();
+
+		lSetStorageCurrent:
+		storage = sp;
 		DISPATCHER();
 
 		lLoopBegin:

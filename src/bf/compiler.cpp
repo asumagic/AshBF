@@ -8,7 +8,7 @@ namespace bf
 
 		bool do_append_input = false;
 
-		const std::array<CTInstruction, 24> instruction_list =
+		const std::array<CTInstruction, 27> instruction_list =
 		{{
 			{'+', bfIncr, true, bfAdd},
 			{'-', bfDecr, true, bfSub},
@@ -20,7 +20,7 @@ namespace bf
 			{']', bfLoopEnd},
 
 			// Extended Type I
-			{'@', bfEnd, false, bfNop, 1, [&](std::vector<Instruction>& v) { v.push_back(Instruction{static_cast<uint8_t>(bfEnd), 0}); do_append_input = true; } },
+			{'@', bfEnd, false, bfNop, 1, [&](std::vector<Instruction>& v, size_t&, const std::string&) { v.push_back(Instruction{static_cast<uint8_t>(bfEnd), 0}); do_append_input = true; } },
 			{'$', bfCopyToStorage, false, bfNop, 1},
 			{'!', bfCopyFromStorage, false, bfNop, 1},
 			{'}', bfBitshiftRightOnce, true, bfBitshiftRight, 1},
@@ -38,6 +38,11 @@ namespace bf
 			{'=', bfAddStorage, false, bfNop, 2},
 			{'_', bfSubStorage, false, bfNop, 2},
 			{'%', bfModStorage, false, bfNop, 2},
+
+			// Extended Type III
+			{'M', bfSetStorageCurrent, false, bfNop, 3},
+			{'m', bfResetStorage, false, bfNop, 3},
+			{'#', bfNop, false, bfNop, 3, [&](std::vector<Instruction>&, size_t& it, const std::string& source) { while(++it < source.size() && source[it] != '\n'); } }, // comment
 		}};
 
 		for (size_t i = 0; i < source.size(); ++i)
@@ -51,7 +56,7 @@ namespace bf
 				else
 				{
 					if (warnings)
-						puts("Warning : A line feed ('\\n') was found in the memory initializer and will be ignored.");
+						warnout(compileinfo) << "Warning : A line feed ('\\n') was found in the memory initializer and will be ignored." << std::endl;
 				}
 
 				if (source[i] == ']')
@@ -65,7 +70,7 @@ namespace bf
 					{
 						if (j.customCallback)
 						{
-							j.customCallback(program);
+							j.customCallback(program, i, source);
 						}
 						else
 						{

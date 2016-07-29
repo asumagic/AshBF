@@ -1,5 +1,6 @@
 #include "bf/bf.hpp"
 #include "fileutils.hpp"
+#include "logger.hpp"
 
 #include <vector>
 #include <string>
@@ -35,12 +36,12 @@ int main(int argc, char** argv)
 		CELLCOUNT,
 		STRICTMEMORYACCESS,
 		WARNINGLEVEL,
-		VERBOSE,
+		//VERBOSE,
 	};
 
 	std::vector<InterpreterFlag> flags =
 	{
-		InterpreterFlag{ "x", "0", {"0", "1", "2"} }, // Brainfuck extension level
+		InterpreterFlag{ "x", "0", {"0", "1", "2", "3"} }, // Brainfuck extension level
 		InterpreterFlag{ "Opasses", "5" }, // Optimization pass count
 		InterpreterFlag{ "O", "1", {"0", "1"} }, // Optimization level (any or 1)
 		InterpreterFlag{ "msize", "30000" }, // Cells available to the program
@@ -49,12 +50,14 @@ int main(int argc, char** argv)
 		//InterpreterFlag{ "v", "0" }, // Enable the verbose mode
 	};
 
+	bool fatal_encountered = false;
+
 	for (size_t i = 2; i < args.size(); ++i)
 	{
 		if (args[i].size() == 0 || args[i][0] != '-')
 		{
-			puts("Passed a flag that does not start by '-'");
-			return EXIT_FAILURE;
+			warnout(cmdinfo) << "Received an extra argument that is not a flag (flags shall be prefixed by '-')" << std::endl;
+			break;
 		}
 
 		bool argfound = false;
@@ -80,8 +83,8 @@ int main(int argc, char** argv)
 
 					if (flag.except.size() != 0 && (std::find(begin(flag.except), end(flag.except), flag.result) == end(flag.except)))
 					{
-						printf("Passed '%s' the given flag '%s' does not accept.\n", flag.result.c_str(), flag.match.c_str());
-						return EXIT_FAILURE;
+						errout(cmdinfo) << "Passed an invalid value \"" << flag.result << "\" to the \"" << flag.match << "\" flag." << std::endl;
+						fatal_encountered = true;
 					}
 
 					argfound = true;
@@ -92,33 +95,68 @@ int main(int argc, char** argv)
 
 		if (!argfound)
 		{
-			puts("Passed an unknown flag.");
-			return EXIT_FAILURE;
+			errout(cmdinfo) << "Passed an unknown flag." << std::endl;
+			fatal_encountered = true;
 		}
 	}
 
-	size_t extendedlevel = std::stoi(flags[EXTENDEDLEVEL].result);
+	if (fatal_encountered)
+		return EXIT_FAILURE;
 
-	std::string source = read_file(args[1]);
+	size_t extendedlevel = std::stoi(flags[EXTENDEDLEVEL].result);
+	bool optimize = flags[OPTIMIZATION];
+
+	std::string source;
+	try
+	{
+		source = read_file(args[1]);
+	}
+	catch (std::runtime_error& r)
+	{
+		return EXIT_FAILURE;
+	}
 
 	if (flags[STRICTMEMORYACCESS] && flags[OPTIMIZATION])
 	{
-		puts("-mstrict and -O are incompatible. Disabling optimizations.");
-		flags[OPTIMIZATION].result = "0";
+		warnout(cmdinfo) << "Strict memory accesses are incompatible with optimizations. Optimizations will be disabled." << std::endl;
+		optimize = false;
+	}
+
+	if (extendedlevel >= 2 && flags[OPTIMIZATION])
+	{
+		warnout(cmdinfo) << "Brainfuck Extended Levels superior to 2 are incompatible with optimizations. Optimizations will be disabled." << std::endl;
+		optimize = false;
 	}
 
 	bf::Brainfuck bfi(extendedlevel, flags[WARNINGLEVEL]);
-	bfi.compile(source);
+	try
+	{
+		bfi.compile(source);
 
-	if (flags[OPTIMIZATION])
-		bfi.optimize(std::stoi(flags[OPTIMIZATIONPASSES]));
+		if (optimize)
+			bfi.optimize(std::stoi(flags[OPTIMIZATIONPASSES]));
 
-	bfi.link();
-	size_t cell_count = std::stoi(flags[CELLCOUNT]);
-	if (flags[STRICTMEMORYACCESS])
-		bfi.interprete<bf::Brainfuck::JMSTRICT>(cell_count);
-	else
-		bfi.interprete<bf::Brainfuck::JMSTANDARD>(cell_count);
+		bfi.link();
+	}
+	catch (std::runtime_error& r)
+	{
+		errout(compileinfo) << "Runtime error occurred during compilation : " << r.what();
+		return EXIT_FAILURE;
+	}
+
+	try
+	{
+		size_t cell_count = std::stoi(flags[CELLCOUNT]);
+		if (flags[STRICTMEMORYACCESS])
+			bfi.interprete<bf::Brainfuck::JMSTRICT>(cell_count);
+		else
+			bfi.interprete<bf::Brainfuck::JMSTANDARD>(cell_count);
+	}
+	catch (std::runtime_error& r)
+	{
+		errout(bcinfo) << "Runtime error occurred during execution : " << r.what();
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }

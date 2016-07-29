@@ -35,7 +35,7 @@ namespace bf
 				assert(initializer_loopends--);
 
 				if (warnings)
-					puts("Warning : Found an orphan loop begin ('[') that will be ignored at runtime, because a matching loop end (']') was found in the memory initializer area, but not in the code area. (Ex. Type II)");
+					warnout(compileinfo) << "Orphan loop begin '[' found with the matching ']' found in the memory initializer" << std::endl;
 
 				jumps.pop_back();
 			}

@@ -67,6 +67,9 @@ namespace bf
 		bfSubStorage, // Substract the current cell with the storage
 		bfModStorage, // Modulo the current cell with the storage
 
+		bfResetStorage, // Reset the storage cell
+		bfSetStorageCurrent, // Set the storage cell to the current cell
+
 		bfLoopBegin,
 		bfLoopEnd,
 
@@ -91,6 +94,8 @@ namespace bf
 		}
 	};
 
+	typedef std::function<void(std::vector<Instruction>&, size_t&, const std::string&)> CTICustomCallback;
+
 	// Compile-time instruction representation
 	struct CTInstruction
 	{
@@ -99,7 +104,7 @@ namespace bf
 		bool is_stackable = false;
 		Opcode stacked_opcode = bfNop;
 		uint8_t extended_level = 0;
-		std::function<void(std::vector<Instruction>&)> customCallback = std::function<void(std::vector<Instruction>&)>(); // Custom callback that passes the incomplete instruction vector if needed
+		CTICustomCallback customCallback = CTICustomCallback(); // Custom callback that passes the incomplete instruction vector if needed
 	};
 
 	struct OptimizationSequence
