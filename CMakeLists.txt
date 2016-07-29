@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.11)
 project(AshBF)
 
 set(CMAKE_CXX_COMPILER "clang++")
-set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra -fomit-frame-pointer -fstrict-aliasing -std=c++14")
+set(CMAKE_CXX_FLAGS "-O0 -g -Wall -Wextra -fomit-frame-pointer -fstrict-aliasing -std=c++14")
 
 add_executable(ashbf
 			   src/main.cpp

@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 	}
 	catch (std::runtime_error& r)
 	{
-		errout(bcinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_COMPILE] << r.what() << std::endl;
+		errout(bcinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_RUNTIME] << r.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 
