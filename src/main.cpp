@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 
 	if (args.size() < 2)
 	{
-		puts("Syntax : ./AshBF <file.bf> (flags)");
+		errout(cmdinfo) << "Syntax : ./ashbf <file.bf> (flags)" << std::endl;
 		return EXIT_FAILURE;
 	}
 
@@ -36,6 +36,7 @@ int main(int argc, char** argv)
 		CELLCOUNT,
 		STRICTMEMORYACCESS,
 		WARNINGLEVEL,
+		IOSYNC,
 		//VERBOSE,
 	};
 
@@ -47,6 +48,7 @@ int main(int argc, char** argv)
 		InterpreterFlag{ "msize", "30000" }, // Cells available to the program
 		InterpreterFlag{ "mstrict", "0", {"0", "1"} }, // Enable strict memory access to the brainfuck program (verifies for <0 and >size accesses and disables optimizations)
 		InterpreterFlag{ "W", "1", {"0", "1"} }, // Controls compiler warnings
+		InterpreterFlag{ "iosync", "1", {"0", "1"} },
 		//InterpreterFlag{ "v", "0" }, // Enable the verbose mode
 	};
 
@@ -56,8 +58,8 @@ int main(int argc, char** argv)
 	{
 		if (args[i].size() == 0 || args[i][0] != '-')
 		{
-			warnout(cmdinfo) << "Received an extra argument that is not a flag (flags shall be prefixed by '-')" << std::endl;
-			break;
+			warnout(cmdinfo) << locale_strings[NOT_A_FLAG] << std::endl;
+			continue;
 		}
 
 		bool argfound = false;
@@ -83,7 +85,7 @@ int main(int argc, char** argv)
 
 					if (flag.except.size() != 0 && (std::find(begin(flag.except), end(flag.except), flag.result) == end(flag.except)))
 					{
-						errout(cmdinfo) << "Passed an invalid value \"" << flag.result << "\" to the \"" << flag.match << "\" flag." << std::endl;
+						errout(cmdinfo) << locale_strings[INVALID_VAL1] << flag.result << locale_strings[INVALID_VAL2] << flag.match << locale_strings[INVALID_VAL3] << std::endl;
 						fatal_encountered = true;
 					}
 
@@ -95,13 +97,15 @@ int main(int argc, char** argv)
 
 		if (!argfound)
 		{
-			errout(cmdinfo) << "Passed an unknown flag." << std::endl;
+			errout(cmdinfo) << locale_strings[UNKNOWN_FLAG] << std::endl;
 			fatal_encountered = true;
 		}
 	}
 
 	if (fatal_encountered)
 		return EXIT_FAILURE;
+
+	std::ios::sync_with_stdio(flags[IOSYNC]);
 
 	size_t extendedlevel = std::stoi(flags[EXTENDEDLEVEL].result);
 	bool optimize = flags[OPTIMIZATION];
@@ -118,13 +122,13 @@ int main(int argc, char** argv)
 
 	if (flags[STRICTMEMORYACCESS] && flags[OPTIMIZATION])
 	{
-		warnout(cmdinfo) << "Strict memory accesses are incompatible with optimizations. Optimizations will be disabled." << std::endl;
+		warnout(cmdinfo) << locale_strings[OPT_UNCOMPATIBLE_STRICT] << std::endl;
 		optimize = false;
 	}
 
 	if (extendedlevel >= 2 && flags[OPTIMIZATION])
 	{
-		warnout(cmdinfo) << "Brainfuck Extended Levels superior to 2 are incompatible with optimizations. Optimizations will be disabled." << std::endl;
+		warnout(cmdinfo) << locale_strings[OPT_UNCOMPATIBLE_EXTENDED] << std::endl;
 		optimize = false;
 	}
 
@@ -140,7 +144,7 @@ int main(int argc, char** argv)
 	}
 	catch (std::runtime_error& r)
 	{
-		errout(compileinfo) << "Runtime error occurred during compilation : " << r.what();
+		errout(compileinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_COMPILE] << r.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 
@@ -154,7 +158,7 @@ int main(int argc, char** argv)
 	}
 	catch (std::runtime_error& r)
 	{
-		errout(bcinfo) << "Runtime error occurred during execution : " << r.what();
+		errout(bcinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_COMPILE] << r.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 

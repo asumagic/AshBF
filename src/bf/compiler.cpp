@@ -56,7 +56,7 @@ namespace bf
 				else
 				{
 					if (warnings)
-						warnout(compileinfo) << "Warning : A line feed ('\\n') was found in the memory initializer and will be ignored." << std::endl;
+						warnout(compileinfo) << locale_strings[IGNORED_LINEFEED] << std::endl;
 				}
 
 				if (source[i] == ']')

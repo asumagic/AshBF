@@ -1,7 +1,5 @@
 #include "bf.hpp"
 
-#include <cassert>
-
 namespace bf
 {
 	void Brainfuck::link()
@@ -17,7 +15,7 @@ namespace bf
 				break;
 
 				case bfLoopEnd:
-					assert(!jumps.empty());
+					lassert(!jumps.empty(), compileinfo, locale_strings[ORPHAN_LOOPEND]);
 					program[i].opcode = static_cast<uint8_t>(bfJmpNotZero);
 					program[jumps.back()].argument = i + 1;
 					program[i].argument = jumps.back() + 1;
@@ -32,15 +30,15 @@ namespace bf
 			{
 				program[jumps.back()].opcode = static_cast<uint8_t>(bfLoopBegin);
 
-				assert(initializer_loopends--);
+				if (!initializer_loopends--)
+					break;
 
 				if (warnings)
-					warnout(compileinfo) << "Orphan loop begin '[' found with the matching ']' found in the memory initializer" << std::endl;
+					warnout(compileinfo) << locale_strings[ORPHAN_LOOPBEGIN] << std::endl;
 
 				jumps.pop_back();
 			}
 		}
-
-		assert(jumps.empty());
+		lassert(jumps.empty(), compileinfo, locale_strings[ORPHAN_LOOPBEGIN_NOMATCH]);
 	}
 }

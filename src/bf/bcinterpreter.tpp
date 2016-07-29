@@ -4,9 +4,9 @@
 
 #define DISPATCHER_STANDARD() instr = beginInstr + pc++; goto *jump_table[instr->opcode];
 
-#define DISPATCHER_STRICT() lassert(sp >= memory.data(), bcinfo, "Program tried to access negative memory."); \
-							lassert(sp < memory.data() + memory.size(), bcinfo, "Program tried to access out-of-bounds memory."); \
-							lassert(pc < program.size(), bcinfo, "Program end reached without '@' (bfEnd)."); \
+#define DISPATCHER_STRICT() lassert(sp >= memory.data(), bcinfo, locale_strings[STRICT_NEG_MEMORY]); \
+							lassert(sp < memory.data() + memory.size(), bcinfo, locale_strings[STRICT_OOB_MEMORY]); \
+							lassert(pc < program.size(), bcinfo, locale_strings[STRICT_OOB_PROGRAM]); \
 							instr = beginInstr + pc++; \
 							goto *jump_table[instr->opcode];
 
@@ -51,13 +51,13 @@ namespace bf
 
 		case 2:
 		case 3:
-			lassert(xsource.size() < (memory.size() - 1), bcinfo, "Source too large to fit in the memory.");
+			lassert(xsource.size() < (memory.size() - 1), bcinfo, locale_strings[MEMORY_SOURCE_TOOLARGE]);
 			std::copy(begin(xsource), end(xsource), begin(memory) + 1);
 			sp += 1 + xsource.size(); // Free a byte for storage, and add the source size
 			break;
 		}
 
-		lassert(memory_initializer.size() < memory.size() - (sp - memory.data()), bcinfo, "Memory initialization data too large to fit in the memory."); // Make sure the copy won't go out of bounds
+		lassert(memory_initializer.size() < memory.size() - (sp - memory.data()), bcinfo, locale_strings[MEMORY_INITIALIZER_TOOLARGE]); // Make sure the copy won't go out of bounds
 		std::copy(begin(memory_initializer), end(memory_initializer), begin(memory) + (sp - memory.data()));
 
 		Instruction const *instr; // Pointer to const Instruction
