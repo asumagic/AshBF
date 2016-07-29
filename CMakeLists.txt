@@ -4,7 +4,7 @@ project(AshBF)
 set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra -fomit-frame-pointer -fstrict-aliasing -std=c++14")
 
-add_executable(AshBF
+add_executable(ashbf
 			   src/main.cpp
 				 src/logger.cpp
 			   src/fileutils.cpp

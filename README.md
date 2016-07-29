@@ -23,7 +23,7 @@ make -j # The -j flags allows for multicore building
 
 While AshBF's commandline support is as for now limited (you may not have spaces in the filename as an example), some flags are present and most notably allow managing the program's available memory, the optimization level and the brainfuck extended support.
 
-``./AshBF <filename> (flags)``
+``./ashbf <filename> (flags)``
 
 Flags always begin with a ``-``, the flag name, optionally a ``=`` for clarity and its value. When no value is specified, the flag is set to ``1``.
 
