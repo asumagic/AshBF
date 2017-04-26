@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include "../logger.hpp"
 
 namespace bf
 {
@@ -12,8 +13,8 @@ namespace bf
 	enum Opcode
 	{
 		// Stackable instructions that relies on the instruction values. Does the operation n times.
-		bfAdd = 0, // == bfIncr n times
-		bfSub, // == bfDecr n times
+		bfAdd = 0,
+		bfSub,
 		bfShiftRight,
 		bfShiftLeft,
 
@@ -32,52 +33,23 @@ namespace bf
 
 		bfSet, // Set the current cell value
 
-		bfMoveRight, // Zero out the current cell and move its value to the cell n times to the right
-		bfMoveLeft, // ^ to the left
+		bfMoveRight, // Zero out the current cell and move its value to the next cell
+		bfMoveLeft, // ^ to the previous cell
 
-		bfMoveRightAdd, // Zero out the current cell and add its value to the cell n times to the right
-		bfMoveLeftAdd, // ^ to the left
+		bfMoveRightAdd, // Zero out the current cell and add its value to the next cell
+		bfMoveLeftAdd, // ^ to the previous cell
 
 		bfLoopUntilZeroRight, // Set the cell pointer to the closest zero cell to the right
-		bfLoopUntilZeroLeft, // ^ to thte left
-
-		bfCopyTo, // Copy the current cell to the argument's pointed cell
-		bfCopyFrom, // Copy the argument's pointed cell to the current cell
-
-		bfCopyToStorage, // Copy the current cell to the storage
-		bfCopyFromStorage, // Copy the storage to the current cell
-
-		bfBitshiftRight, // Bitshift the current cell to the right n times
-		bfBitshiftLeft, // Bitshift the current cell to the left n times
-
-		bfBitshiftRightOnce, // Bitshift the current cell to the right once
-		bfBitshiftLeftOnce, // Bitshift the current cell to the left once
-
-		bfNotStorage, // Revert bits on the current cell
-		bfXorStorage, // XOR the current cell with the storage
-		bfAndStorage, // AND the current cell with the storage
-		bfOrStorage, // OR the current cell with the storage
-
-		bfInsertPrev, // Insert a cell before the current pointer
-		bfEraseCurrent, // Erase the current cell (and shift following ones to the left)
-
-		bfMulStorage, // Multiply the current cell with the storage
-		bfDivStorage, // Divide the current cell with the storage
-		bfAddStorage, // Add the current cell with the storage
-		bfSubStorage, // Substract the current cell with the storage
-		bfModStorage, // Modulo the current cell with the storage
-
-		bfResetStorage, // Reset the storage cell
-		bfSetStorageCurrent, // Set the storage cell to the current cell
+				bfLoopUntilZeroLeft, // ^ to the left
 
 		bfLoopBegin,
 		bfLoopEnd,
 
 		bfEnd, // End the program execution
 
-		bfTOTAL,
+                bfTOTAL,
 
-		bfNop // May NOT be interpreted by the VM
+                bfNop // Unused by the VM; exclusively compile-time
 	};
 
 	// The struct defining an instruction.
@@ -85,6 +57,9 @@ namespace bf
 	// Note : Bytecode size is often smaller than sources in terms of amount of opcodes to run.
 	struct Instruction
 	{
+            Instruction() = default;
+			Instruction(const uint8_t opcode, const uint16_t argument = 0);
+
 		uint8_t opcode;
 		uint16_t argument;
 
@@ -94,17 +69,13 @@ namespace bf
 		}
 	};
 
-	typedef std::function<void(std::vector<Instruction>&, size_t&, const std::string&)> CTICustomCallback;
-
 	// Compile-time instruction representation
 	struct CTInstruction
 	{
 		char match;
 		Opcode base_opcode;
 		bool is_stackable = false;
-		Opcode stacked_opcode = bfNop;
-		uint8_t extended_level = 0;
-		CTICustomCallback customCallback = CTICustomCallback(); // Custom callback that passes the incomplete instruction vector if needed
+                Opcode stacked_opcode = bfNop;
 	};
 
 	struct OptimizationSequence
@@ -116,7 +87,7 @@ namespace bf
 	class Brainfuck
 	{
 	public:
-		Brainfuck(const uint8_t extended_level = 0, const bool warnings = true);
+                Brainfuck(const bool warnings = true);
 
 		enum JumpMode
 		{
@@ -127,19 +98,12 @@ namespace bf
 		void compile(const std::string& source);
 		void optimize(const size_t passes = 5);
 		void link();
-		template<JumpMode jmpmodel>
 		void interprete(const size_t memory_size);
 
 	private:
-		std::vector<Instruction> program; // Program
-		std::string xsource; // Extended type II source
-		std::vector<uint8_t> memory_initializer; // Memory initializer in extended type II
-		size_t initializer_loopends = 0; // Loop ends located in the memory initializer in extended type II
-		uint8_t extended_level; // Extended brainfuck level
-		bool strict_memory_access, warnings; // Settings
+                std::vector<Instruction> program; // Program
+                bool warnings; // Settings
 	};
 }
-
-#include "bcinterpreter.tpp"
 
 #endif

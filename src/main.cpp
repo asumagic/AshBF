@@ -30,26 +30,21 @@ int main(int argc, char** argv)
 
 	enum FlagEnum
 	{
-		EXTENDEDLEVEL = 0,
-		OPTIMIZATIONPASSES,
+		OPTIMIZATIONPASSES = 0,
 		OPTIMIZATION,
 		CELLCOUNT,
-		STRICTMEMORYACCESS,
+		SANITIZER,
 		WARNINGLEVEL,
-		IOSYNC,
-		//VERBOSE,
+		IOSYNC
 	};
 
 	std::vector<InterpreterFlag> flags =
 	{
-		InterpreterFlag{ "x", "0", {"0", "1", "2", "3"} }, // Brainfuck extension level
 		InterpreterFlag{ "Opasses", "5" }, // Optimization pass count
 		InterpreterFlag{ "O", "1", {"0", "1"} }, // Optimization level (any or 1)
 		InterpreterFlag{ "msize", "30000" }, // Cells available to the program
-		InterpreterFlag{ "mstrict", "0", {"0", "1"} }, // Enable strict memory access to the brainfuck program (verifies for <0 and >size accesses and disables optimizations)
-		InterpreterFlag{ "W", "1", {"0", "1"} }, // Controls compiler warnings
-		InterpreterFlag{ "iosync", "1", {"0", "1"} },
-		//InterpreterFlag{ "v", "0" }, // Enable the verbose mode
+		InterpreterFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
+		InterpreterFlag{ "W", "1", {"0", "1"} } // Controls compiler warnings
 	};
 
 	bool fatal_encountered = false;
@@ -105,37 +100,12 @@ int main(int argc, char** argv)
 	if (fatal_encountered)
 		return EXIT_FAILURE;
 
-	std::ios::sync_with_stdio(flags[IOSYNC]);
-
-	size_t extendedlevel = std::stoi(flags[EXTENDEDLEVEL].result);
 	bool optimize = flags[OPTIMIZATION];
 
-	std::string source;
+	bf::Brainfuck bfi(flags[WARNINGLEVEL]);
 	try
 	{
-		source = read_file(args[1]);
-	}
-	catch (std::runtime_error& r)
-	{
-		return EXIT_FAILURE;
-	}
-
-	if (flags[STRICTMEMORYACCESS] && flags[OPTIMIZATION])
-	{
-		warnout(cmdinfo) << locale_strings[OPT_UNCOMPATIBLE_STRICT] << std::endl;
-		optimize = false;
-	}
-
-	if (extendedlevel >= 2 && flags[OPTIMIZATION])
-	{
-		warnout(cmdinfo) << locale_strings[OPT_UNCOMPATIBLE_EXTENDED] << std::endl;
-		optimize = false;
-	}
-
-	bf::Brainfuck bfi(extendedlevel, flags[WARNINGLEVEL]);
-	try
-	{
-		bfi.compile(source);
+		bfi.compile(args[1]);
 
 		if (optimize)
 			bfi.optimize(std::stoi(flags[OPTIMIZATIONPASSES]));
@@ -151,10 +121,10 @@ int main(int argc, char** argv)
 	try
 	{
 		size_t cell_count = std::stoi(flags[CELLCOUNT]);
-		if (flags[STRICTMEMORYACCESS])
-			bfi.interprete<bf::Brainfuck::JMSTRICT>(cell_count);
+		if (flags[SANITIZER])
+			bfi.interprete(cell_count);
 		else
-			bfi.interprete<bf::Brainfuck::JMSTANDARD>(cell_count);
+			bfi.interprete(cell_count);
 	}
 	catch (std::runtime_error& r)
 	{

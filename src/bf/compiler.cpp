@@ -1,14 +1,15 @@
 #include "bf.hpp"
+#include <algorithm>
+#include <fstream>
 #include <iostream>
+
 namespace bf
 {
 	void Brainfuck::compile(const std::string& source)
 	{
-		program.reserve(source.size() + (!extended_level)); // Don't reserve a byte in extended levels (because of @)
+		std::ifstream file{source, std::ios::binary};
 
-		bool do_append_input = false;
-
-		const std::array<CTInstruction, 27> instruction_list =
+		static const std::array<CTInstruction, 8> instruction_list =
 		{{
 			{'+', bfIncr, true, bfAdd},
 			{'-', bfDecr, true, bfSub},
@@ -17,99 +18,41 @@ namespace bf
 			{'.', bfCharOut},
 			{',', bfCharIn},
 			{'[', bfLoopBegin},
-			{']', bfLoopEnd},
-
-			// Extended Type I
-			{'@', bfEnd, false, bfNop, 1, [&](std::vector<Instruction>& v, size_t&, const std::string&) { v.push_back(Instruction{static_cast<uint8_t>(bfEnd), 0}); do_append_input = true; } },
-			{'$', bfCopyToStorage, false, bfNop, 1},
-			{'!', bfCopyFromStorage, false, bfNop, 1},
-			{'}', bfBitshiftRightOnce, true, bfBitshiftRight, 1},
-			{'{', bfBitshiftLeftOnce, true, bfBitshiftLeft, 1},
-			{'~', bfNotStorage, false, bfNop, 1},
-			{'^', bfXorStorage, false, bfNop, 1},
-			{'&', bfAndStorage, false, bfNop, 1},
-			{'|', bfOrStorage, false, bfNop, 1},
-
-			// Extended Type II
-			{')', bfInsertPrev, false, bfNop, 2}, // @TODO:20 add successive support
-			{'(', bfEraseCurrent, false, bfNop, 2}, // @TODO:30 add successive support
-			{'*', bfMulStorage, false, bfNop, 2},
-			{'/', bfDivStorage, false, bfNop, 2},
-			{'=', bfAddStorage, false, bfNop, 2},
-			{'_', bfSubStorage, false, bfNop, 2},
-			{'%', bfModStorage, false, bfNop, 2},
-
-			// Extended Type III
-			{'M', bfSetStorageCurrent, false, bfNop, 3},
-			{'m', bfResetStorage, false, bfNop, 3},
-			{'#', bfNop, false, bfNop, 3, [&](std::vector<Instruction>&, size_t& it, const std::string& source) { while(++it < source.size() && source[it] != '\n'); } }, // comment
+			{']', bfLoopEnd}
 		}};
 
-		for (size_t i = 0; i < source.size(); ++i)
+		char current;
+		file.get(current);
+
+		while (file.good())
 		{
-			if (extended_level >= 2 && do_append_input)
+
+			auto it = std::find_if(begin(instruction_list), end(instruction_list), [current](const CTInstruction& other) { return current == other.match; });
+
+			if (it != end(instruction_list))
 			{
-				if (source[i] != '\n')
+				if (it->is_stackable) // @TODO: move stacking optimize-time?
 				{
-					memory_initializer.push_back(source[i]);
+					unsigned count = 1;
+					while (file.get(current) && current == it->match) // Read until the next different character
+						++count;
+
+					if (count == 1) // No combination possible
+						program.emplace_back(static_cast<uint8_t>(it->base_opcode));
+					else
+						program.emplace_back(static_cast<uint8_t>(it->stacked_opcode), count);
+
+					continue; // current is already the next char : do not get another one!
 				}
 				else
 				{
-					if (warnings)
-						warnout(compileinfo) << locale_strings[IGNORED_LINEFEED] << std::endl;
-				}
-
-				if (source[i] == ']')
-					++initializer_loopends;
-			}
-			else
-			{
-				for (const CTInstruction& j : instruction_list)
-				{
-					if (j.match == source[i] && extended_level >= j.extended_level)
-					{
-						if (j.customCallback)
-						{
-							j.customCallback(program, i, source);
-						}
-						else
-						{
-							if (j.is_stackable) // @TODO:40 move stacking optimize-time?
-							{
-								unsigned k = i;
-								while (++k < source.size() && source[k] == j.match);
-
-								Instruction curInstr;
-								if ((k - i) == 1) // If there's only one
-								{
-									curInstr.opcode = static_cast<uint8_t>(j.base_opcode); // Interprete as a done-once instruction
-									curInstr.argument = 0;
-								}
-								else
-								{
-									curInstr.opcode = static_cast<uint8_t>(j.stacked_opcode);
-									curInstr.argument = k - i;
-								}
-
-								program.push_back(curInstr);
-
-								i = k - 1; // Skip the stacked instructions we processed
-								break;
-							}
-							else
-							{
-								program.push_back({static_cast<uint8_t>(j.base_opcode), 0});
-							}
-						}
-					}
+					program.emplace_back(static_cast<uint8_t>(it->base_opcode), 0);
 				}
 			}
+
+			file.get(current);
 		}
 
-		if (!extended_level)
-			program.push_back({bfEnd, 0});
-
-		if (extended_level >= 2)
-			xsource = source;
+		program.emplace_back(bfEnd, 0);
 	}
 }

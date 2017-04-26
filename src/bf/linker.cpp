@@ -24,21 +24,6 @@ namespace bf
 			}
 		}
 
-		if (extended_level >= 2)
-		{
-			while(!jumps.empty())
-			{
-				program[jumps.back()].opcode = static_cast<uint8_t>(bfLoopBegin);
-
-				if (!initializer_loopends--)
-					break;
-
-				if (warnings)
-					warnout(compileinfo) << locale_strings[ORPHAN_LOOPBEGIN] << std::endl;
-
-				jumps.pop_back();
-			}
-		}
 		lassert(jumps.empty(), compileinfo, locale_strings[ORPHAN_LOOPBEGIN_NOMATCH]);
 	}
 }

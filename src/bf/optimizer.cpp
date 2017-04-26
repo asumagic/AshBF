@@ -10,7 +10,7 @@ namespace bf
 	void Brainfuck::optimize(const size_t passes)
 	{
 		typedef std::vector<Instruction> ivec;
-		std::vector<OptimizationSequence> optimizers =
+		static std::vector<OptimizationSequence> optimizers =
 		{
 			// [-] then set 0
 			OptimizationSequence{ {bfLoopBegin, bfDecr, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfSet, 0}}; } },
@@ -62,7 +62,6 @@ namespace bf
 
 			if (passopt == 0)
 				break;
-
 		}
 
 		program.shrink_to_fit();
