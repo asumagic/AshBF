@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 		bfi.compile(args[1]);
 
 		if (optimize)
-			bfi.optimize(std::stoi(flags[OPTIMIZATIONPASSES]));
+			bfi.optimize(std::stoul(flags[OPTIMIZATIONPASSES]));
 
 		bfi.link();
 	}
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		size_t cell_count = std::stoi(flags[CELLCOUNT]);
+		size_t cell_count = std::stoul(flags[CELLCOUNT]);
 		if (flags[SANITIZER])
 			bfi.interprete(cell_count);
 		else
