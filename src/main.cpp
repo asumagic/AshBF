@@ -18,99 +18,90 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	struct InterpreterFlag
+	struct CommandlineFlag
 	{
-		std::string match, result = "";
-		std::vector<std::string> except = {};
+		const std::string match;
+		std::string result;
+		const std::vector<std::string> expected{};
 
 		operator bool() { return result == "1"; }
 		operator std::string() { return result; }
 	};
 
-	enum FlagEnum
+	enum class Flag
 	{
-		OPTIMIZATIONPASSES = 0,
-		OPTIMIZATION,
-		CELLCOUNT,
-		SANITIZER,
-		WARNINGLEVEL,
-		IOSYNC
+		OptimizationPasses = 0,
+		OptimizationLevel,
+		TapeSize,
+		//Sanitize,
+		WarningLevel
 	};
 
-	std::array<InterpreterFlag, 5> flags
-	{{
-		InterpreterFlag{ "Opasses", "5" }, // Optimization pass count
-		InterpreterFlag{ "O", "1", {"0", "1"} }, // Optimization level (any or 1)
-		InterpreterFlag{ "msize", "30000" }, // Cells available to the program
-		InterpreterFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
-		InterpreterFlag{ "W", "1", {"0", "1"} } // Controls compiler warnings
-	}};
+	struct
+	{
+		std::array<CommandlineFlag, 5> flags
+		{{
+			CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
+			CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
+			CommandlineFlag{ "msize", "30000" }, // Cells available to the program
+			//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
+			CommandlineFlag{ "warnings", "1", {"0", "1"} } // Controls compiler warnings
+		}};
+
+		CommandlineFlag& operator[](const Flag flag)
+		{
+			return flags[static_cast<size_t>(flag)];
+		}
+	} flags;
 
 	bool fatal_encountered = false;
 
 	for (size_t i = 2; i < args.size(); ++i)
 	{
-		if (args[i].empty() || args[i][0] != '-')
+		if (args[i].size() < 2 || args[i][0] != '-')
 		{
 			warnout(cmdinfo) << locale_strings[NOT_A_FLAG] << std::endl;
 			continue;
 		}
 
-		bool argfound = false;
-		for (InterpreterFlag& flag : flags)
+		auto equals_it = std::find(begin(args[i]), end(args[i]), '=');
+		auto match_it = std::find_if(begin(flags.flags), end(flags.flags), [&args, i, equals_it](const CommandlineFlag& flag) { return std::string{begin(args[i]) + 1, equals_it} == flag.match; });
+
+		if (match_it != end(flags.flags))
 		{
-			if (args[i].size() - 1 >= flag.match.size() &&
-			    std::equal(begin(args[i]) + 1, begin(args[i]) + 1 + flag.match.size(), begin(flag.match), end(flag.match)))
+			if (equals_it == end(args[i])) // "-flag"
+				match_it->result = "1"; // Triggered flags that aren't defined are set to 1
+			else
 			{
-				if (args[i].size() - 1 == flag.match.size()) // "-flag"
+				match_it->result = std::string{equals_it + 1, end(args[i])};
+
+				if (match_it->expected.empty() &&
+					std::find(begin(match_it->expected), end(match_it->expected), match_it->result) == end(match_it->expected)) // Make sure the argument is within the expected values
 				{
-					flag.result = "1"; // Triggered flags that aren't defined are set to 1
-					argfound = true;
-					break;
-				}
-				if (args[i].size() - 1 > flag.match.size()) // "-flag*"
-				{
-					size_t at = flag.match.size() + 1; // '=' or the value
-					if (args[i][at] == '=') {
-						++at;
-}
-
-					flag.result.resize(args[i].size() - at);
-					std::move(begin(args[i]) + at, end(args[i]), begin(flag.result));
-
-					if (flag.except.size() != 0 && (std::find(begin(flag.except), end(flag.except), flag.result) == end(flag.except)))
-					{
-						errout(cmdinfo) << locale_strings[INVALID_VAL1] << flag.result << locale_strings[INVALID_VAL2] << flag.match << locale_strings[INVALID_VAL3] << std::endl;
-						fatal_encountered = true;
-					}
-
-					argfound = true;
-					break;
+					errout(cmdinfo) << locale_strings[INVALID_VAL1] << match_it->result << locale_strings[INVALID_VAL2] << match_it->match << locale_strings[INVALID_VAL3] << std::endl;
+					fatal_encountered = true;
 				}
 			}
 		}
-
-		if (!argfound)
+		else
 		{
 			errout(cmdinfo) << locale_strings[UNKNOWN_FLAG] << std::endl;
 			fatal_encountered = true;
 		}
 	}
 
-	if (fatal_encountered) {
+	if (fatal_encountered)
 		return EXIT_FAILURE;
-}
 
-	bool optimize = flags[OPTIMIZATION];
+	bool optimize = flags[Flag::OptimizationLevel];
 
-	bf::Brainfuck bfi(flags[WARNINGLEVEL]);
+	bf::Brainfuck bfi(flags[Flag::WarningLevel]);
 	try
 	{
 		bfi.compile(args[1]);
 
-		if (optimize) {
-			bfi.optimize(std::stoul(flags[OPTIMIZATIONPASSES]));
-}
+		if (optimize)
+			bfi.optimize(std::stoul(flags[Flag::OptimizationPasses]));
 
 		bfi.link();
 	}
@@ -122,13 +113,8 @@ int main(int argc, char** argv)
 
 	try
 	{
-		size_t cell_count = std::stoul(flags[CELLCOUNT]);
-		// @TODO reimplement sanitizers
-		if (flags[SANITIZER]) {
-			bfi.interprete(cell_count);
-		} else {
-			bfi.interprete(cell_count);
-}
+		size_t tape_size = std::stoul(flags[Flag::TapeSize]);
+		bfi.interprete(tape_size);
 	}
 	catch (std::runtime_error& r) // @TODO use custom exceptions
 	{
