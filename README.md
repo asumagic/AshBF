@@ -21,14 +21,14 @@ While AshBF's commandline support is as for now limited (you may not have spaces
 
 ``./ashbf <filename> (flags)``
 
-Flags always begin with a ``-``, the flag name, optionally a ``=`` for clarity and its value. When no value is specified, the flag is set to ``1`` by default.
+Specify flags with ``-flag=value``. When a flag is enabled (``-flag``) without a given value, it will default to ``1``.
 
 Available flags:
 
-- ``Opasses`` : Select the amount of passes used by the optimizer. For now, nearly no optimization may benefit from more than a pass. (``-Opasses=5`` is the default)
-- ``O`` : Enable optimizations (``-O`` is the default, disable with ``-O0``)
-- ``msize`` : Define the amount of cells/bytes available by the program. From Extended Type II, it will define the program's available memory, not the entire memory. (``msize=30000`` is the default)
-- ``sanitize`` : Sanitizes the memory accesses on by the VM.
+- ``optimizepasses`` : Select the amount of passes used by the optimizer. For now, nearly no optimization may benefit from more than a pass. (``5`` is the default)
+- ``optimize`` : Enable optimizations (``1`` is the default)
+- ``msize`` : Define the amount of cells within for the brainfuck tape. (``30000`` is the default)
+- ``sanitize`` : Sanitizes the memory accesses on by the VM (to be implemented).
 
 ## Planned features
 
