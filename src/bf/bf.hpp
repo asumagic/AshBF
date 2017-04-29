@@ -74,7 +74,6 @@ namespace bf
 	{
 		char match;
 		Opcode base_opcode;
-		bool is_stackable = false;
                 Opcode stacked_opcode = bfNop;
 	};
 

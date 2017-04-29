@@ -7,10 +7,9 @@
 #include <iostream>
 #include <array>
 
-#define CINFO() return std::string(std::string(__FILE__) + std::string("\033[90m:") + std::string(__LINE__));
-
 #define lassert(check, sourceinfo, error) if (static_cast<bool>(check) == 0) { exceptionlog(sourceinfo, error); }
 
+// @TODO improve/rewrite with actual support for locales (or give up on locales)
 struct LogLevel
 {
     const std::string levelprefix;

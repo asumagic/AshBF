@@ -11,10 +11,10 @@ namespace bf
 
 		static const std::array<CTInstruction, 8> instruction_list =
 		{{
-			{'+', bfIncr, true, bfAdd},
-			{'-', bfDecr, true, bfSub},
-			{'>', bfOnceShiftRight, true, bfShiftRight},
-			{'<', bfOnceShiftLeft, true, bfShiftLeft},
+			{'+', bfIncr, bfAdd},
+			{'-', bfDecr, bfSub},
+			{'>', bfOnceShiftRight, bfShiftRight},
+			{'<', bfOnceShiftLeft, bfShiftLeft},
 			{'.', bfCharOut},
 			{',', bfCharIn},
 			{'[', bfLoopBegin},
@@ -26,12 +26,11 @@ namespace bf
 
 		while (file.good())
 		{
-
 			auto it = std::find_if(begin(instruction_list), end(instruction_list), [current](const CTInstruction& other) { return current == other.match; });
 
 			if (it != end(instruction_list))
 			{
-				if (it->is_stackable) // @TODO: move stacking optimize-time?
+				if (it->stacked_opcode != bfNop) // @TODO: move stacking optimize-time?
 				{
 					unsigned count = 1;
 					while (file.get(current) && current == it->match) // Read until the next different character

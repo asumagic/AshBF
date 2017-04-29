@@ -1,17 +1,20 @@
 #include "bf.hpp"
 
 #include <vector>
+#include <array>
 #include <functional>
 #include <algorithm>
 #include "../vecutils.hpp"
 
+// @TODO add code analysis for optimizations, improve the sequence-based optimizer or remove it
+// @TODO have a way to profile the execution of the brainfuck program and make it possible to analyze it (with an external tool eventually)
 namespace bf
 {
 	void Brainfuck::optimize(const size_t passes)
 	{
 		typedef std::vector<Instruction> ivec;
-		static std::vector<OptimizationSequence> optimizers =
-		{
+		static std::array<OptimizationSequence, 11> optimizers
+		{{
 			// [-] then set 0
 			OptimizationSequence{ {bfLoopBegin, bfDecr, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfSet, 0}}; } },
 
@@ -41,7 +44,7 @@ namespace bf
 			// [>] and [<]
 			OptimizationSequence{ {bfLoopBegin, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroRight, 0}}; } },
 			OptimizationSequence{ {bfLoopBegin, bfOnceShiftLeft, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroLeft, 0}}; } },
-		};
+		}};
 
 		for (size_t p = 0; p < passes; ++p)
 		{

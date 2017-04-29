@@ -1,11 +1,12 @@
 #include "bf/bf.hpp"
-#include "fileutils.hpp"
 #include "logger.hpp"
 
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <cmath>
+
+// @TODO change from regular enum to enum class when possible
 
 int main(int argc, char** argv)
 {
@@ -108,7 +109,7 @@ int main(int argc, char** argv)
 		bfi.compile(args[1]);
 
 		if (optimize)
-			bfi.optimize(std::stoul(flags[OPTIMIZATIONPASSES]));
+			bfi.optimize(std::stoi(flags[OPTIMIZATIONPASSES]));
 
 		bfi.link();
 	}
@@ -120,13 +121,14 @@ int main(int argc, char** argv)
 
 	try
 	{
-		size_t cell_count = std::stoul(flags[CELLCOUNT]);
+		size_t cell_count = std::stoi(flags[CELLCOUNT]);
+		// @TODO reimplement sanitizers
 		if (flags[SANITIZER])
 			bfi.interprete(cell_count);
 		else
 			bfi.interprete(cell_count);
 	}
-	catch (std::runtime_error& r)
+	catch (std::runtime_error& r) // @TODO use custom exceptions
 	{
 		errout(bcinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_RUNTIME] << r.what() << std::endl;
 		return EXIT_FAILURE;
