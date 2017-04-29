@@ -3,7 +3,7 @@ project(AshBF)
 
 set(CMAKE_CXX_COMPILER "clang++")
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++1z")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -std=c++1z")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fomit-frame-pointer")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
