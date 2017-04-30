@@ -42,10 +42,10 @@ namespace bf
 		bfLoopUntilZeroRight, // Set the cell pointer to the closest zero cell to the right
 				bfLoopUntilZeroLeft, // ^ to the left
 
+		bfEnd, // End the program execution
+
 		bfLoopBegin,
 		bfLoopEnd,
-
-		bfEnd, // End the program execution
 
                 bfTOTAL,
 

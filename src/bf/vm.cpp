@@ -9,8 +9,7 @@ namespace bf
 		unsigned pc = 0;
 		uint8_t *sp = memory.data();
 
-		const Instruction* instr;
-		const Instruction *const begin_instr = program.data();
+		const Instruction *instr, *const begin_instr = program.data();
         
         for(;;)
         {
@@ -20,11 +19,11 @@ namespace bf
             {
 			case bfAdd:					*sp += instr->argument; break;
 			case bfSub:					*sp -= instr->argument; break;
-			case bfIncr:				++(*sp); break;
-			case bfDecr:				--(*sp); break;
-
 			case bfShiftRight:			sp += instr->argument; break;
 			case bfShiftLeft:			sp -= instr->argument; break;
+
+			case bfIncr:				++(*sp); break;
+			case bfDecr:				--(*sp); break;
 			case bfOnceShiftRight:		++sp; break;
 			case bfOnceShiftLeft:		--sp; break;
 
