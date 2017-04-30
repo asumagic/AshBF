@@ -10,13 +10,13 @@ namespace bf
 		uint8_t *sp = memory.data();
 
 		const Instruction *instr, *const begin_instr = program.data();
-        
-        for(;;)
-        {
+
+		for(;;)
+		{
 			instr = begin_instr + pc++;
-                        
-            switch (instr->opcode)
-            {
+
+			switch (instr->opcode)
+			{
 			case bfAdd:					*sp += instr->argument; break;
 			case bfSub:					*sp -= instr->argument; break;
 			case bfShiftRight:			sp += instr->argument; break;
@@ -46,7 +46,7 @@ namespace bf
 			case bfEnd:					return;
 
 			default:					__builtin_unreachable(); // On supported compilers, assume this is not possible.
-            }
-        }
+			}
+		}
 	}
 }

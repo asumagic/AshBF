@@ -11,15 +11,15 @@ namespace bf
 
 		static const std::array<CTInstruction, 8> instruction_list =
 		{{
-			{'+', bfIncr, bfAdd},
-			{'-', bfDecr, bfSub},
-			{'>', bfOnceShiftRight, bfShiftRight},
-			{'<', bfOnceShiftLeft, bfShiftLeft},
-			{'.', bfCharOut},
-			{',', bfCharIn},
-			{'[', bfLoopBegin},
-			{']', bfLoopEnd}
-		}};
+			 {'+', bfIncr, bfAdd},
+			 {'-', bfDecr, bfSub},
+			 {'>', bfOnceShiftRight, bfShiftRight},
+			 {'<', bfOnceShiftLeft, bfShiftLeft},
+			 {'.', bfCharOut},
+			 {',', bfCharIn},
+			 {'[', bfLoopBegin},
+			 {']', bfLoopEnd}
+		 }};
 
 		char current;
 		file.get(current);

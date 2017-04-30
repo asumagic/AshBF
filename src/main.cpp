@@ -41,12 +41,12 @@ int main(int argc, char** argv)
 	{
 		std::array<CommandlineFlag, 5> flags
 		{{
-			CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
-			CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
-			CommandlineFlag{ "msize", "30000" }, // Cells available to the program
-			//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
-			CommandlineFlag{ "warnings", "1", {"0", "1"} } // Controls compiler warnings
-		}};
+				CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
+				CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
+				CommandlineFlag{ "msize", "30000" }, // Cells available to the program
+				//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
+				CommandlineFlag{ "warnings", "1", {"0", "1"} } // Controls compiler warnings
+			}};
 
 		CommandlineFlag& operator[](const Flag flag)
 		{
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 				match_it->result = std::string{equals_it + 1, end(args[i])};
 
 				if (match_it->expected.empty() &&
-					std::find(begin(match_it->expected), end(match_it->expected), match_it->result) == end(match_it->expected)) // Make sure the argument is within the expected values
+						std::find(begin(match_it->expected), end(match_it->expected), match_it->result) == end(match_it->expected)) // Make sure the argument is within the expected values
 				{
 					errout(cmdinfo) << locale_strings[INVALID_VAL1] << match_it->result << locale_strings[INVALID_VAL2] << match_it->match << locale_strings[INVALID_VAL3] << std::endl;
 					fatal_encountered = true;

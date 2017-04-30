@@ -40,16 +40,16 @@ namespace bf
 		bfMoveLeftAdd, // ^ to the previous cell
 
 		bfLoopUntilZeroRight, // Set the cell pointer to the closest zero cell to the right
-				bfLoopUntilZeroLeft, // ^ to the left
+		bfLoopUntilZeroLeft, // ^ to the left
 
 		bfEnd, // End the program execution
 
 		bfLoopBegin,
 		bfLoopEnd,
 
-                bfTOTAL,
+		bfTOTAL,
 
-                bfNop // Unused by the VM; exclusively compile-time
+		bfNop // Unused by the VM; exclusively compile-time
 	};
 
 	// The struct defining an instruction.
@@ -57,8 +57,8 @@ namespace bf
 	// Note : Bytecode size is often smaller than sources in terms of amount of opcodes to run.
 	struct Instruction
 	{
-            Instruction() = default;
-			Instruction(const uint8_t opcode, const uint16_t argument = 0);
+		Instruction() = default;
+		Instruction(const uint8_t opcode, const uint16_t argument = 0);
 
 		uint8_t opcode;
 		uint16_t argument;
@@ -74,7 +74,7 @@ namespace bf
 	{
 		char match;
 		Opcode base_opcode;
-                Opcode stacked_opcode = bfNop;
+		Opcode stacked_opcode = bfNop;
 	};
 
 	struct OptimizationSequence
@@ -86,7 +86,7 @@ namespace bf
 	class Brainfuck
 	{
 	public:
-                Brainfuck(const bool warnings = true);
+		Brainfuck(const bool warnings = true);
 
 		enum JumpMode
 		{
@@ -100,8 +100,8 @@ namespace bf
 		void interprete(const size_t memory_size);
 
 	private:
-                std::vector<Instruction> program; // Program
-                bool warnings; // Settings
+		std::vector<Instruction> program; // Program
+		bool warnings; // Settings
 	};
 }
 

@@ -15,36 +15,36 @@ namespace bf
 		typedef std::vector<Instruction> ivec;
 		static std::array<OptimizationSequence, 11> optimizers
 		{{
-			// [-] then set 0
-			OptimizationSequence{ {bfLoopBegin, bfDecr, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfSet, 0}}; } },
+				// [-] then set 0
+				OptimizationSequence{ {bfLoopBegin, bfDecr, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfSet, 0}}; } },
 
-			// + or - and then set -> set
-			OptimizationSequence{ {bfAdd, bfSet},  [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
-			OptimizationSequence{ {bfIncr, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
-			OptimizationSequence{ {bfSub, bfSet},  [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
-			OptimizationSequence{ {bfDecr, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
+				// + or - and then set -> set
+				OptimizationSequence{ {bfAdd, bfSet},  [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
+				OptimizationSequence{ {bfIncr, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
+				OptimizationSequence{ {bfSub, bfSet},  [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
+				OptimizationSequence{ {bfDecr, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
 
-			// [->+<] or [-<+>]
-			OptimizationSequence{ {bfLoopBegin, bfDecr, bfOnceShiftRight, bfIncr, bfOnceShiftLeft, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfMoveRightAdd, 1}}; } }, // @TODO:10 add bfMoveRightIncr?
-			OptimizationSequence{ {bfLoopBegin, bfDecr, bfShiftRight, bfIncr, bfShiftLeft, bfLoopEnd}, [](const ivec& v) -> ivec {
-				if (v[2].argument == v[4].argument)
-					return {{bfMoveRightAdd, v[2].argument}};
-				else
-					return v;
-			} },
+				// [->+<] or [-<+>]
+				OptimizationSequence{ {bfLoopBegin, bfDecr, bfOnceShiftRight, bfIncr, bfOnceShiftLeft, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfMoveRightAdd, 1}}; } }, // @TODO:10 add bfMoveRightIncr?
+				OptimizationSequence{ {bfLoopBegin, bfDecr, bfShiftRight, bfIncr, bfShiftLeft, bfLoopEnd}, [](const ivec& v) -> ivec {
+						if (v[2].argument == v[4].argument)
+							return {{bfMoveRightAdd, v[2].argument}};
+						else
+							return v;
+					} },
 
-			OptimizationSequence{ {bfLoopBegin, bfDecr, bfOnceShiftLeft, bfIncr, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfMoveLeftAdd, 1}}; } }, // @TODO:0 add bfMoveLeftIncr?
-			OptimizationSequence{ {bfLoopBegin, bfDecr, bfShiftLeft, bfIncr, bfShiftRight, bfLoopEnd}, [](const ivec& v) -> ivec {
-				if (v[2].argument == v[4].argument)
-					return {{bfMoveLeftAdd, v[2].argument}};
-				else
-					return v;
-			} },
+				OptimizationSequence{ {bfLoopBegin, bfDecr, bfOnceShiftLeft, bfIncr, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfMoveLeftAdd, 1}}; } }, // @TODO:0 add bfMoveLeftIncr?
+				OptimizationSequence{ {bfLoopBegin, bfDecr, bfShiftLeft, bfIncr, bfShiftRight, bfLoopEnd}, [](const ivec& v) -> ivec {
+						if (v[2].argument == v[4].argument)
+							return {{bfMoveLeftAdd, v[2].argument}};
+						else
+							return v;
+					} },
 
-			// [>] and [<]
-			OptimizationSequence{ {bfLoopBegin, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroRight, 0}}; } },
-			OptimizationSequence{ {bfLoopBegin, bfOnceShiftLeft, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroLeft, 0}}; } },
-		}};
+				// [>] and [<]
+				OptimizationSequence{ {bfLoopBegin, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroRight, 0}}; } },
+				OptimizationSequence{ {bfLoopBegin, bfOnceShiftLeft, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroLeft, 0}}; } },
+			}};
 
 		for (size_t p = 0; p < passes; ++p)
 		{
