@@ -24,6 +24,10 @@ namespace bf
 		bfOnceShiftRight,
 		bfOnceShiftLeft,
 
+		// Integer multiply and divide instructions
+		bfMultiply,
+		bfDivide,
+
 		// Non stackable instructions
 		bfCharOut,
 		bfCharIn,

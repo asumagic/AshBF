@@ -27,11 +27,14 @@ namespace bf
 			case bfOnceShiftRight:		++sp; break;
 			case bfOnceShiftLeft:		--sp; break;
 
+			case bfMultiply:			*sp *= instr->argument; break;
+			case bfDivide:				if (*sp != 0) { *sp /= instr->argument; } break;
+
 			case bfCharOut:				std::cout << *sp; break;
 			case bfCharIn:				std::cin >> *sp; break;
 
-			case bfJmpZero:				if ((*sp) == 0) { pc = instr->argument; } break;
-			case bfJmpNotZero:			if ((*sp) != 0) { pc = instr->argument; } break;
+			case bfJmpZero:				if (*sp == 0) { pc = instr->argument; } break;
+			case bfJmpNotZero:			if (*sp != 0) { pc = instr->argument; } break;
 
 			case bfSet:					*sp = static_cast<uint8_t>(instr->argument); break;
 
