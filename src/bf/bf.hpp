@@ -69,6 +69,45 @@ namespace bf
 		}
 	};
 
+	// Defines various info about a VM instruction.
+	struct InstructionInfo
+	{
+		const char* name;
+		Opcode opcode;
+		bool argument_used;
+	};
+
+	constexpr std::array<InstructionInfo, Opcode::bfTOTAL> instructions
+	{{
+		{"add", bfAdd, true},
+		{"sub", bfSub, true},
+		{"ptradd", bfShiftRight, true},
+		{"ptrsub", bfShiftLeft, true},
+
+		{"inc", bfIncr, false},
+		{"dec", bfDecr, false},
+		{"ptrinc", bfOnceShiftRight, false},
+		{"ptrdec", bfOnceShiftLeft, false},
+
+		{"cout", bfCharOut, false},
+		{"cin", bfCharIn, false},
+
+		{"jz", bfJmpZero, true},
+		{"jnz", bfJmpNotZero, true},
+
+		{"set", bfSet, true},
+
+		{"mvr", bfMoveRight, true},
+		{"mvl", bfMoveLeft, true},
+		{"mvradd", bfMoveRightAdd, true},
+		{"mvladd", bfMoveLeftAdd, true},
+
+		{"ltzr", bfLoopUntilZeroRight, false},
+		{"ltzl", bfLoopUntilZeroLeft, false},
+
+		{"end", bfEnd, false}
+	}};
+
 	// Compile-time instruction representation
 	struct BrainfuckInstruction
 	{
@@ -88,11 +127,7 @@ namespace bf
 	public:
 		Brainfuck(const bool warnings = true);
 
-		enum JumpMode
-		{
-			JMSTANDARD,
-			JMSTRICT
-		};
+		void print_assembly();
 
 		void compile(const std::string& source);
 		void optimize(const size_t passes = 5);

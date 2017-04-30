@@ -29,10 +29,12 @@ Available flags:
 - ``optimize`` : Enable optimizations (``1`` is the default)
 - ``msize`` : Define the amount of cells within for the brainfuck tape. (``30000`` is the default)
 - ``sanitize`` : Sanitizes the memory accesses on by the VM (to be implemented).
+- ``printasm`` : Prints the compiled, optimized and linked assembly (with offset).
+- ``execute`` : Defines whether the compiled program should be executed or not.
 
 ## Planned features
 
 - More static optimizations. VM improvements?
 - Machine code / JIT?
 - Brainfuck debugger?
-- IRC/Discord bot?
+- IRC / Discord bot?

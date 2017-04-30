@@ -34,18 +34,22 @@ int main(int argc, char** argv)
 		OptimizationLevel,
 		TapeSize,
 		//Sanitize,
-		WarningLevel
+		WarningLevel,
+		PrintAssembly,
+		DoExecute
 	};
 
 	struct
 	{
-		std::array<CommandlineFlag, 5> flags
+		std::array<CommandlineFlag, 6> flags
 		{{
 				CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
 				CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
 				CommandlineFlag{ "msize", "30000" }, // Cells available to the program
 				//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
-				CommandlineFlag{ "warnings", "1", {"0", "1"} } // Controls compiler warnings
+				CommandlineFlag{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
+				CommandlineFlag{ "printasm", "0", {"0", "1"} }, // Print generated, optimized VM assembly
+				CommandlineFlag{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
 			}};
 
 		CommandlineFlag& operator[](const Flag flag)
@@ -111,15 +115,21 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	try
+	if (flags[Flag::PrintAssembly])
+		bfi.print_assembly();
+
+	if (flags[Flag::DoExecute])
 	{
-		size_t tape_size = std::stoul(flags[Flag::TapeSize]);
-		bfi.interprete(tape_size);
-	}
-	catch (std::runtime_error& r) // @TODO use custom exceptions
-	{
-		errout(bcinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_RUNTIME] << r.what() << std::endl;
-		return EXIT_FAILURE;
+		try
+		{
+			size_t tape_size = std::stoul(flags[Flag::TapeSize]);
+			bfi.interprete(tape_size);
+		}
+		catch (std::runtime_error& r) // @TODO use custom exceptions
+		{
+			errout(bcinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_RUNTIME] << r.what() << std::endl;
+			return EXIT_FAILURE;
+		}
 	}
 
 	return EXIT_SUCCESS;
