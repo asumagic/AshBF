@@ -79,8 +79,8 @@ int main(int argc, char** argv)
 			{
 				match_it->result = std::string{equals_it + 1, end(args[i])};
 
-				if (match_it->expected.empty() &&
-						std::find(begin(match_it->expected), end(match_it->expected), match_it->result) == end(match_it->expected)) // Make sure the argument is within the expected values
+				if (!match_it->expected.empty() &&
+					std::find(begin(match_it->expected), end(match_it->expected), match_it->result) == end(match_it->expected)) // Make sure the argument is within the expected values
 				{
 					errout(cmdinfo) << locale_strings[INVALID_VAL1] << match_it->result << locale_strings[INVALID_VAL2] << match_it->match << locale_strings[INVALID_VAL3] << std::endl;
 					fatal_encountered = true;

@@ -10,7 +10,7 @@
 namespace bf
 {
 	// Available opcodes to the VM/compiler
-	enum Opcode
+	enum Opcode : uint8_t
 	{
 		// Stackable instructions that relies on the instruction values. Does the operation n times.
 		bfAdd = 0,
@@ -64,7 +64,7 @@ namespace bf
 		Instruction() = default;
 		Instruction(const uint8_t opcode, const uint16_t argument = 0);
 
-		uint8_t opcode;
+		Opcode opcode;
 		uint16_t argument;
 
 		inline operator uint8_t() const // Implicit cast operator to opcode
@@ -92,6 +92,9 @@ namespace bf
 		{"dec", bfDecr, false},
 		{"ptrinc", bfOnceShiftRight, false},
 		{"ptrdec", bfOnceShiftLeft, false},
+
+		{"mul", bfMultiply, true},
+		{"div", bfDivide, true},
 
 		{"cout", bfCharOut, false},
 		{"cin", bfCharIn, false},
