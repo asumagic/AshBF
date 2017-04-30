@@ -9,7 +9,7 @@ namespace bf
 	{
 		std::ifstream file{source, std::ios::binary};
 
-		static const std::array<CTInstruction, 8> instruction_list =
+		static const std::array<BrainfuckInstruction, 8> instruction_list =
 		{{
 			 {'+', bfIncr, bfAdd},
 			 {'-', bfDecr, bfSub},
@@ -26,7 +26,7 @@ namespace bf
 
 		while (file.good())
 		{
-			auto it = std::find_if(begin(instruction_list), end(instruction_list), [current](const CTInstruction& other) { return current == other.match; });
+			auto it = std::find_if(begin(instruction_list), end(instruction_list), [current](const BrainfuckInstruction& other) { return current == other.match; });
 
 			if (it != end(instruction_list))
 			{

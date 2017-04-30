@@ -52,7 +52,7 @@ namespace bf
 		bfNop // Unused by the VM; exclusively compile-time
 	};
 
-	// The struct defining an instruction.
+	// The struct defining a VM instruction.
 	// If argument is a 16-bit value for example, then jumps (i.e. loops) won't be able to refer to a pc higher than 65'365
 	// Note : Bytecode size is often smaller than sources in terms of amount of opcodes to run.
 	struct Instruction
@@ -70,7 +70,7 @@ namespace bf
 	};
 
 	// Compile-time instruction representation
-	struct CTInstruction
+	struct BrainfuckInstruction
 	{
 		char match;
 		Opcode base_opcode;
