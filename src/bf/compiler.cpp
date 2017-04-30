@@ -9,6 +9,9 @@ namespace bf
 	{
 		std::ifstream file{source, std::ios::binary};
 
+		if (!file)
+			throw std::runtime_error(std::string{"Could not load file '"} + source + '\'');
+
 		static const std::array<BrainfuckInstruction, 8> instruction_list =
 		{{
 			 {'+', bfIncr, bfAdd},
