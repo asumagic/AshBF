@@ -8,7 +8,7 @@ namespace bf
 
 	void Brainfuck::print_assembly()
 	{
-		infoout(compileinfo) << "Compiled program size is " << program.size() << " instructions (" << program.size() * sizeof(Instruction) << " bytes)" << '\n';
+		infoout(compileinfo) << "Compiled program size is " << program.size() << " instructions (" << program.size() * sizeof(Instruction) << " bytes)\n";
 
 		size_t offset = 0;
 		for (Instruction& i : program)
@@ -21,8 +21,6 @@ namespace bf
 
 			std::cout << '\n';
 		}
-		
-		std::cout << std::flush;
 	}
 
 	Instruction::Instruction(const uint8_t opcode, const int16_t argument) :

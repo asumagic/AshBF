@@ -75,6 +75,8 @@ namespace bf
 		{"jnz", bfJmpNotZero, true, false},
 
 		{"set", bfSet, true, false},
+		
+		{"luz", bfLoopUntilZero, true, false},
 
 		{"end", bfEnd, false, false}
 	}};

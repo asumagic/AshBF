@@ -1,9 +1,7 @@
 #include "bf.hpp"
 
-#define prefetch()       __builtin_prefetch(sp);
-
-#define dispatch()       ++pc; prefetch(); goto *pc->handler;
-#define dispatch_noinc()       prefetch(); goto *pc->handler;
+#define dispatch()       goto *(++pc)->handler;
+#define dispatch_noinc() goto *pc->handler;
 
 namespace bf
 {
