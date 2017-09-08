@@ -10,8 +10,6 @@
 
 int main(int argc, char** argv)
 {
-	std::ios::sync_with_stdio(false);
-	
 	std::vector<std::string> args(argv, argv + argc);
 
 	if (args.size() < 2)

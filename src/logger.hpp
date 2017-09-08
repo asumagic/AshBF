@@ -13,7 +13,7 @@
 struct LogLevel
 {
 	const std::string levelprefix;
-	std::ostream& buffer = std::clog;
+	std::ostream& buffer = std::cout;
 
 	std::ostream& operator()(const std::string& sourceinfo = "")
 	{
@@ -27,7 +27,7 @@ struct LogLevel
 
 struct LogLevelException : LogLevel
 {
-	LogLevelException() : LogLevel{"\033[91mException", std::cerr} {}
+	LogLevelException() : LogLevel{"\033[91mException", std::cout} {}
 
 	void operator()(const std::string& sourceinfo = "", const std::string& error = "Assertion failed.")
 	{
