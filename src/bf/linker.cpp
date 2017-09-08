@@ -17,8 +17,10 @@ namespace bf
 			case bfLoopEnd:
 				lassert(!jumps.empty(), compileinfo, locale_strings[ORPHAN_LOOPEND]);
 				program[i].opcode = bfJmpNotZero;
-				program[jumps.back()].argument = i + 1;
-				program[i].argument = jumps.back() + 1;
+				
+				uint diff = i - jumps.back();
+				program[jumps.back()].argument = diff;
+				program[i].argument = -diff;
 				jumps.pop_back();
 				break;
 			}

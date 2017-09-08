@@ -14,10 +14,10 @@ namespace bf
 
 		static const std::array<BrainfuckInstruction, 8> instruction_list =
 		{{
-			 {'+', bfIncr, bfAdd},
-			 {'-', bfDecr, bfSub},
-			 {'>', bfOnceShiftRight, bfShiftRight},
-			 {'<', bfOnceShiftLeft, bfShiftLeft},
+			 {'+', bfAdd, 1},
+			 {'-', bfAdd, -1},
+			 {'>', bfShift, 1},
+			 {'<', bfShift, -1},
 			 {'.', bfCharOut},
 			 {',', bfCharIn},
 			 {'[', bfLoopBegin},
@@ -32,25 +32,7 @@ namespace bf
 			auto it = std::find_if(begin(instruction_list), end(instruction_list), [current](const BrainfuckInstruction& other) { return current == other.match; });
 
 			if (it != end(instruction_list))
-			{
-				if (it->stacked_opcode != bfNop) // @TODO: move stacking optimize-time?
-				{
-					unsigned count = 1;
-					while (file.get(current) && current == it->match) // Read until the next different character
-						++count;
-
-					if (count == 1) // No combination possible
-						program.emplace_back(static_cast<uint8_t>(it->base_opcode));
-					else
-						program.emplace_back(static_cast<uint8_t>(it->stacked_opcode), count);
-
-					continue; // current is already the next char : do not get another one!
-				}
-				else
-				{
-					program.emplace_back(static_cast<uint8_t>(it->base_opcode), 0);
-				}
-			}
+				program.emplace_back(static_cast<uint8_t>(it->base_opcode), it->default_arg);
 
 			file.get(current);
 		}

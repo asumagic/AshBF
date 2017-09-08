@@ -1,55 +1,48 @@
 #include "bf.hpp"
 
+#define prefetch()       __builtin_prefetch(sp);
+
+#define dispatch()       ++pc; prefetch(); goto *pc->handler;
+#define dispatch_noinc()       prefetch(); goto *pc->handler;
+
 namespace bf
 {
-	void Brainfuck::interprete(const size_t memory_size)
+	// Performance-critical threaded interpreter
+	void Brainfuck::interprete(const size_t memory_size) noexcept
 	{
+		std::array<void*, Opcode::bfTOTAL> labels =
+		{{
+			&&lAdd, &&lShift,
+			&&lCOut, &&lCIn,
+			&&lJZ, &&lJNZ,
+			&&lSet,
+			&&lLUZ,
+			&&lEnd,
+		}};
+		
+		// Compute the goto labels
+		for (size_t i = 0; i < program.size(); ++i)
+			program[i].handler = labels[program[i].opcode];
+		
 		std::vector<uint8_t> memory(memory_size);
+		uint8_t* sp = memory.data();
+		const Instruction* pc = program.data();
+				
+		dispatch_noinc();
+		
+		lAdd:  *sp += pc->argument; dispatch();
+		lShift: sp += pc->argument; dispatch();
+		
+		lCOut: std::cout << *sp << std::flush; dispatch();
+		lCIn:  std::cin  >> *sp; dispatch();
+		
+		lJZ:  if (*sp == 0) { pc += pc->argument; dispatch_noinc(); } dispatch();
+		lJNZ: if (*sp != 0) { pc += pc->argument; dispatch_noinc(); } dispatch();
+		
+		lSet: *sp = pc->argument; dispatch();
 
-		unsigned pc = 0;
-		uint8_t *sp = memory.data();
-
-		const Instruction *instr, *const begin_instr = program.data();
-
-		for(;;)
-		{
-			instr = begin_instr + pc++;
-
-			switch (instr->opcode)
-			{
-			case bfAdd:					*sp += instr->argument; break;
-			case bfSub:					*sp -= instr->argument; break;
-			case bfShiftRight:			sp += instr->argument; break;
-			case bfShiftLeft:			sp -= instr->argument; break;
-
-			case bfIncr:				++(*sp); break;
-			case bfDecr:				--(*sp); break;
-			case bfOnceShiftRight:		++sp; break;
-			case bfOnceShiftLeft:		--sp; break;
-
-			case bfMultiply:			*sp *= instr->argument; break;
-			case bfDivide:				if (*sp != 0) { *sp /= instr->argument; } break;
-
-			case bfCharOut:				std::cout << *sp; break;
-			case bfCharIn:				std::cin >> *sp; break;
-
-			case bfJmpZero:				if (*sp == 0) { pc = instr->argument; } break;
-			case bfJmpNotZero:			if (*sp != 0) { pc = instr->argument; } break;
-
-			case bfSet:					*sp = static_cast<uint8_t>(instr->argument); break;
-
-			case bfMoveRight:			*(sp + instr->argument) = *sp; *sp = 0; break;
-			case bfMoveLeft:			*(sp - instr->argument) = *sp; *sp = 0; break;
-			case bfMoveRightAdd:		*(sp + instr->argument) += *sp; *sp = 0; break;
-			case bfMoveLeftAdd:			*(sp - instr->argument) += *sp; *sp = 0; break;
-
-			case bfLoopUntilZeroRight:	while (*sp) { ++sp; } break;
-			case bfLoopUntilZeroLeft:	while (*sp) { --sp; } break;
-
-			case bfEnd:					return;
-
-			default:					__builtin_unreachable(); // On supported compilers, assume this is not possible.
-			}
-		}
+	    lLUZ: while (*sp) { sp += pc->argument; } dispatch();
+		
+	    lEnd: return;
 	}
 }

@@ -11,59 +11,71 @@
 namespace bf
 {
 	void Brainfuck::optimize(const size_t passes)
-	{
+	{		
 		typedef std::vector<Instruction> ivec;
-		static std::array<OptimizationSequence, 11> optimizers
+		static std::array<OptimizationSequence, 3> optimizers
 		{{
-				// [-] then set 0
-				OptimizationSequence{ {bfLoopBegin, bfDecr, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfSet, 0}}; } },
+			// [-] or [+] then set 0
+			OptimizationSequence{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec& v) -> ivec {
+				if (v[1].argument == -1 || v[1].argument == 1)
+					return {{bfSet, 0}};
+				return v;
+			}},
 
-				// + or - and then set -> set
-				OptimizationSequence{ {bfAdd, bfSet},  [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
-				OptimizationSequence{ {bfIncr, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
-				OptimizationSequence{ {bfSub, bfSet},  [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
-				OptimizationSequence{ {bfDecr, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; } },
+			// + or - and then set -> set
+			OptimizationSequence{{bfAdd, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; }},
 
-				// [->+<] or [-<+>]
-				OptimizationSequence{ {bfLoopBegin, bfDecr, bfOnceShiftRight, bfIncr, bfOnceShiftLeft, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfMoveRightAdd, 1}}; } }, // @TODO:10 add bfMoveRightIncr?
-				OptimizationSequence{ {bfLoopBegin, bfDecr, bfShiftRight, bfIncr, bfShiftLeft, bfLoopEnd}, [](const ivec& v) -> ivec {
-						if (v[2].argument == v[4].argument)
-							return {{bfMoveRightAdd, v[2].argument}};
-						else
-							return v;
-					} },
+			// [>] and [<]
+			OptimizationSequence{{bfLoopBegin, bfShift, bfLoopEnd}, [](const ivec& v) -> ivec {
+				if (v[1].argument == -1 || v[1].argument == 1)
+					return {{bfLoopUntilZero, v[1].argument}};
+				return v;
+			}},
+		}};
 
-				OptimizationSequence{ {bfLoopBegin, bfDecr, bfOnceShiftLeft, bfIncr, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfMoveLeftAdd, 1}}; } }, // @TODO:0 add bfMoveLeftIncr?
-				OptimizationSequence{ {bfLoopBegin, bfDecr, bfShiftLeft, bfIncr, bfShiftRight, bfLoopEnd}, [](const ivec& v) -> ivec {
-						if (v[2].argument == v[4].argument)
-							return {{bfMoveLeftAdd, v[2].argument}};
-						else
-							return v;
-					} },
-
-				// [>] and [<]
-				OptimizationSequence{ {bfLoopBegin, bfOnceShiftRight, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroRight, 0}}; } },
-				OptimizationSequence{ {bfLoopBegin, bfOnceShiftLeft, bfLoopEnd}, [](const ivec&) -> ivec { return {{bfLoopUntilZeroLeft, 0}}; } },
-			}};
-
-		for (size_t p = 0; p < passes; ++p)
+		for (size_t p = 0;; ++p)
 		{
-			size_t passopt = 0;
+			if (p >= passes)
+			{
+				warnout(optimizeinfo) << "Maximal optimization pass reached. Consider increasing -optimizepasses.\n";
+				return;
+			}
+			
+			bool useful_pass = false;
+			
+			// Merge stackable ops
+			for (std::size_t i = 0; i < program.size(); ++i)
+			{
+				if (!instructions[program[i].opcode].stackable)
+					continue;
+				
+				std::size_t j = i;
+				while (++j < program.size() && program[i].opcode == program[j].opcode)
+					program[i].argument += program[j].argument;
+				
+				program.erase(begin(program) + i + 1, begin(program) + j);
+			}
+			
+			// Sequence based optimizer
 			for (auto& optimizer : optimizers)
 			{
 				for (size_t i = 0; i < program.size(); ++i)
 				{
 					if (std::equal(begin(program) + i, begin(program) + i + optimizer.seq.size(), begin(optimizer.seq), end(optimizer.seq)))
 					{
-						++passopt;
-
 						ivec extract(program.begin() + i, program.begin() + i + optimizer.seq.size());
-						replace_subvector_smaller(program, begin(program) + i, begin(program) + i + extract.size(), optimizer.callback(extract));
+						ivec optimized = optimizer.callback(extract);
+						
+						if (!std::equal(begin(extract), end(extract), begin(optimized), end(optimized)))
+						{
+							useful_pass = true;
+							replace_subvector_smaller(program, begin(program) + i, begin(program) + i + extract.size(), optimized);
+						}	
 					}
 				}
 			}
 
-			if (passopt == 0)
+			if (!useful_pass)
 				break;
 		}
 

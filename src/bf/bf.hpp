@@ -6,45 +6,25 @@
 #include <vector>
 #include <functional>
 #include "../logger.hpp"
+#include "vm.hpp"
 
 namespace bf
 {
 	// Available opcodes to the VM/compiler
 	enum Opcode : uint8_t
 	{
-		// Stackable instructions that relies on the instruction values. Does the operation n times.
-		bfAdd = 0,
-		bfSub,
-		bfShiftRight,
-		bfShiftLeft,
+		bfAdd = 0, // Add to the memory cell referenced by sp
+		bfShift, // Add to the sp
 
-		// Stackable instructions that are done only once in a row (avoid overhead)
-		bfIncr,
-		bfDecr,
-		bfOnceShiftRight,
-		bfOnceShiftLeft,
-
-		// Integer multiply and divide instructions
-		bfMultiply,
-		bfDivide,
-
-		// Non stackable instructions
 		bfCharOut,
 		bfCharIn,
 
-		bfJmpZero, // Used by loop begins; jumps if the current cell is zero
-		bfJmpNotZero, // Used by loop endings; jumps if the current cell is not zero
+		bfJmpZero, // Adds the argument to pc if the current cell is zero
+		bfJmpNotZero, // Adds the argument to pc if the current cell is not zero
 
 		bfSet, // Set the current cell value
-
-		bfMoveRight, // Zero out the current cell and move its value to the next cell
-		bfMoveLeft, // ^ to the previous cell
-
-		bfMoveRightAdd, // Zero out the current cell and add its value to the next cell
-		bfMoveLeftAdd, // ^ to the previous cell
-
-		bfLoopUntilZeroRight, // Set the cell pointer to the closest zero cell to the right
-		bfLoopUntilZeroLeft, // ^ to the left
+		
+		bfLoopUntilZero, // Adds the argument to sp until the memory cell referenced by sp is zero
 
 		bfEnd, // End the program execution
 
@@ -55,18 +35,19 @@ namespace bf
 
 		bfNop // Unused by the VM; exclusively compile-time
 	};
+	
+	class Brainfuck;
 
 	// The struct defining a VM instruction.
-	// If argument is a 16-bit value for example, then jumps (i.e. loops) won't be able to refer to a pc higher than 65'365
-	// Note : Bytecode size is often smaller than sources in terms of amount of opcodes to run.
 	struct Instruction
 	{
 		Instruction() = default;
-		Instruction(const uint8_t opcode, const uint16_t argument = 0);
+		Instruction(const uint8_t opcode, const int16_t argument = 0);
 
+		void* handler;
 		Opcode opcode;
-		uint16_t argument;
-
+		int16_t argument;
+		
 		inline operator uint8_t() const // Implicit cast operator to opcode
 		{
 			return opcode;
@@ -79,40 +60,23 @@ namespace bf
 		const char* name;
 		Opcode opcode;
 		bool argument_used;
+		bool stackable = false; // Defines whether the optimizer should combine successive instructions by adding their args together in a single instruction.
 	};
 
 	constexpr std::array<InstructionInfo, Opcode::bfTOTAL> instructions
 	{{
-		{"add", bfAdd, true},
-		{"sub", bfSub, true},
-		{"ptradd", bfShiftRight, true},
-		{"ptrsub", bfShiftLeft, true},
+		{"add", bfAdd, true, true},
+		{"shift", bfShift, true, true},
 
-		{"inc", bfIncr, false},
-		{"dec", bfDecr, false},
-		{"ptrinc", bfOnceShiftRight, false},
-		{"ptrdec", bfOnceShiftLeft, false},
+		{"cout", bfCharOut, false, false},
+		{"cin", bfCharIn, false, false},
 
-		{"mul", bfMultiply, true},
-		{"div", bfDivide, true},
+		{"jz", bfJmpZero, true, false},
+		{"jnz", bfJmpNotZero, true, false},
 
-		{"cout", bfCharOut, false},
-		{"cin", bfCharIn, false},
+		{"set", bfSet, true, false},
 
-		{"jz", bfJmpZero, true},
-		{"jnz", bfJmpNotZero, true},
-
-		{"set", bfSet, true},
-
-		{"mvr", bfMoveRight, true},
-		{"mvl", bfMoveLeft, true},
-		{"mvradd", bfMoveRightAdd, true},
-		{"mvladd", bfMoveLeftAdd, true},
-
-		{"ltzr", bfLoopUntilZeroRight, false},
-		{"ltzl", bfLoopUntilZeroLeft, false},
-
-		{"end", bfEnd, false}
+		{"end", bfEnd, false, false}
 	}};
 
 	// Compile-time instruction representation
@@ -120,7 +84,7 @@ namespace bf
 	{
 		char match;
 		Opcode base_opcode;
-		Opcode stacked_opcode = bfNop;
+		int16_t default_arg = 0;
 	};
 
 	struct OptimizationSequence
@@ -139,11 +103,12 @@ namespace bf
 		void compile(const std::string& source);
 		void optimize(const size_t passes = 5);
 		void link();
-		void interprete(const size_t memory_size);
-
+		void interprete(const size_t memory_size) noexcept;
+		
 	private:
-		std::vector<Instruction> program; // Program
-		bool warnings; // Settings
+		std::vector<Instruction> program;
+		
+		bool warnings;
 	};
 }
 

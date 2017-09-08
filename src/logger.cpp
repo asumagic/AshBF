@@ -17,7 +17,7 @@ std::array<std::string, LOCALE_TOTAL> locale_strings =
 	 "Program tried to access out-of-bounds memory."
  }};
 
-const std::string cmdinfo = "Commandline", bcinfo = "Interpreter", compileinfo = "Compiler";
+const std::string cmdinfo = "Commandline", bcinfo = "Interpreter", compileinfo = "Compiler", optimizeinfo = "Optimizer";
 
 LogLevel warnout{"\033[93mWarning"},
 errout{"\033[91mError", std::cerr},

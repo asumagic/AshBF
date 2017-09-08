@@ -57,7 +57,7 @@ enum locale_ids
 
 extern std::array<std::string, LOCALE_TOTAL> locale_strings;
 
-extern const std::string cmdinfo, bcinfo, compileinfo;
+extern const std::string cmdinfo, bcinfo, compileinfo, optimizeinfo;
 
 extern LogLevel warnout, errout, verbout, infoout;
 extern LogLevelException exceptionlog;
