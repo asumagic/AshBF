@@ -46,8 +46,11 @@ namespace bf
 		Instruction() = default;
 		Instruction(const uint8_t opcode, const Argument argument = 0);
 
-		void* handler;
-		Opcode opcode;
+		union
+		{
+			void* handler;
+			Opcode opcode;
+		};
 		Argument argument;
 		
 		inline operator uint8_t() const // Implicit cast operator to opcode
