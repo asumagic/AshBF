@@ -22,6 +22,8 @@ namespace bf
 				program[i].argument = jumps.back();
 				jumps.pop_back();
 				break;
+
+			default: break;
 			}
 		}
 
