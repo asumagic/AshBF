@@ -30,9 +30,7 @@ namespace bf
 
 			// [>] and [<]
 			OptimizationSequence{{bfLoopBegin, bfShift, bfLoopEnd}, [](const ivec& v) -> ivec {
-				if (v[1].argument == -1 || v[1].argument == 1)
-					return {{bfLoopUntilZero, v[1].argument}};
-				return v;
+				return {{bfLoopUntilZero, v[1].argument}};
 			}},
 		}};
 
