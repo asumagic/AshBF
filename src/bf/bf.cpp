@@ -23,7 +23,7 @@ namespace bf
 		}
 	}
 
-	Instruction::Instruction(const uint8_t opcode, const int16_t argument) :
+	Instruction::Instruction(const uint8_t opcode, const Instruction::Argument argument) :
 		opcode{opcode},
 		argument{argument}
 	{}

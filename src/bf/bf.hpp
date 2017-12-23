@@ -41,12 +41,14 @@ namespace bf
 	// The struct defining a VM instruction.
 	struct Instruction
 	{
+		using Argument = long;
+
 		Instruction() = default;
-		Instruction(const uint8_t opcode, const int16_t argument = 0);
+		Instruction(const uint8_t opcode, const Argument argument = 0);
 
 		void* handler;
 		Opcode opcode;
-		int16_t argument;
+		Argument argument;
 		
 		inline operator uint8_t() const // Implicit cast operator to opcode
 		{
@@ -86,7 +88,7 @@ namespace bf
 	{
 		char match;
 		Opcode base_opcode;
-		int16_t default_arg = 0;
+		Instruction::Argument default_arg = 0;
 	};
 
 	struct OptimizationSequence
