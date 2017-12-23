@@ -25,6 +25,7 @@ Specify flags with `-flag=value`. When a flag is enabled (`-flag`) without a giv
 
 Prevents the optimizer from iterating over N times.  
 Typically, one optimization pass will be sufficient. However, due to the way the optimizer is built, one optimization may enable another one next pass.  
+Do note that not all optimizations are pass-based. With `-optimize=1 -optimizepasses=0` some optimizations may still be performed.  
 `5` is the default.
 
 ### `-optimize`
