@@ -13,14 +13,19 @@ namespace bf
 	void Brainfuck::optimize(const size_t passes)
 	{		
 		typedef std::vector<Instruction> ivec;
-		static std::array<OptimizationSequence, 3> optimizers
+		static std::array<OptimizationSequence, 4> optimizers
 		{{
-			// [-] or [+] then set 0
+			// [+] to bfSet 0
 			OptimizationSequence{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec&) -> ivec {
 				return {{bfSet, 0}};
 			}},
 
-			// + or - and then set -> set
+			// Merge bfSet then bfAdd
+			OptimizationSequence{{bfSet, bfAdd}, [](const ivec &v) -> ivec {
+				return {{bfSet, v[0].argument + v[1].argument}};
+			}},
+
+			// + and then set -> set
 			OptimizationSequence{{bfAdd, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; }},
 
 			// [>] and [<]
