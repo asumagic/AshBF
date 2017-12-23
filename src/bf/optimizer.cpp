@@ -53,6 +53,10 @@ namespace bf
 				
 				program.erase(begin(program) + i + 1, begin(program) + j);
 			}
+
+			// Eliminate stacked instructions with argument = 0
+			program.erase(std::remove_if(program.begin(), program.end(), [](Instruction& ins) {
+				return instructions[ins.opcode].stackable && ins.argument == 0; }), program.end());
 			
 			// Sequence based optimizer
 			for (auto& optimizer : optimizers)
