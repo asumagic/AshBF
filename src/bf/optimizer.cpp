@@ -16,10 +16,8 @@ namespace bf
 		static std::array<OptimizationSequence, 3> optimizers
 		{{
 			// [-] or [+] then set 0
-			OptimizationSequence{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec& v) -> ivec {
-				if (v[1].argument == -1 || v[1].argument == 1)
-					return {{bfSet, 0}};
-				return v;
+			OptimizationSequence{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec&) -> ivec {
+				return {{bfSet, 0}};
 			}},
 
 			// + or - and then set -> set
@@ -44,12 +42,12 @@ namespace bf
 			bool useful_pass = false;
 			
 			// Merge stackable ops
-			for (std::size_t i = 0; i < program.size(); ++i)
+			for (size_t i = 0; i < program.size(); ++i)
 			{
 				if (!instructions[program[i].opcode].stackable)
 					continue;
 				
-				std::size_t j = i;
+				size_t j = i;
 				while (++j < program.size() && program[i].opcode == program[j].opcode)
 					program[i].argument += program[j].argument;
 				
