@@ -16,13 +16,13 @@ namespace bf
 			&&lCOut, &&lCIn,
 			&&lJZ, &&lJNZ,
 			&&lSet,
-			&&lLUZ,
+			&&lSUZ,
 			&&lEnd,
 		}};
 
 		// Compute the goto labels
-		for (size_t i = 0; i < program.size(); ++i)
-			program[i].handler = labels[program[i].opcode];
+		for (auto &ins : program)
+			ins.handler = labels[ins.opcode];
 
 		uint8_t* sp = memory.data();
 		const Instruction *pc = program.data();
@@ -40,7 +40,7 @@ namespace bf
 		
 		lSet: *sp = pc->argument; dispatch();
 
-	    lLUZ: while (*sp) { sp += pc->argument; } dispatch();
+		lSUZ: while (*sp) { sp += pc->argument; } dispatch();
 		
 	    lEnd: return;
 	}

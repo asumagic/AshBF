@@ -24,7 +24,7 @@ namespace bf
 
 		bfSet, // Set the current cell value
 		
-		bfLoopUntilZero, // Adds the argument to sp until the memory cell referenced by sp is zero
+		bfShiftUntilZero, // Adds the argument to sp until the memory cell referenced by sp is zero
 
 		bfEnd, // End the program execution
 
@@ -81,7 +81,7 @@ namespace bf
 
 		{"set", bfSet, true, false},
 		
-		{"luz", bfLoopUntilZero, true, false},
+		{"suz", bfShiftUntilZero, true, false},
 
 		{"end", bfEnd, false, false}
 	}};

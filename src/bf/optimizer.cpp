@@ -13,24 +13,24 @@ namespace bf
 	void Brainfuck::optimize(const size_t passes)
 	{		
 		typedef std::vector<Instruction> ivec;
-		static std::array<OptimizationSequence, 4> optimizers
+		static std::array<OptimizationSequence, 4> peephole_optimizers
 		{{
 			// [+] to bfSet 0
-			OptimizationSequence{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec&) -> ivec {
+			{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec&) -> ivec {
 				return {{bfSet, 0}};
 			}},
 
 			// Merge bfSet then bfAdd
-			OptimizationSequence{{bfSet, bfAdd}, [](const ivec &v) -> ivec {
+			{{bfSet, bfAdd}, [](const ivec &v) -> ivec {
 				return {{bfSet, v[0].argument + v[1].argument}};
 			}},
 
 			// + and then set -> set
-			OptimizationSequence{{bfAdd, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; }},
+			{{bfAdd, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; }},
 
 			// [>] and [<]
-			OptimizationSequence{{bfLoopBegin, bfShift, bfLoopEnd}, [](const ivec& v) -> ivec {
-				return {{bfLoopUntilZero, v[1].argument}};
+			{{bfLoopBegin, bfShift, bfLoopEnd}, [](const ivec& v) -> ivec {
+				return {{bfShiftUntilZero, v[1].argument}};
 			}},
 		}};
 
@@ -61,8 +61,8 @@ namespace bf
 			program.erase(std::remove_if(program.begin(), program.end(), [](Instruction& ins) {
 				return instructions[ins.opcode].stackable && ins.argument == 0; }), program.end());
 			
-			// Sequence based optimizer
-			for (auto& optimizer : optimizers)
+			// Peephole optimization
+			for (auto& optimizer : peephole_optimizers)
 			{
 				for (size_t i = 0; i < program.size(); ++i)
 				{
