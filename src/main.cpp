@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 		TapeSize,
 		//Sanitize,
 		WarningLevel,
-		PrintAssembly,
+		PrintIL,
 		DoExecute
 	};
 
@@ -43,14 +43,14 @@ int main(int argc, char** argv)
 	{
 		std::array<CommandlineFlag, 6> flags
 		{{
-				CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
-				CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
-				CommandlineFlag{ "msize", "30000" }, // Cells available to the program
-				//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
-				CommandlineFlag{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
-				CommandlineFlag{ "printasm", "0", {"0", "1"} }, // Print generated, optimized VM assembly
-				CommandlineFlag{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
-			}};
+			CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
+			CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
+			CommandlineFlag{ "msize", "30000" }, // Cells available to the program
+			//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
+			CommandlineFlag{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
+			CommandlineFlag{ "printil", "0", {"0", "1"} }, // Print VM IL
+			CommandlineFlag{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
+		}};
 
 		CommandlineFlag& operator[](const Flag flag)
 		{
@@ -115,7 +115,7 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	if (flags[Flag::PrintAssembly])
+	if (flags[Flag::PrintIL])
 		bfi.print_assembly();
 
 	if (flags[Flag::DoExecute])
