@@ -7,8 +7,10 @@ std::array<std::string, LOCALE_TOTAL> locale_strings =
 	 "Passed an invalid argument \"", "\" to the \"", "\" flag.",
 
 	 "A runtime error occurred ",
-	 "while compiling : ",
-	 "while interpreting : ",
+	 "while compiling: ",
+	 "while interpreting: ",
+
+	 "Loop will never be executed. ",
 
 	 "Orphan loop begin '[' found.",
 	 "Orphan loop end ']' found (too much '[').",
