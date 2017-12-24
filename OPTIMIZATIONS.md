@@ -1,5 +1,42 @@
 # AshBF optimizer
 
+## Instruction stacking
+
+Some instructions are "stackable", meaning that they can be merged into one in some way.
+
+### Instruction stacking
+
++ and - are compiled down to the same instruction in the IL, but have different arguments. This greatly simplifies basic optimization routines like the peephole optimizer.  
+Consider the following program: `+++-++`  
+This compiles into the following unoptimized IL:
+
+```
+0 add 1
+1 add 1
+2 add 1
+3 add -1
+4 add 1
+5 add 1
+```
+
+We can merge the add instructions in order to generate the following IL:
+
+```
+0 add 4
+```
+
+`>` and `<` behave the same way, with the `shift` instruction instead.
+
+### Null argument stackable instruction elimination
+
+Stackable instructions with a null argument will be optimized away. Consider this IL (which could appear at some moment in the optimizer loop when compiling `+-`):
+
+```
+0 add 0
+```
+
+`add 0` will have no side effect and will be removed.
+
 ## Peephole optimizations
 
 Peephole optimizations are simple pattern matching optimizations, used to simplify a few common expressions.
