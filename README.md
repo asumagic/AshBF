@@ -5,6 +5,7 @@
 [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) is a very minimalist turing-complete esoteric language with only 8 instructions: `+-><[].,`.
 
 AshBF is an optimizing C++17 brainfuck interpreter tailored for speed.  
+Currently, AshBF relies on the [GNU "Label as Address" extension](https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html). `clang` and `gcc` both should compile AshBF fine, but Microsoft Visual Studio probably won't.  
 It recompiles brainfuck into an optimized IL, later interpreted by a VM.
 
 ## Compiling
