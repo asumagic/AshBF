@@ -166,3 +166,11 @@ However, we know `*sp` because of the `set 4` instruction! Plus, when the loop e
 3 add 4
 4 shift -2
 ```
+
+### 1-decremented balanced loop optimization (UNIMPLEMENTED)
+
+`[>++>+<<-]` alone could be optimized (a lot).
+
+An instruction `relmul` would multiply `*sp` by `*(sp + relmul)` and *could* help there. However, in case of `++` we want to add `2 * N`. Because we do not know the value at `*(sp + 1)` we cannot quite do it this way, because there is only one argument.
+
+A (complicated) solution I've thought of: implement a 'data' segment for the program, beyond `end` perhaps, which would use the arguments to store data. This would require implementation effort, is not quite optimal and would look hacky.
