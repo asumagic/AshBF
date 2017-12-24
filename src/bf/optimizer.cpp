@@ -10,27 +10,29 @@
 // @TODO have a way to profile the execution of the brainfuck program and make it possible to analyze it (with an external tool eventually)
 namespace bf
 {
-	void Brainfuck::optimize(const size_t passes)
+	void Brainfuck::optimize(size_t passes)
 	{		
-		typedef std::vector<Instruction> ivec;
+		using ivec = std::vector<Instruction>;
 		static std::array<OptimizationSequence, 4> peephole_optimizers
 		{{
 			// [+] to bfSet 0
-			{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec&) -> ivec {
-				return {{bfSet, 0}};
+			{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec&) {
+				return ivec{{bfSet, 0}};
 			}},
 
 			// Merge bfSet then bfAdd
-			{{bfSet, bfAdd}, [](const ivec &v) -> ivec {
-				return {{bfSet, v[0].argument + v[1].argument}};
+			{{bfSet, bfAdd}, [](const ivec &v) {
+				return ivec{{bfSet, v[0].argument + v[1].argument}};
 			}},
 
 			// + and then set -> set
-			{{bfAdd, bfSet}, [](const ivec& v) -> ivec { return {{bfSet, v[1].argument}}; }},
+			{{bfAdd, bfSet}, [](const ivec& v) {
+				return ivec{{bfSet, v[1].argument}};
+			}},
 
 			// [>] and [<]
-			{{bfLoopBegin, bfShift, bfLoopEnd}, [](const ivec& v) -> ivec {
-				return {{bfShiftUntilZero, v[1].argument}};
+			{{bfLoopBegin, bfShift, bfLoopEnd}, [](const ivec& v) {
+				return ivec{{bfShiftUntilZero, v[1].argument}};
 			}},
 		}};
 
