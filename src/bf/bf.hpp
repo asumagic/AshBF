@@ -16,6 +16,8 @@ namespace bf
 		bfAdd = 0, // Add to the memory cell referenced by sp
 		bfShift, // Add to the sp
 
+		bfMul,
+
 		bfCharOut,
 		bfCharIn,
 
@@ -31,9 +33,7 @@ namespace bf
 		bfLoopBegin,
 		bfLoopEnd,
 
-		bfTOTAL,
-
-		bfNop // Unused by the VM; exclusively compile-time
+		bfTOTAL
 	};
 	
 	class Brainfuck;
@@ -73,6 +73,8 @@ namespace bf
 		{"add", bfAdd, true, true},
 		{"shift", bfShift, true, true},
 
+		{"mul", bfMul, true, false},
+
 		{"cout", bfCharOut, false, false},
 		{"cin", bfCharIn, false, false},
 
@@ -83,7 +85,10 @@ namespace bf
 		
 		{"suz", bfShiftUntilZero, true, false},
 
-		{"end", bfEnd, false, false}
+		{"end", bfEnd, false, false},
+
+		{"(ir)loopbegin", bfLoopBegin, false, false},
+		{"(ir)loopend", bfLoopEnd, false, false}
 	}};
 
 	// Compile-time instruction representation
@@ -100,11 +105,23 @@ namespace bf
 		std::function<std::vector<Instruction>(const std::vector<Instruction>&)> callback;
 	};
 
+	struct CellOperation
+	{
+		Instruction op;
+		bool any = false;
+
+		bool apply(Instruction instruction);
+		void simplify();
+		void repeat(size_t n);
+	};
+
 	class Brainfuck
 	{
 	public:
 		Brainfuck(const bool warnings = true);
 
+		std::string disassemble(Instruction &ins);
+		void print_assembly(size_t begin, size_t end);
 		void print_assembly();
 
 		void compile(const std::string& source);
