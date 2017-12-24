@@ -19,7 +19,7 @@ Consider this IL:
 This will be still optimized down to a `set 0` instruction, though the program's visible effect will be different.  
 AshBF does not handle this case, and has lax rules on cell overflow.
 
-#### Add-set optimization
+### Add-set optimization
 
 Consider this IL:
 
@@ -30,7 +30,7 @@ Consider this IL:
 
 The first `add` instruction will have no effect and will be optimized away.
 
-#### Set-add optimization
+### Set-add optimization
 
 Consider this IL (for `[-]++++`):
 
