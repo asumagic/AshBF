@@ -6,7 +6,7 @@ Some instructions are "stackable", meaning that they can be merged into one in s
 
 ### Instruction stacking
 
-+ and - are compiled down to the same instruction in the IL, but have different arguments. This greatly simplifies basic optimization routines like the peephole optimizer.  
+`+` and `-` are compiled down to the same instruction in the IL, but have different arguments. This greatly simplifies basic optimization routines like the peephole optimizer.  
 Consider the following program: `+++-++`  
 This compiles into the following unoptimized IL:
 
