@@ -13,27 +13,42 @@ namespace bf
 	void Brainfuck::optimize(size_t passes)
 	{		
 		using ivec = std::vector<Instruction>;
-		static std::array<OptimizationSequence, 4> peephole_optimizers
+		static std::array<OptimizationSequence, 6> peephole_optimizers
 		{{
 			// [+] to bfSet 0
 			{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const ivec&) {
 				return ivec{{bfSet, 0}};
 			}},
 
-			// Merge bfSet then bfAdd
+			// Merge bfSet then bfAdd to a single set.
 			{{bfSet, bfAdd}, [](const ivec &v) {
 				return ivec{{bfSet, v[0].argument + v[1].argument}};
 			}},
 
-			// + and then set -> set
+			// Optimize adding then setting, because adding will not be effective.
 			{{bfAdd, bfSet}, [](const ivec& v) {
 				return ivec{{bfSet, v[1].argument}};
 			}},
 
-			// [>] and [<]
+			// Optimize 2 sets in a row.
+			{{bfSet, bfSet}, [](const ivec& v) {
+				return ivec{{bfSet, v[1].argument}};
+			}},
+
+			// [>]
 			{{bfLoopBegin, bfShift, bfLoopEnd}, [](const ivec& v) {
 				return ivec{{bfShiftUntilZero, v[1].argument}};
 			}},
+
+			// Optimize setting then entering loop. We can determine whether the loop will ever enter or not
+			{{bfSet, bfLoopBegin}, [](const ivec &v) {
+				if (v[0].argument == 0)
+				{
+					warnout(optimizeinfo) << locale_strings[LOOP_NEVER_EXECUTED] << '\n';
+				}
+				//std::cout << "Encountered set-loop pattern\n";
+				return v;
+			}}
 		}};
 
 		for (size_t p = 0;; ++p)
