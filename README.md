@@ -58,7 +58,8 @@ Compiler: Info: Compiled program size is 6 instructions (96 bytes)
 2 add 1
 3 cout
 4 jnz 2
-5 end```
+5 end
+```
 
 ### `-execute`
 
@@ -66,9 +67,8 @@ Enables brainfuck program execution.
 Disabling this may be useful when you are only interested by the IL assembly listings or when you want to profile IL generation.  
 `1` is the default.
 
-## Planned features
+## TODO list
 
-- More static optimizations. VM improvements?
-- Machine code / JIT?
-- Brainfuck debugger?
-- IRC / Discord bot?
+- Perform better static optimizations
+- x86 JIT backend
+- Brainfuck debugger and profiler
