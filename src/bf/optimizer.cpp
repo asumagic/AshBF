@@ -306,7 +306,8 @@ void Optimizer::optimize(Program& program)
 
 		bool pass_effective = false;
 
-		infoout(optimizeinfo) << "Performing pass #" << p + 1 << '\n';
+		if (verbose)
+			infoout(optimizeinfo) << "Performing pass #" << p + 1 << '\n';
 
 		struct OptimizerTask
 		{
@@ -324,7 +325,9 @@ void Optimizer::optimize(Program& program)
 		for (auto &task : tasks)
 		{
 			bool effective = (this->*(task.callback))(program, program.begin(), program.end());
-			infoout(optimizeinfo) << "Performed optimization task '" << task.name << "' and " << (effective ? "was effective\n" : "had no effect\n");
+
+			if (verbose)
+				infoout(optimizeinfo) << "Performed optimization task '" << task.name << "' and " << (effective ? "was effective\n" : "had no effect\n");
 
 			if (effective)
 				pass_effective = true;
@@ -332,7 +335,8 @@ void Optimizer::optimize(Program& program)
 
 		if (!pass_effective)
 		{
-			infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
+			if (verbose)
+				infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
 			break;
 		}
 	}

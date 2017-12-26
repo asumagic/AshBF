@@ -9,6 +9,7 @@ struct Optimizer
 {
 	// Parameters
 	size_t pass_count = 5;
+	bool verbose = false;
 
 	static bool is_stackable(const Instruction &ins); // True if the instruction is mergeable/stackable
 	static bool is_nop(const Instruction &ins); // True if the instruction has no visible effect

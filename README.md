@@ -47,6 +47,11 @@ Sanitize brainfuck memory accesses to prevent from out of memory reads or writes
 When an invalid read or write is detected, the interpreter will exit and print an error.  
 `0` is the default.
 
+### `-verboseoptimizer`
+
+Verbose optimization feedback.  
+When enabled, the optimizer will give various information on optimization tasks and passes.
+
 ### `-printil`
 
 Enable IL assembly listings.  

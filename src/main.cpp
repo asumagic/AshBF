@@ -37,19 +37,21 @@ int main(int argc, char** argv)
 		TapeSize,
 		//Sanitize,
 		WarningLevel,
+		VerboseOptimizer,
 		PrintIL,
 		DoExecute
 	};
 
 	struct
 	{
-		std::array<CommandlineFlag, 6> flags
+		std::array<CommandlineFlag, 7> flags
 		{{
 			CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
 			CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
 			CommandlineFlag{ "msize", "30000" }, // Cells available to the program
 			//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
 			CommandlineFlag{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
+			CommandlineFlag{ "verboseoptimizer", "0", {"0", "1"} },
 			CommandlineFlag{ "printil", "0", {"0", "1"} }, // Print VM IL
 			CommandlineFlag{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
 		}};
@@ -110,6 +112,7 @@ int main(int argc, char** argv)
 		{
 			bf::Optimizer opt;
 			opt.pass_count = std::stoul(flags[Flag::OptimizationPasses]);
+			opt.verbose = std::stoul(flags[Flag::VerboseOptimizer]);
 			opt.optimize(bfi.program);
 		}
 
