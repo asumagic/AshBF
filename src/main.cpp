@@ -1,4 +1,6 @@
 #include "bf/bf.hpp"
+#include "bf/optimizer.hpp"
+#include "bf/il.hpp"
 #include "logger.hpp"
 
 #include <algorithm>
@@ -105,7 +107,11 @@ int main(int argc, char** argv)
 		bfi.compile(args[1]);
 
 		if (optimize)
-			bfi.optimize(std::stoul(flags[Flag::OptimizationPasses]));
+		{
+			bf::Optimizer opt;
+			opt.pass_count = std::stoul(flags[Flag::OptimizationPasses]);
+			opt.optimize(bfi.program);
+		}
 
 		bfi.link();
 	}
@@ -116,7 +122,7 @@ int main(int argc, char** argv)
 	}
 
 	if (flags[Flag::PrintIL])
-		bfi.print_assembly();
+		bf::disasm.print_range(bfi.program);
 
 	if (flags[Flag::DoExecute])
 	{

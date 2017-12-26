@@ -10,7 +10,7 @@ namespace bf
 	{
 		{
 			constexpr std::array<void*, Opcode::bfTOTAL> labels {{
-				&&lAdd, &&lShift, &&lMul, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd
+				&&lAdd, &&lShift, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd
 			}};
 
 			// Compute the goto labels
@@ -28,8 +28,6 @@ namespace bf
 		
 		lAdd:  *sp += pc->argument; dispatch();
 		lShift: sp += pc->argument; dispatch();
-
-		lMul:  *sp *= *(memory.data() + pc->argument);
 		
 		lCOut: std::cout << static_cast<char>(*sp) << std::flush; dispatch();
 		lCIn:  char c; std::cin >> c; *sp = c; dispatch();

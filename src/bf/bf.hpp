@@ -16,8 +16,6 @@ namespace bf
 		bfAdd = 0, // Add to the memory cell referenced by sp
 		bfShift, // Add to the sp
 
-		bfMul,
-
 		bfCharOut,
 		bfCharIn,
 
@@ -33,7 +31,9 @@ namespace bf
 		bfLoopBegin,
 		bfLoopEnd,
 
-		bfTOTAL
+		bfTOTAL,
+
+		bfNop // Used for convenience by the optimizer
 	};
 	
 	class Brainfuck;
@@ -59,6 +59,9 @@ namespace bf
 		}
 	};
 
+	using Program = std::vector<Instruction>;
+	using ProgramIt = Program::iterator;
+
 	// Defines various info about a VM instruction.
 	struct InstructionInfo
 	{
@@ -72,8 +75,6 @@ namespace bf
 	{{
 		{"add", bfAdd, true, true},
 		{"shift", bfShift, true, true},
-
-		{"mul", bfMul, true, false},
 
 		{"cout", bfCharOut, false, false},
 		{"cin", bfCharIn, false, false},
@@ -102,7 +103,7 @@ namespace bf
 	struct OptimizationSequence
 	{
 		std::vector<uint8_t> seq;
-		std::function<std::vector<Instruction>(const std::vector<Instruction>&)> callback;
+		std::function<Program(const Program&)> callback;
 	};
 
 	struct CellOperation
@@ -110,7 +111,7 @@ namespace bf
 		Instruction op;
 		bool any = false;
 
-		bool apply(Instruction instruction);
+		void apply(const Instruction& instruction);
 		void simplify();
 		void repeat(size_t n);
 	};
@@ -120,16 +121,10 @@ namespace bf
 	public:
 		Brainfuck(const bool warnings = true);
 
-		std::string disassemble(Instruction &ins);
-		void print_assembly(size_t begin, size_t end);
-		void print_assembly();
-
 		void compile(const std::string& source);
-		void optimize(const size_t passes = 5);
 		void link();
 		void interprete(const size_t memory_size) noexcept;
 		
-	private:
 		std::vector<Instruction> program;
 		
 		bool warnings;
