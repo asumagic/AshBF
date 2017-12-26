@@ -20,7 +20,7 @@ namespace bf
 		size_t i = 0;
 		for (auto it = begin; it != end; ++it)
 		{
-			std::cout << ++i << ' ' << (*this)(*it) << '\n';
+			std::cout << ++i << '\t' << (*this)(*it) << '\n';
 		}
 	}
 
