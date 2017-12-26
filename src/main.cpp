@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 	{
 		if (args[i].size() < 2 || args[i][0] != '-')
 		{
-			warnout(cmdinfo) << locale_strings[NOT_A_FLAG] << std::endl;
+			warnout(cmdinfo) << "Unknown passed argument, flags should be prefixed with '-'" << std::endl;
 			continue;
 		}
 
@@ -88,14 +88,14 @@ int main(int argc, char** argv)
 				if (!match_it->expected.empty() &&
 					std::find(begin(match_it->expected), end(match_it->expected), match_it->result) == end(match_it->expected)) // Make sure the argument is within the expected values
 				{
-					errout(cmdinfo) << locale_strings[INVALID_VAL1] << match_it->result << locale_strings[INVALID_VAL2] << match_it->match << locale_strings[INVALID_VAL3] << std::endl;
+					errout(cmdinfo) << "Passed bad argument '" << match_it->result << "' to flag '" << match_it->match << "'\n";
 					fatal_encountered = true;
 				}
 			}
 		}
 		else
 		{
-			errout(cmdinfo) << locale_strings[UNKNOWN_FLAG] << std::endl;
+			errout(cmdinfo) << "Invalid flag '" << args[i] << "'\n";
 			fatal_encountered = true;
 		}
 	}
@@ -134,7 +134,7 @@ int main(int argc, char** argv)
 	}
 	catch (std::runtime_error& r)
 	{
-		errout(compileinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_COMPILE] << r.what() << std::endl;
+		errout(compileinfo) << "Runtime compiler error: " << r.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 		}
 		catch (std::runtime_error& r) // @TODO use custom exceptions
 		{
-			errout(bcinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_RUNTIME] << r.what() << std::endl;
+			errout(bcinfo) << "Runtime VM error: " << r.what() << std::endl;
 			return EXIT_FAILURE;
 		}
 	}

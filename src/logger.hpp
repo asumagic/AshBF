@@ -36,29 +36,6 @@ struct LogLevelException : LogLevel
 	}
 };
 
-enum locale_ids
-{
-	NOT_A_FLAG = 0,
-	UNKNOWN_FLAG,
-	INVALID_VAL1, INVALID_VAL2, INVALID_VAL3,
-
-	EXCEPTION_COMMON,
-	EXCEPTION_COMPILE,
-	EXCEPTION_RUNTIME,
-
-	LOOP_NEVER_EXECUTED,
-
-	ORPHAN_LOOPBEGIN_NOMATCH,
-	ORPHAN_LOOPEND,
-
-	STRICT_NEG_MEMORY,
-	STRICT_OOB_MEMORY,
-
-	LOCALE_TOTAL
-};
-
-extern std::array<std::string, LOCALE_TOTAL> locale_strings;
-
 extern const std::string cmdinfo, bcinfo, compileinfo, optimizeinfo;
 
 extern LogLevel warnout, errout, verbout, infoout;
