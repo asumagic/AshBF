@@ -52,6 +52,11 @@ When an invalid read or write is detected, the interpreter will exit and print a
 Verbose optimization feedback.  
 When enabled, the optimizer will give various information on optimization tasks and passes.
 
+### `-annotate`
+
+Keep track of source information within the compiled form.  
+Required for advanced toolchain sanitizing.
+
 ### `-printil`
 
 Enable IL assembly listings.  

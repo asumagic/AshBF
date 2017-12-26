@@ -119,6 +119,8 @@ namespace bf
 		Instruction::Argument default_arg = 0;
 	};
 
+	using SourceIt = std::string::iterator;
+
 	struct OptimizationSequence
 	{
 		std::vector<uint8_t> seq;
@@ -140,11 +142,15 @@ namespace bf
 	public:
 		Brainfuck(const bool warnings = true);
 
-		void compile(const std::string& source);
+		void compile(const std::string& fname);
 		void link();
 		void interprete(const size_t memory_size) noexcept;
 		
 		std::vector<Instruction> program;
+
+		std::string source;
+		std::vector<size_t> annotations;
+		bool annotate;
 		
 		bool warnings;
 	};

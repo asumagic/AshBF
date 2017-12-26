@@ -38,22 +38,24 @@ int main(int argc, char** argv)
 		//Sanitize,
 		WarningLevel,
 		VerboseOptimizer,
+		Annotate,
 		PrintIL,
 		DoExecute
 	};
 
 	struct
 	{
-		std::array<CommandlineFlag, 7> flags
+		std::array<CommandlineFlag, 8> flags
 		{{
-			CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
-			CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
-			CommandlineFlag{ "msize", "30000" }, // Cells available to the program
-			//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
-			CommandlineFlag{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
-			CommandlineFlag{ "verboseoptimizer", "0", {"0", "1"} },
-			CommandlineFlag{ "printil", "0", {"0", "1"} }, // Print VM IL
-			CommandlineFlag{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
+			{ "optimizepasses", "5" }, // Optimization pass count
+			{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
+			{ "msize", "30000" }, // Cells available to the program
+			//{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
+			{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
+			{ "verboseoptimizer", "0", {"0", "1"} },
+			{ "annotate", "0", {"0", "1"} },
+			{ "printil", "0", {"0", "1"} }, // Print VM IL
+			{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
 		}};
 
 		CommandlineFlag& operator[](const Flag flag)
@@ -104,6 +106,18 @@ int main(int argc, char** argv)
 	bool optimize = flags[Flag::OptimizationLevel];
 
 	bf::Brainfuck bfi(flags[Flag::WarningLevel]);
+	bfi.annotate = flags[Flag::Annotate];
+	if (bfi.annotate)
+	{
+		if (flags[Flag::OptimizationLevel])
+		{
+			warnout(cmdinfo) << "Annotations are not compatible with optimization yet.\n";
+		}
+
+		bf::disasm.annotations = &bfi.annotations;
+		bf::disasm.source = &bfi.source;
+	}
+
 	try
 	{
 		bfi.compile(args[1]);
@@ -112,7 +126,7 @@ int main(int argc, char** argv)
 		{
 			bf::Optimizer opt;
 			opt.pass_count = std::stoul(flags[Flag::OptimizationPasses]);
-			opt.verbose = std::stoul(flags[Flag::VerboseOptimizer]);
+			opt.verbose = flags[Flag::VerboseOptimizer];
 			opt.optimize(bfi.program);
 		}
 

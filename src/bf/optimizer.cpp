@@ -135,6 +135,7 @@ bool Optimizer::peephole_optimize(Program &program, ProgramIt begin, ProgramIt e
 				continue;
 
 			replace_subvector_smaller(program, i, i + extract.size(), optimized);
+
 			effective = true;
 		}
 	}
