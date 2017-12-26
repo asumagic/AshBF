@@ -293,105 +293,50 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 
 	return effective;
 }
-/*
-							{
-								std::cout << "Found expandable loop, pass " << p + 1 << '\n';
-								print_assembly(j, i + 1);
 
-								if (co.op.argument() != -1)
-								{
-									warnout(optimizeinfo) << "Loop iterator `" << disassemble(co.op) << "` may rely on cell overflow:\n";
-									print_assembly(j - 1, i + 1);
-									is_innermost = false;
-									continue;
-								}
-
-								ivec unrolled;
-
-								size_t offset = 0;
-								for (auto &p : operations)
-								{
-									CellOperation &current = p.second;
-
-									int diff = p.first - offset;
-									offset += diff;
-
-									unrolled.emplace_back(bfShift, diff);
-									if (current.op.opcode == bfSet)
-									{
-										unrolled.push_back(current.op);
-									}
-									else
-									{
-										// wrong
-										unrolled.emplace_back(bfMul, -offset);
-									}
-								}
-
-								if (!is_innermost) continue;
-
-								unrolled.emplace_back(bfShift, -offset);
-
-								// We do this now because because bfMul uses this above
-								unrolled.emplace_back(bfSet, 0);
-
-								replace_subvector_smaller(program, program.begin() + j, program.begin() + i + 1, unrolled);
-
-								is_innermost = true;
-								continue;
-							}
-						}
-
-						is_innermost = false;
-					}
-				}
-
-		return true;
-	}*/
-
-	void Optimizer::optimize(Program& program)
+void Optimizer::optimize(Program& program)
+{
+	for (size_t p = 0;; ++p)
 	{
-		for (size_t p = 0;; ++p)
+		if (p >= pass_count)
 		{
-			if (p >= pass_count)
-			{
-				warnout(optimizeinfo) << "Maximal optimization pass reached. Consider increasing -optimizepasses.\n";
-				break;
-			}
-
-			bool pass_effective = false;
-
-			infoout(optimizeinfo) << "Performing pass #" << p + 1 << '\n';
-
-			struct OptimizerTask
-			{
-				bool (Optimizer::*callback)(Program&, ProgramIt, ProgramIt);
-				const char *name;
-			};
-
-			std::array<OptimizerTask, 3> tasks
-			{{
-				{&Optimizer::merge_stackable,         "Merge stackable instructions"},
-				{&Optimizer::peephole_optimize,       "Peephole"},
-				{&Optimizer::balanced_loop_unrolling, "Balanced loop unrolling"}
-			}};
-
-			for (auto &task : tasks)
-			{
-				bool effective = (this->*(task.callback))(program, program.begin(), program.end());
-				infoout(optimizeinfo) << "Performed optimization task '" << task.name << "' and " << (effective ? "was effective\n" : "had no effect\n");
-
-				if (effective)
-					pass_effective = true;
-			}
-
-			if (!pass_effective)
-			{
-				infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
-				break;
-			}
+			warnout(optimizeinfo) << "Maximal optimization pass reached. Consider increasing -optimizepasses.\n";
+			break;
 		}
 
-		program.shrink_to_fit();
+		bool pass_effective = false;
+
+		infoout(optimizeinfo) << "Performing pass #" << p + 1 << '\n';
+
+		struct OptimizerTask
+		{
+			bool (Optimizer::*callback)(Program&, ProgramIt, ProgramIt);
+			const char *name;
+		};
+
+		std::array<OptimizerTask, 3> tasks
+		{{
+			{&Optimizer::merge_stackable,         "Merge stackable instructions"},
+			{&Optimizer::peephole_optimize,       "Peephole"},
+			{&Optimizer::balanced_loop_unrolling, "Balanced loop unrolling"}
+		}};
+
+		for (auto &task : tasks)
+		{
+			bool effective = (this->*(task.callback))(program, program.begin(), program.end());
+			infoout(optimizeinfo) << "Performed optimization task '" << task.name << "' and " << (effective ? "was effective\n" : "had no effect\n");
+
+			if (effective)
+				pass_effective = true;
+		}
+
+		if (!pass_effective)
+		{
+			infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
+			break;
+		}
 	}
+
+	program.shrink_to_fit();
+}
 }
