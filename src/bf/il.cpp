@@ -9,8 +9,8 @@ namespace bf
 		const InstructionInfo& info = instructions[static_cast<size_t>(ins.opcode)];
 		std::string str = info.name;
 
-		if (info.argument_used)
-			str += ' ' + std::to_string(ins.argument) + ' ' + std::to_string(ins.argument2);
+		for (size_t i = 0; i < info.arguments_used; ++i)
+			str += ' ' + std::to_string(ins.arguments[i]);
 
 		return str;
 	}

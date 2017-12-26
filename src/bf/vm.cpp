@@ -26,20 +26,20 @@ namespace bf
 				
 		dispatch_noinc();
 		
-		lAdd:  *sp += pc->argument; dispatch();
-		lShift: sp += pc->argument; dispatch();
+		lAdd:  *sp += pc->argument(); dispatch();
+		lShift: sp += pc->argument(); dispatch();
 
-		lMAC:  *sp += pc->argument * *(sp + pc->argument2); /*errout(bcinfo) << "Multiply ACcumulate not implemented\n";*/ dispatch();
+		lMAC:  *sp += pc->argument() * *(sp + pc->argument(1)); /*errout(bcinfo) << "Multiply ACcumulate not implemented\n";*/ dispatch();
 		
 		lCOut: std::cout << static_cast<char>(*sp) << std::flush; dispatch();
 		lCIn:  char c; std::cin >> c; *sp = c; dispatch();
 		
-		lJZ:  if (*sp == 0) { pc = program.data() + pc->argument; dispatch_noinc(); } dispatch();
-		lJNZ: if (*sp != 0) { pc = program.data() + pc->argument; dispatch_noinc(); } dispatch();
+		lJZ:  if (*sp == 0) { pc = program.data() + pc->argument(); dispatch_noinc(); } dispatch();
+		lJNZ: if (*sp != 0) { pc = program.data() + pc->argument(); dispatch_noinc(); } dispatch();
 		
-		lSet: *sp = pc->argument; dispatch();
+		lSet: *sp = pc->argument(); dispatch();
 
-		lSUZ: while (*sp) { sp += pc->argument; } dispatch();
+		lSUZ: while (*sp) { sp += pc->argument(); } dispatch();
 		
 		lEnd: return;
 	}

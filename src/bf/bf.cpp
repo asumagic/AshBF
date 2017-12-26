@@ -8,7 +8,6 @@ namespace bf
 
 	Instruction::Instruction(uint8_t opcode, Instruction::Argument argument, Instruction::Argument argument2) :
 		opcode{opcode},
-		argument{argument},
-		argument2{argument2}
+		arguments{{argument, argument2}}
 	{}
 }

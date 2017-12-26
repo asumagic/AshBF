@@ -53,11 +53,22 @@ namespace bf
 			void* handler;
 			Opcode opcode;
 		};
-		Argument argument, argument2;
+
+		std::array<Argument, 2> arguments;
 		
 		inline operator uint8_t() const // Implicit cast operator to opcode
 		{
 			return opcode;
+		}
+
+		inline Argument &argument(size_t n = 0)
+		{
+			return arguments[n];
+		}
+
+		inline const Argument &argument(size_t n = 0) const
+		{
+			return arguments[n];
 		}
 	};
 
@@ -69,35 +80,35 @@ namespace bf
 	{
 		const char* name;
 		Opcode opcode;
-		bool argument_used;
-		bool stackable = false; // Defines whether the optimizer should combine successive instructions by adding their args together in a single instruction.
+		unsigned short arguments_used;
+		bool stackable; // Defines whether the optimizer should combine successive instructions by adding their first argument together in a single instruction.
 	};
 
 	constexpr std::array<InstructionInfo, Opcode::bfTOTAL + 2> instructions
 	{{
-		{"add", bfAdd, true, true},
-		{"shift", bfShift, true, true},
+		{"add", bfAdd, 1, true},
+		{"shift", bfShift, 1, true},
 
-		{"mac", bfMAC, true, false},
+		{"mac", bfMAC, 2, false},
 
-		{"cout", bfCharOut, false, false},
-		{"cin", bfCharIn, false, false},
+		{"cout", bfCharOut, 0, false},
+		{"cin", bfCharIn, 0, false},
 
-		{"jz", bfJmpZero, true, false},
-		{"jnz", bfJmpNotZero, true, false},
+		{"jz", bfJmpZero, 1, false},
+		{"jnz", bfJmpNotZero, 1, false},
 
-		{"set", bfSet, true, false},
+		{"set", bfSet, 1, false},
 		
-		{"suz", bfShiftUntilZero, true, false},
+		{"suz", bfShiftUntilZero, 1, false},
 
-		{"end", bfEnd, false, false},
+		{"end", bfEnd, 0, false},
 
-		{"(ir)loopbegin", bfLoopBegin, false, false},
-		{"(ir)loopend", bfLoopEnd, false, false},
+		{"(ir)loopbegin", bfLoopBegin, 0, false},
+		{"(ir)loopend", bfLoopEnd, 0, false},
 
-		{"(ir)nop", bfTOTAL, false, false},
+		{"(ir)(bad)nop", bfTOTAL, 0, false},
 
-		{"(ir)nop", bfNop, false, false}
+		{"(ir)nop", bfNop, 0, false}
 	}};
 
 	// Compile-time instruction representation
