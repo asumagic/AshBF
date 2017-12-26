@@ -6,8 +6,9 @@ namespace bf
 		warnings{warnings}
 	{}
 
-	Instruction::Instruction(const uint8_t opcode, const Instruction::Argument argument) :
+	Instruction::Instruction(uint8_t opcode, Instruction::Argument argument, Instruction::Argument argument2) :
 		opcode{opcode},
-		argument{argument}
+		argument{argument},
+		argument2{argument2}
 	{}
 }

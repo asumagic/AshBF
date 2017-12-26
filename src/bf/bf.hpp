@@ -16,6 +16,8 @@ namespace bf
 		bfAdd = 0, // Add to the memory cell referenced by sp
 		bfShift, // Add to the sp
 
+		bfMAC,
+
 		bfCharOut,
 		bfCharIn,
 
@@ -41,17 +43,17 @@ namespace bf
 	// The struct defining a VM instruction.
 	struct Instruction
 	{
-		using Argument = long;
+		using Argument = int;
 
 		Instruction() = default;
-		Instruction(const uint8_t opcode, const Argument argument = 0);
+		Instruction(uint8_t opcode, Argument argument = 0, Argument argument2 = 0);
 
 		union
 		{
 			void* handler;
 			Opcode opcode;
 		};
-		Argument argument;
+		Argument argument, argument2;
 		
 		inline operator uint8_t() const // Implicit cast operator to opcode
 		{
@@ -71,10 +73,12 @@ namespace bf
 		bool stackable = false; // Defines whether the optimizer should combine successive instructions by adding their args together in a single instruction.
 	};
 
-	constexpr std::array<InstructionInfo, Opcode::bfTOTAL> instructions
+	constexpr std::array<InstructionInfo, Opcode::bfTOTAL + 2> instructions
 	{{
 		{"add", bfAdd, true, true},
 		{"shift", bfShift, true, true},
+
+		{"mac", bfMAC, true, false},
 
 		{"cout", bfCharOut, false, false},
 		{"cin", bfCharIn, false, false},
@@ -89,7 +93,11 @@ namespace bf
 		{"end", bfEnd, false, false},
 
 		{"(ir)loopbegin", bfLoopBegin, false, false},
-		{"(ir)loopend", bfLoopEnd, false, false}
+		{"(ir)loopend", bfLoopEnd, false, false},
+
+		{"(ir)nop", bfTOTAL, false, false},
+
+		{"(ir)nop", bfNop, false, false}
 	}};
 
 	// Compile-time instruction representation

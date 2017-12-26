@@ -10,7 +10,7 @@ namespace bf
 		std::string str = info.name;
 
 		if (info.argument_used)
-			str += ' ' + std::to_string(ins.argument);
+			str += ' ' + std::to_string(ins.argument) + ' ' + std::to_string(ins.argument2);
 
 		return str;
 	}

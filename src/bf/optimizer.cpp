@@ -164,6 +164,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			mark_expandable(i);
 
 		if (i->opcode == bfShiftUntilZero ||
+			i->opcode == bfMAC ||
 			i->opcode == bfCharIn ||
 			i->opcode == bfCharOut) // TODO could be expanded
 			expandable = false;
@@ -219,10 +220,10 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			if (loopit_op.op.argument != -1)
 				continue;
 
+			Program unrolled;
 			if (loop_begin != begin && (loop_begin - 1)->opcode == bfSet)
 			{
-				// We know the iterator's value.
-
+				// We know how many times the loop runs.
 				Instruction &prec = *(loop_begin - 1);
 				if (prec.argument == 0)
 				{
@@ -236,14 +237,12 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 					warnout(optimizeinfo) << "Loop runs exactly once\n";
 				}
 
-				Program unrolled;
-
 				shift_count = 0;
 				for (auto &p : operations)
 				{
 					p.second.repeat(prec.argument);
 					unrolled.emplace_back(bfShift, p.first - shift_count);
-					unrolled.emplace_back(p.second.op);
+					unrolled.push_back(p.second.op);
 					shift_count = p.first;
 				}
 
@@ -252,12 +251,43 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 				unrolled.emplace_back(bfSet, 0);
 
 				replace_subvector_smaller(program, loop_begin - 1, i + 1, unrolled);
-				effective = true;
 			}
+#ifdef BROKEN_OPTIMIZATIONS
 			else
 			{
+				// We don't know how many times the loop runs, but we assumed that the loop is decremented
+				// by one every time.
 
+				shift_count = 0;
+				for (auto &p : operations)
+				{
+					unrolled.emplace_back(bfShift, p.first - shift_count);
+					shift_count = p.first;
+
+					if (p.second.op.opcode == bfAdd)
+						unrolled.emplace_back(bfMAC, p.second.op.argument, -shift_count);
+					else
+						unrolled.push_back(p.second.op);
+				}
+
+				// Shift back to the iterator cell and set it to 0
+				unrolled.emplace_back(bfShift, -shift_count);
+				unrolled.emplace_back(bfSet, 0);
+
+				infoout() << "Optimized:\n";
+				disasm.print_range(loop_begin, i + 1);
+				infoout() << "into:\n";
+				disasm.print_range(unrolled.begin(), unrolled.end());
+
+				replace_subvector_smaller(program, loop_begin, i + 1, unrolled);
 			}
+#else
+			else { effective = false; }
+#endif
+
+			effective = true;
+			//i = begin; // HACK
+			return false;
 		}
 	}
 

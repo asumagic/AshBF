@@ -10,7 +10,7 @@ namespace bf
 	{
 		{
 			constexpr std::array<void*, Opcode::bfTOTAL> labels {{
-				&&lAdd, &&lShift, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd
+				&&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd
 			}};
 
 			// Compute the goto labels
@@ -18,7 +18,7 @@ namespace bf
 				ins.handler = labels[ins.opcode];
 		}
 
-		using Cell = int8_t;
+		using Cell = uint8_t;
 		std::vector<Cell> memory(memory_size);
 
 		Cell *sp = memory.data();
@@ -28,6 +28,8 @@ namespace bf
 		
 		lAdd:  *sp += pc->argument; dispatch();
 		lShift: sp += pc->argument; dispatch();
+
+		lMAC:  *sp += pc->argument * *(sp + pc->argument2); /*errout(bcinfo) << "Multiply ACcumulate not implemented\n";*/ dispatch();
 		
 		lCOut: std::cout << static_cast<char>(*sp) << std::flush; dispatch();
 		lCIn:  char c; std::cin >> c; *sp = c; dispatch();
