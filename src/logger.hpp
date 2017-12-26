@@ -13,7 +13,7 @@
 struct LogLevel
 {
 	const std::string levelprefix;
-	std::ostream& buffer = std::cout;
+	std::ostream& buffer = std::clog;
 
 	std::ostream& operator()(const std::string& sourceinfo = "")
 	{
