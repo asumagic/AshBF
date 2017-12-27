@@ -1,6 +1,7 @@
 #include "bf/bf.hpp"
 #include "bf/optimizer.hpp"
 #include "bf/il.hpp"
+#include "bf/safeinterpreter.hpp"
 #include "logger.hpp"
 
 #include <algorithm>
@@ -36,24 +37,26 @@ int main(int argc, char** argv)
 		OptimizationLevel,
 		TapeSize,
 		//Sanitize,
+		Debug,
 		WarningLevel,
 		VerboseOptimizer,
-		Annotate,
+		//Annotate,
 		PrintIL,
 		DoExecute
 	};
 
 	struct
 	{
-		std::array<CommandlineFlag, 8> flags
+		std::array<CommandlineFlag, 9> flags
 		{{
 			{ "optimizepasses", "5" }, // Optimization pass count
 			{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
 			{ "msize", "30000" }, // Cells available to the program
 			//{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
+			{ "debug", "0", {"0", "1"} },
 			{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
 			{ "verboseoptimizer", "0", {"0", "1"} },
-			{ "annotate", "0", {"0", "1"} },
+			//{ "annotate", "0", {"0", "1"} },
 			{ "printil", "0", {"0", "1"} }, // Print VM IL
 			{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
 		}};
@@ -70,7 +73,7 @@ int main(int argc, char** argv)
 	{
 		if (args[i].size() < 2 || args[i][0] != '-')
 		{
-			warnout(cmdinfo) << "Unknown passed argument, flags should be prefixed with '-'" << std::endl;
+			warnout(cmdinfo) << "Unknown argument '" << args[i] << "', flags should be prefixed with '-'" << std::endl;
 			continue;
 		}
 
@@ -88,7 +91,7 @@ int main(int argc, char** argv)
 				if (!match_it->expected.empty() &&
 					std::find(begin(match_it->expected), end(match_it->expected), match_it->result) == end(match_it->expected)) // Make sure the argument is within the expected values
 				{
-					errout(cmdinfo) << "Passed bad argument '" << match_it->result << "' to flag '" << match_it->match << "'\n";
+					errout(cmdinfo) << "Passed bad parameter '" << match_it->result << "' to flag '" << match_it->match << "'\n";
 					fatal_encountered = true;
 				}
 			}
@@ -106,17 +109,13 @@ int main(int argc, char** argv)
 	bool optimize = flags[Flag::OptimizationLevel];
 
 	bf::Brainfuck bfi(flags[Flag::WarningLevel]);
-	bfi.annotate = flags[Flag::Annotate];
-	if (bfi.annotate)
+	/*if (bfi.annotate)
 	{
 		if (flags[Flag::OptimizationLevel])
 		{
-			warnout(cmdinfo) << "Annotations are not compatible with optimization yet.\n";
+			warnout(cmdinfo) << "Annotations are not compatible with optimizations. If '-debug' is set you will have problems.\n";
 		}
-
-		bf::disasm.annotations = &bfi.annotations;
-		bf::disasm.source = &bfi.source;
-	}
+	}*/
 
 	try
 	{
@@ -140,6 +139,19 @@ int main(int argc, char** argv)
 
 	if (flags[Flag::PrintIL])
 		bf::disasm.print_range(bfi.program);
+
+	if (flags[Flag::Debug])
+	{
+		/*if (!flags[Flag::Annotate])
+		{
+			errout(cmdinfo) << "Debug mode requires annotations enabled\n";
+			return EXIT_FAILURE;
+		}*/
+
+		bf::DebugInterpreter dbg;
+		//dbg.source = &bfi.source;
+		//dbg.resume(800000);
+	}
 
 	if (flags[Flag::DoExecute])
 	{

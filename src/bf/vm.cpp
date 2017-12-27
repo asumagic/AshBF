@@ -10,7 +10,7 @@ namespace bf
 	{
 		{
 			constexpr std::array<void*, Opcode::bfTOTAL> labels {{
-				&&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd
+				&&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lDebug, &&lEnd
 			}};
 
 			// Compute the goto labels
@@ -40,6 +40,8 @@ namespace bf
 		lSet: *sp = pc->argument(); dispatch();
 
 		lSUZ: while (*sp) { sp += pc->argument(); } dispatch();
+
+		lDebug: return;
 		
 		lEnd: return;
 	}

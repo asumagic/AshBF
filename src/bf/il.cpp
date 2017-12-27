@@ -45,7 +45,7 @@ namespace bf
 		size_t i = 0;
 		for (auto it = program.begin(); it != program.end(); ++it)
 		{
-			if (annotations)
+			/*if (annotations)
 			{
 				if (i >= annotations->size())
 				{
@@ -58,15 +58,15 @@ namespace bf
 					for (size_t j = 0; j < offset; ++j)
 						std::cout << ' ';
 
-					/*for (long j = i - 1; j >= 0 && (*annotations)[j] == (*annotations)[i]; --j)
+					for (long j = i - 1; j >= 0 && (*annotations)[j] == (*annotations)[i]; --j)
 						std::cout << '~';
 
 					for (size_t j = i + 1; j < source->size() && (*annotations)[j] == (*annotations)[i]; ++j)
-						std::cout << '~';*/
+						std::cout << '~';
 
 					std::cout << "^\n";
 				}
-			}
+			}*/
 
 			std::cout << ++i << '\t' << (*this)(*it) << "\n";
 		}

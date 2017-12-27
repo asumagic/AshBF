@@ -28,6 +28,7 @@ void CellOperation::apply(const Instruction& ins)
 			op = ins;
 			any = true;
 		}
+	break;
 
 	case bfSet:
 		op = ins;
@@ -253,6 +254,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 
 				replace_subvector_smaller(program, loop_begin - 1, i + 1, unrolled);
 			}
+//#define BROKEN_OPTIMIZATIONS
 #ifdef BROKEN_OPTIMIZATIONS
 			else
 			{
@@ -288,7 +290,11 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 
 			effective = true;
 			//i = begin; // HACK
+#ifdef BROKEN_OPTIMIZATIONS
+			return true;
+#else
 			return false;
+#endif
 		}
 	}
 

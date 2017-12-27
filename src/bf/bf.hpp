@@ -28,6 +28,8 @@ namespace bf
 		
 		bfShiftUntilZero, // Adds the argument to sp until the memory cell referenced by sp is zero
 
+		bfDebug,
+
 		bfEnd, // End the program execution
 
 		bfLoopBegin,
@@ -38,7 +40,7 @@ namespace bf
 		bfNop // Used for convenience by the optimizer
 	};
 	
-	class Brainfuck;
+	struct Brainfuck;
 
 	// The struct defining a VM instruction.
 	struct Instruction
@@ -101,6 +103,8 @@ namespace bf
 		
 		{"suz", bfShiftUntilZero, 1, false},
 
+		{"debug", bfDebug, 0, false},
+
 		{"end", bfEnd, 0, false},
 
 		{"(ir)loopbegin", bfLoopBegin, 0, false},
@@ -137,9 +141,8 @@ namespace bf
 		void repeat(size_t n);
 	};
 
-	class Brainfuck
+	struct Brainfuck
 	{
-	public:
 		Brainfuck(const bool warnings = true);
 
 		void compile(const std::string& fname);
@@ -147,10 +150,6 @@ namespace bf
 		void interprete(const size_t memory_size) noexcept;
 		
 		std::vector<Instruction> program;
-
-		std::string source;
-		std::vector<size_t> annotations;
-		bool annotate;
 		
 		bool warnings;
 	};

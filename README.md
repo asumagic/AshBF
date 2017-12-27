@@ -41,11 +41,18 @@ Defines the brainfuck tape allocated memory.
 Do note that without the `-sanitize` flag passed, out of bounds memory accesses will cause problems.  
 `30000` is the default.
 
-### `-sanitize`
+### `-sanitize` (unimplemented)
 
 Sanitize brainfuck memory accesses to prevent from out of memory reads or writes.  
 When an invalid read or write is detected, the interpreter will exit and print an error.  
 `0` is the default.
+
+### `-debug`
+
+Enable a mode that detects bugs within the optimizer or the VM by comparing optimized results with those of a safe, though very slow interpreter.
+
+Requires `-annotate`.  
+The compiler inserts breakpoints within the code late into the compile process. When reached by the 'unsafe', optimized VM, nearby memory, tape information and more will be compared against the safe interpreter's. When a mismatch is found, ashbf will abort and output a detailed report.
 
 ### `-verboseoptimizer`
 
@@ -54,8 +61,8 @@ When enabled, the optimizer will give various information on optimization tasks 
 
 ### `-annotate`
 
-Keep track of source information within the compiled form.  
-Required for advanced toolchain sanitizing.
+Keep track of source information within the compiled form. This makes IL assembly listenings more verbose.  
+Required for debug mode.
 
 ### `-printil`
 

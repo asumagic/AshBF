@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "safeinterpreter.hpp"
+
 namespace bf
 {
 	void Brainfuck::compile(const std::string &fname)
@@ -29,18 +31,10 @@ namespace bf
 
 		while (file.good())
 		{
-			if (annotate)
-				source.push_back(current);
-
 			auto it = std::find_if(begin(instruction_list), end(instruction_list), [current](const BrainfuckInstruction& other) { return current == other.match; });
 
 			if (it != end(instruction_list))
-			{
 				program.emplace_back(static_cast<uint8_t>(it->base_opcode), it->default_arg);
-
-				if (annotate)
-					annotations.emplace_back(source.size() - 1);
-			}
 
 			file.get(current);
 		}
