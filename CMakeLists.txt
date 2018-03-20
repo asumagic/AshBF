@@ -10,3 +10,5 @@ add_custom_target(headers SOURCES ${headers})
 
 file(GLOB_RECURSE sources "*.cpp")
 add_executable(${PROJECT_NAME} ${sources})
+
+set(CMAKE_CXX_COMPILER "g++")

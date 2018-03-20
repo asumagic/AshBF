@@ -1,15 +1,12 @@
 #include "bf/bf.hpp"
 #include "bf/optimizer.hpp"
 #include "bf/il.hpp"
-#include "bf/safeinterpreter.hpp"
 #include "logger.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <string>
 #include <vector>
-
-// @TODO change from regular enum to enum class when possible
 
 int main(int argc, char** argv)
 {
@@ -35,13 +32,13 @@ int main(int argc, char** argv)
 	{
 		OptimizationPasses = 0,
 		OptimizationLevel,
+		OptimizationDebug,
+		OptimizationVerbose,
 		TapeSize,
 		//Sanitize,
-		Debug,
 		WarningLevel,
-		VerboseOptimizer,
-		//Annotate,
 		PrintIL,
+		ILLineNumber,
 		DoExecute
 	};
 
@@ -49,15 +46,15 @@ int main(int argc, char** argv)
 	{
 		std::array<CommandlineFlag, 9> flags
 		{{
-			{ "optimizepasses", "5" }, // Optimization pass count
+			{ "optimize-passes", "5" }, // Optimization pass count
 			{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
+			{ "optimize-debug", "0", {"0", "1"} }, // Optimization regression verification
+			{ "optimize-verbose", "0", {"0", "1"} },
 			{ "msize", "30000" }, // Cells available to the program
 			//{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
-			{ "debug", "0", {"0", "1"} },
 			{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
-			{ "verboseoptimizer", "0", {"0", "1"} },
-			//{ "annotate", "0", {"0", "1"} },
-			{ "printil", "0", {"0", "1"} }, // Print VM IL
+			{ "print-il", "0", {"0", "1"} }, // Print VM IL
+			{ "il-line-numbers", "1", {"0", "1"} }, // Print VM IL line numbers
 			{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
 		}};
 
@@ -109,13 +106,6 @@ int main(int argc, char** argv)
 	bool optimize = flags[Flag::OptimizationLevel];
 
 	bf::Brainfuck bfi(flags[Flag::WarningLevel]);
-	/*if (bfi.annotate)
-	{
-		if (flags[Flag::OptimizationLevel])
-		{
-			warnout(cmdinfo) << "Annotations are not compatible with optimizations. If '-debug' is set you will have problems.\n";
-		}
-	}*/
 
 	try
 	{
@@ -125,7 +115,8 @@ int main(int argc, char** argv)
 		{
 			bf::Optimizer opt;
 			opt.pass_count = std::stoul(flags[Flag::OptimizationPasses]);
-			opt.verbose = flags[Flag::VerboseOptimizer];
+			opt.debug = flags[Flag::OptimizationDebug];
+			opt.verbose = flags[Flag::OptimizationVerbose];
 			opt.optimize(bfi.program);
 		}
 
@@ -137,21 +128,10 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
+	bf::disasm.print_line_numbers = flags[Flag::ILLineNumber];
+
 	if (flags[Flag::PrintIL])
 		bf::disasm.print_range(bfi.program);
-
-	if (flags[Flag::Debug])
-	{
-		/*if (!flags[Flag::Annotate])
-		{
-			errout(cmdinfo) << "Debug mode requires annotations enabled\n";
-			return EXIT_FAILURE;
-		}*/
-
-		bf::DebugInterpreter dbg;
-		//dbg.source = &bfi.source;
-		//dbg.resume(800000);
-	}
 
 	if (flags[Flag::DoExecute])
 	{

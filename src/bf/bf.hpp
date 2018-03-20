@@ -28,8 +28,6 @@ namespace bf
 		
 		bfShiftUntilZero, // Adds the argument to sp until the memory cell referenced by sp is zero
 
-		bfDebug,
-
 		bfEnd, // End the program execution
 
 		bfLoopBegin,
@@ -42,13 +40,12 @@ namespace bf
 	
 	struct Brainfuck;
 
-	// The struct defining a VM instruction.
-	struct Instruction
+	struct VMOp
 	{
 		using Argument = int;
 
-		Instruction() = default;
-		Instruction(uint8_t opcode, Argument argument = 0, Argument argument2 = 0);
+		VMOp() = default;
+		VMOp(uint8_t opcode, Argument argument = 0, Argument argument2 = 0);
 
 		union
 		{
@@ -74,11 +71,11 @@ namespace bf
 		}
 	};
 
-	using Program = std::vector<Instruction>;
+	using Program = std::vector<VMOp>;
 	using ProgramIt = Program::iterator;
 
 	// Defines various info about a VM instruction.
-	struct InstructionInfo
+	struct VMOpInfo
 	{
 		const char* name;
 		Opcode opcode;
@@ -86,7 +83,7 @@ namespace bf
 		bool stackable; // Defines whether the optimizer should combine successive instructions by adding their first argument together in a single instruction.
 	};
 
-	constexpr std::array<InstructionInfo, Opcode::bfTOTAL + 2> instructions
+	constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions
 	{{
 		{"add", bfAdd, 1, true},
 		{"shift", bfShift, 1, true},
@@ -103,8 +100,6 @@ namespace bf
 		
 		{"suz", bfShiftUntilZero, 1, false},
 
-		{"debug", bfDebug, 0, false},
-
 		{"end", bfEnd, 0, false},
 
 		{"(ir)loopbegin", bfLoopBegin, 0, false},
@@ -116,14 +111,12 @@ namespace bf
 	}};
 
 	// Compile-time instruction representation
-	struct BrainfuckInstruction
+	struct BFOp
 	{
 		char match;
 		Opcode base_opcode;
-		Instruction::Argument default_arg = 0;
+		VMOp::Argument default_arg = 0;
 	};
-
-	using SourceIt = std::string::iterator;
 
 	struct OptimizationSequence
 	{
@@ -133,10 +126,10 @@ namespace bf
 
 	struct CellOperation
 	{
-		Instruction op;
+		VMOp op;
 		bool any = false;
 
-		void apply(const Instruction& instruction);
+		void apply(const VMOp& instruction);
 		void simplify();
 		void repeat(size_t n);
 	};
@@ -147,9 +140,9 @@ namespace bf
 
 		void compile(const std::string& fname);
 		void link();
-		void interprete(const size_t memory_size) noexcept;
+		void interprete(size_t memory_size) noexcept;
 		
-		std::vector<Instruction> program;
+		std::vector<VMOp> program;
 		
 		bool warnings;
 	};

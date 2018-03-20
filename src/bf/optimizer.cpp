@@ -14,7 +14,7 @@
 
 namespace bf
 {
-void CellOperation::apply(const Instruction& ins)
+void CellOperation::apply(const VMOp& ins)
 {
 	switch (ins.opcode)
 	{
@@ -55,12 +55,12 @@ void CellOperation::repeat(size_t n)
 	}
 }
 
-bool Optimizer::is_stackable(const Instruction& ins)
+bool Optimizer::is_stackable(const VMOp& ins)
 {
 	return instructions[ins.opcode].stackable;
 }
 
-bool Optimizer::is_nop(const Instruction& ins)
+bool Optimizer::is_nop(const VMOp& ins)
 {
 	return ins.opcode == bfNop ||
 		(is_stackable(ins) && ins.argument() == 0);
@@ -226,7 +226,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			if (loop_begin != begin && (loop_begin - 1)->opcode == bfSet)
 			{
 				// We know how many times the loop runs.
-				Instruction &prec = *(loop_begin - 1);
+				VMOp &prec = *(loop_begin - 1);
 				if (prec.argument() == 0)
 				{
 					warnout(optimizeinfo) << "Loop never runs, iterator is initialized to 0\n";

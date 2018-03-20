@@ -1,8 +1,6 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
-#include "commonpp.hpp"
-
 #include <string>
 #include <iostream>
 #include <array>

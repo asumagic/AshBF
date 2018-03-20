@@ -7,20 +7,14 @@ namespace bf
 {
 struct Disassembler
 {
-	std::string operator()(const Instruction &ins);
+	bool print_line_numbers;
+
+	std::string operator()(const VMOp &ins);
 	void print_range(Program::iterator begin, Program::iterator end);
 	void print_range(Program& program);
 };
 
 extern Disassembler disasm;
-
-// IR instruction, used when optimizing
-struct IRInstruction : Instruction
-{
-	using Instruction::Instruction;
-
-	size_t source_offset = 0;
-};
 }
 
 #endif // IL_HPP

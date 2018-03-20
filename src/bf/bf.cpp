@@ -6,7 +6,7 @@ namespace bf
 		warnings{warnings}
 	{}
 
-	Instruction::Instruction(uint8_t opcode, Instruction::Argument argument, Instruction::Argument argument2) :
+	VMOp::VMOp(uint8_t opcode, VMOp::Argument argument, VMOp::Argument argument2) :
 		opcode{opcode},
 		arguments{{argument, argument2}}
 	{}
