@@ -105,7 +105,7 @@ namespace bf
 		{"(ir)loopbegin", bfLoopBegin, 0, false},
 		{"(ir)loopend", bfLoopEnd, 0, false},
 
-		{"(ir)(bad)nop", bfTOTAL, 0, false},
+		{"(ir)(bad)", bfTOTAL, 0, false},
 
 		{"(ir)nop", bfNop, 0, false}
 	}};
