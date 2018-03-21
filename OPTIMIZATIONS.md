@@ -168,10 +168,9 @@ However, we know `*sp` because of the `set 4` instruction! Plus, when the loop e
 5 shift -2
 ```
 
-### 1-decremented balanced loop optimization (UNIMPLEMENTED)
+### 1-decremented balanced loop optimization
 
-`[>++>+<<-]` alone could be optimized (a lot).
+TODO: detail
 
-An instruction `relmul` would multiply `*sp` by `*(sp + relmul)` and *could* help there. However, in case of `++` we want to add `2 * N`. Because we do not know the value at `*(sp + 1)` we cannot quite do it this way, because there is only one argument.
-
-A (complicated) solution I've thought of: implement a 'data' segment for the program, beyond `end` perhaps, which would use the arguments to store data. This would require implementation effort, is not quite optimal and would look hacky.
+The `mac` (multiply-accumulate) instruction is used to add the current cell by the cell refered to by the second argument multiplied by the first argument, i.e. `*sp += arg1 * sp[arg2]`.  
+For now, `set` inside such loops can not be optimized away.
