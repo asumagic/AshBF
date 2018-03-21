@@ -143,6 +143,8 @@ namespace bf
 		void interprete(size_t memory_size) noexcept;
 		
 		std::vector<VMOp> program;
+
+		std::ostream* pipeout = &std::cout;
 		
 		bool warnings;
 	};
