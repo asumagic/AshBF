@@ -306,13 +306,12 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 
 				replace_subvector_smaller(program, loop_begin - 1, i + 1, unrolled);
 			}
-//#define BROKEN_OPTIMIZATIONS
-#ifdef BROKEN_OPTIMIZATIONS
 			else
 			{
 				// We don't know how many times the loop runs, but we assumed that the loop is decremented
 				// by one every time.
 
+				bool legal_when_zero = true;
 				shift_count = 0;
 				for (auto &p : operations)
 				{
@@ -320,33 +319,38 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 					shift_count = p.first;
 
 					if (p.second.op.opcode == bfAdd)
+					{
 						unrolled.emplace_back(bfMAC, p.second.op.argument(), -shift_count);
+					}
+					else if (p.second.op.opcode == bfSet)
+					{
+						legal_when_zero = false;
+						break;
+					}
 					else
+					{
 						unrolled.push_back(p.second.op);
+					}
+				}
+
+				// TODO: conditionals to allow some optimization anyway
+				if (!legal_when_zero)
+				{
+					update_state_debug(program);
+					continue;
 				}
 
 				// Shift back to the iterator cell and set it to 0
 				unrolled.emplace_back(bfShift, -shift_count);
 				unrolled.emplace_back(bfSet, 0);
 
-				infoout() << "Optimized:\n";
-				disasm.print_range(loop_begin, i + 1);
-				infoout() << "into:\n";
-				disasm.print_range(unrolled.begin(), unrolled.end());
-
 				replace_subvector_smaller(program, loop_begin, i + 1, unrolled);
+
+				update_state_debug(program);
 			}
-#else
-			else { effective = false; }
-#endif
 
 			effective = true;
 			//i = begin; // HACK
-#ifdef BROKEN_OPTIMIZATIONS
-			return true;
-#else
-			return false;
-#endif
 		}
 	}
 
@@ -390,6 +394,8 @@ void Optimizer::optimize(Program& program)
 
 			if (effective)
 				pass_effective = true;
+
+			update_state_debug(program);
 		}
 
 		if (!pass_effective)
