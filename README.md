@@ -35,11 +35,10 @@ Enables IL optimizations.
 When disabled, the IL will be very similar to the brainfuck source. Pattern optimization will not be performed and stackable instructions (e.g. +, -, >, <) will not be merged.  
 `1` is the default.
 
-### `-optimize-debug` *(unimplemented)*
+### `-optimize-debug`
 
 Detect optimization regression.
-The optimizer will execute the compiled program without optimizations and with optimizations to compare the output.  
-If the output is identical, there is no optimization regression detected. If the output is different, the regression finder will repeat optimizations up to a certain point until the culprit optimization is found.  
+The optimizer will test every optimization to detect optimization bugs.    
 It will then compare the ILs and print the difference between them. Note that this is extremely slow and should only be used to detect bugs in the compiler.  
 Programs using `,` are not yet supported. Regressions involving VM crashes or sanitization errors are not yet supported.  
 `-msize` is ignored during debug.  
