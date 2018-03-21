@@ -15,11 +15,11 @@ namespace bf
 				break;
 
 			case bfLoopEnd:
-				lassert(!jumps.empty(), compileinfo, locale_strings[ORPHAN_LOOPEND]);
+				lassert(!jumps.empty(), compileinfo, "Loop '[' has no matching ']'");
 				program[i].opcode = bfJmpNotZero;
 
-				program[jumps.back()].argument = i + 1;
-				program[i].argument = jumps.back() + 1;
+				program[jumps.back()].argument() = i + 1;
+				program[i].argument() = jumps.back() + 1;
 				jumps.pop_back();
 				break;
 
@@ -27,6 +27,6 @@ namespace bf
 			}
 		}
 
-		lassert(jumps.empty(), compileinfo, locale_strings[ORPHAN_LOOPBEGIN_NOMATCH]);
+		lassert(jumps.empty(), compileinfo, "Loop ']' has no matching '['");
 	}
 }

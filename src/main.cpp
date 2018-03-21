@@ -1,12 +1,12 @@
 #include "bf/bf.hpp"
+#include "bf/optimizer.hpp"
+#include "bf/il.hpp"
 #include "logger.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <string>
 #include <vector>
-
-// @TODO change from regular enum to enum class when possible
 
 int main(int argc, char** argv)
 {
@@ -32,24 +32,30 @@ int main(int argc, char** argv)
 	{
 		OptimizationPasses = 0,
 		OptimizationLevel,
+		OptimizationDebug,
+		OptimizationVerbose,
 		TapeSize,
 		//Sanitize,
 		WarningLevel,
 		PrintIL,
+		ILLineNumber,
 		DoExecute
 	};
 
 	struct
 	{
-		std::array<CommandlineFlag, 6> flags
+		std::array<CommandlineFlag, 9> flags
 		{{
-			CommandlineFlag{ "optimizepasses", "5" }, // Optimization pass count
-			CommandlineFlag{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
-			CommandlineFlag{ "msize", "30000" }, // Cells available to the program
-			//CommandlineFlag{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
-			CommandlineFlag{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
-			CommandlineFlag{ "printil", "0", {"0", "1"} }, // Print VM IL
-			CommandlineFlag{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
+			{ "optimize-passes", "5" }, // Optimization pass count
+			{ "optimize", "1", {"0", "1"} }, // Optimization level (any or 1)
+			{ "optimize-debug", "0", {"0", "1"} }, // Optimization regression verification
+			{ "optimize-verbose", "0", {"0", "1"} },
+			{ "msize", "30000" }, // Cells available to the program
+			//{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
+			{ "warnings", "1", {"0", "1"} }, // Controls compiler warnings
+			{ "print-il", "0", {"0", "1"} }, // Print VM IL
+			{ "il-line-numbers", "1", {"0", "1"} }, // Print VM IL line numbers
+			{ "execute", "1", {"0", "1"} } // Do execute the compiled program or not
 		}};
 
 		CommandlineFlag& operator[](const Flag flag)
@@ -64,7 +70,7 @@ int main(int argc, char** argv)
 	{
 		if (args[i].size() < 2 || args[i][0] != '-')
 		{
-			warnout(cmdinfo) << locale_strings[NOT_A_FLAG] << std::endl;
+			warnout(cmdinfo) << "Unknown argument '" << args[i] << "', flags should be prefixed with '-'" << std::endl;
 			continue;
 		}
 
@@ -82,14 +88,14 @@ int main(int argc, char** argv)
 				if (!match_it->expected.empty() &&
 					std::find(begin(match_it->expected), end(match_it->expected), match_it->result) == end(match_it->expected)) // Make sure the argument is within the expected values
 				{
-					errout(cmdinfo) << locale_strings[INVALID_VAL1] << match_it->result << locale_strings[INVALID_VAL2] << match_it->match << locale_strings[INVALID_VAL3] << std::endl;
+					errout(cmdinfo) << "Passed bad parameter '" << match_it->result << "' to flag '" << match_it->match << "'\n";
 					fatal_encountered = true;
 				}
 			}
 		}
 		else
 		{
-			errout(cmdinfo) << locale_strings[UNKNOWN_FLAG] << std::endl;
+			errout(cmdinfo) << "Invalid flag '" << args[i] << "'\n";
 			fatal_encountered = true;
 		}
 	}
@@ -100,23 +106,32 @@ int main(int argc, char** argv)
 	bool optimize = flags[Flag::OptimizationLevel];
 
 	bf::Brainfuck bfi(flags[Flag::WarningLevel]);
+
 	try
 	{
 		bfi.compile(args[1]);
 
 		if (optimize)
-			bfi.optimize(std::stoul(flags[Flag::OptimizationPasses]));
+		{
+			bf::Optimizer opt;
+			opt.pass_count = std::stoul(flags[Flag::OptimizationPasses]);
+			opt.debug = flags[Flag::OptimizationDebug];
+			opt.verbose = flags[Flag::OptimizationVerbose];
+			opt.optimize(bfi.program);
+		}
 
 		bfi.link();
 	}
 	catch (std::runtime_error& r)
 	{
-		errout(compileinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_COMPILE] << r.what() << std::endl;
+		errout(compileinfo) << "Runtime compiler error: " << r.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 
+	bf::disasm.print_line_numbers = flags[Flag::ILLineNumber];
+
 	if (flags[Flag::PrintIL])
-		bfi.print_assembly();
+		bf::disasm.print_range(bfi.program);
 
 	if (flags[Flag::DoExecute])
 	{
@@ -127,7 +142,7 @@ int main(int argc, char** argv)
 		}
 		catch (std::runtime_error& r) // @TODO use custom exceptions
 		{
-			errout(bcinfo) << locale_strings[EXCEPTION_COMMON] << locale_strings[EXCEPTION_RUNTIME] << r.what() << std::endl;
+			errout(bcinfo) << "Runtime VM error: " << r.what() << std::endl;
 			return EXIT_FAILURE;
 		}
 	}

@@ -16,6 +16,8 @@ namespace bf
 		bfAdd = 0, // Add to the memory cell referenced by sp
 		bfShift, // Add to the sp
 
+		bfMAC,
+
 		bfCharOut,
 		bfCharIn,
 
@@ -33,87 +35,116 @@ namespace bf
 
 		bfTOTAL,
 
-		bfNop // Unused by the VM; exclusively compile-time
+		bfNop // Used for convenience by the optimizer
 	};
 	
-	class Brainfuck;
+	struct Brainfuck;
 
-	// The struct defining a VM instruction.
-	struct Instruction
+	using VMArg = int;
+
+	struct VMOp
 	{
-		using Argument = long;
-
-		Instruction() = default;
-		Instruction(const uint8_t opcode, const Argument argument = 0);
+		VMOp() = default;
+		VMOp(uint8_t opcode, VMArg arg1 = 0, VMArg arg2 = 0);
 
 		union
 		{
 			void* handler;
 			Opcode opcode;
 		};
-		Argument argument;
+
+		std::array<VMArg, 2> arguments;
 		
 		inline operator uint8_t() const // Implicit cast operator to opcode
 		{
 			return opcode;
 		}
+
+		inline VMArg &argument(size_t n = 0)
+		{
+			return arguments[n];
+		}
+
+		inline const VMArg &argument(size_t n = 0) const
+		{
+			return arguments[n];
+		}
 	};
 
+	using Program = std::vector<VMOp>;
+	using ProgramIt = Program::iterator;
+
 	// Defines various info about a VM instruction.
-	struct InstructionInfo
+	struct VMOpInfo
 	{
 		const char* name;
 		Opcode opcode;
-		bool argument_used;
-		bool stackable = false; // Defines whether the optimizer should combine successive instructions by adding their args together in a single instruction.
+		unsigned short arguments_used;
+		bool stackable; // Defines whether the optimizer should combine successive instructions by adding their first argument together in a single instruction.
 	};
 
-	constexpr std::array<InstructionInfo, Opcode::bfTOTAL> instructions
+	constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions
 	{{
-		{"add", bfAdd, true, true},
-		{"shift", bfShift, true, true},
+		{"add", bfAdd, 1, true},
+		{"shift", bfShift, 1, true},
 
-		{"cout", bfCharOut, false, false},
-		{"cin", bfCharIn, false, false},
+		{"mac", bfMAC, 2, false},
 
-		{"jz", bfJmpZero, true, false},
-		{"jnz", bfJmpNotZero, true, false},
+		{"cout", bfCharOut, 0, false},
+		{"cin", bfCharIn, 0, false},
 
-		{"set", bfSet, true, false},
+		{"jz", bfJmpZero, 1, false},
+		{"jnz", bfJmpNotZero, 1, false},
+
+		{"set", bfSet, 1, false},
 		
-		{"suz", bfShiftUntilZero, true, false},
+		{"suz", bfShiftUntilZero, 1, false},
 
-		{"end", bfEnd, false, false}
+		{"end", bfEnd, 0, false},
+
+		{"(tmp)loopbegin", bfLoopBegin, 0, false},
+		{"(tmp)loopend", bfLoopEnd, 0, false},
+
+		{"(bad)", bfTOTAL, 0, false},
+
+		{"(tmp)nop", bfNop, 0, false}
 	}};
 
 	// Compile-time instruction representation
-	struct BrainfuckInstruction
+	struct BFOp
 	{
 		char match;
 		Opcode base_opcode;
-		Instruction::Argument default_arg = 0;
+		VMArg default_arg = 0;
 	};
 
 	struct OptimizationSequence
 	{
 		std::vector<uint8_t> seq;
-		std::function<std::vector<Instruction>(const std::vector<Instruction>&)> callback;
+		std::function<Program(const Program&)> callback;
 	};
 
-	class Brainfuck
+	struct CellOperation
 	{
-	public:
+		VMOp op;
+		bool any = false;
+
+		void apply(const VMOp& instruction);
+		void simplify();
+		void repeat(size_t n);
+	};
+
+	struct Brainfuck
+	{
 		Brainfuck(const bool warnings = true);
 
-		void print_assembly();
-
-		void compile(const std::string& source);
-		void optimize(const size_t passes = 5);
+		void compile(const std::string& fname);
 		void link();
-		void interprete(const size_t memory_size) noexcept;
+		void interprete(size_t memory_size) noexcept;
 		
-	private:
-		std::vector<Instruction> program;
+		std::vector<VMOp> program;
+
+		std::ostream* pipeout = &std::cout;
 		
 		bool warnings;
 	};

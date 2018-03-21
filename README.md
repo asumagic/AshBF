@@ -22,11 +22,11 @@ cmake . && make
 
 Specify flags with `-flag=value`. When a flag is enabled (`-flag`) without a given value, it will default to `1`.
 
-### `-optimizepasses`
+### `-optimize-passes`
 
 Prevents the optimizer from iterating over N times.  
 Typically, one optimization pass will be sufficient. However, due to the way the optimizer is built, one optimization may enable another one next pass.  
-Do note that not all optimizations are pass-based. With `-optimize=1 -optimizepasses=0` some optimizations may still be performed.  
+Do note that not all optimizations are pass-based.
 `5` is the default.
 
 ### `-optimize`
@@ -35,19 +35,34 @@ Enables IL optimizations.
 When disabled, the IL will be very similar to the brainfuck source. Pattern optimization will not be performed and stackable instructions (e.g. +, -, >, <) will not be merged.  
 `1` is the default.
 
+### `-optimize-debug` *(unimplemented)*
+
+Detect optimization regression.
+The optimizer will execute the compiled program without optimizations and with optimizations to compare the output.  
+If the output is identical, there is no optimization regression detected. If the output is different, the regression finder will repeat optimizations up to a certain point until the culprit optimization is found.  
+It will then compare the ILs and print the difference between them. Note that this is extremely slow and should only be used to detect bugs in the compiler.  
+Programs using `,` are not yet supported. Regressions involving VM crashes or sanitization errors are not yet supported.  
+`-msize` is ignored during debug.  
+Program output will not show to stdout.
+
+### `-optimize-verbose`
+
+Verbose optimization feedback.  
+When enabled, the optimizer will give various information on optimization tasks and passes and even more in `-optimizedebug` mode.
+
 ### `-msize`
 
 Defines the brainfuck tape allocated memory.  
 Do note that without the `-sanitize` flag passed, out of bounds memory accesses will cause problems.  
 `30000` is the default.
 
-### `-sanitize`
+### `-sanitize` *(unimplemented)*
 
 Sanitize brainfuck memory accesses to prevent from out of memory reads or writes.  
 When an invalid read or write is detected, the interpreter will exit and print an error.  
 `0` is the default.
 
-### `-printil`
+### `-print-il`
 
 Enable IL assembly listings.  
 Example for program `+[+.]`:
@@ -62,6 +77,11 @@ Compiler: Info: Compiled program size is 6 instructions (96 bytes)
 5 end
 ```
 
+### `-il-line-numbers`
+
+Determines whether the IL assembly listings should display line numbers.  
+`0` is the default.
+
 ### `-execute`
 
 Enables brainfuck program execution.  
@@ -70,6 +90,8 @@ Disabling this may be useful when you are only interested by the IL assembly lis
 
 ## TODO list
 
-- Perform better static optimizations
-- x86 JIT backend
-- Brainfuck debugger and profiler
+- More optimizations
+- Short flag versions (e.g. `-x` instead of `-execute`)
+- Optimization regression finder
+- Sanitization
+- Unit tests for optimizations using `-optimize-debug -optimize-verbose -sanitize -execute=0`

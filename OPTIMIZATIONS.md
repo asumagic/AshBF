@@ -108,7 +108,7 @@ This can be optimized down to `suz 2`, which is implemented into native code.
 A balanced loop is a loop that exits with the same tape pointer as when the loop began.  
 In other words, when there are as many `>` as there are `<` in a loop within a brainfuck program, we can make a few assumptions because we precisely know, relative to the tape pointer as it is when the loop begins, which memory cells are being modified.
 
-### Set-balanced loop optimization **(UNIMPLEMENTED)**
+### Set-balanced loop optimization
 
 Consider the following program: `[-]++++[>+>+<<-]`
 
@@ -131,7 +131,6 @@ This program will compile, unoptimized, into:
 13 shift -1
 14 add -1
 15 jnz 8
-16 end
 ```
 
 The peephole optimizer will recompile `[-]` as a `set 0` statement and stack down the shifts and adds.  
@@ -149,7 +148,6 @@ The program already gets much simpler:
 6 shift -2
 7 add -1
 8 jnz 2
-9 end
 ```
 
 There is still more we can do. `[>+>+<<-]` is an innermost loop. The sum of its shifts is 0 - the loop is balanced.  
@@ -162,11 +160,12 @@ This allows us to make the following assumptions about the loop:
 However, we know `*sp` because of the `set 4` instruction! Plus, when the loop exits `*sp` will be `0`. We thus can unroll the loop and eliminate some code:
 
 ```
-0 shift 1
-1 add 4
-2 shift 1
-3 add 4
-4 shift -2
+0 set 0
+1 shift 1
+2 add 4
+3 shift 1
+4 add 4
+5 shift -2
 ```
 
 ### 1-decremented balanced loop optimization (UNIMPLEMENTED)

@@ -18,6 +18,11 @@ Adds `[increment]` to the memory cell refered to by `sp`.
 
 Move the `sp` memory pointer by `offset`.
 
+### `mac [immA] [offB]`
+
+Multiply-accumulate `*sp` with an immediate `[immA]` multipled by `*(sp + [offB])`.  
+i.e. `*sp = *sp + [immA] * *(sp + [offB])`
+
 ### `cout`
 
 Prints the character representation of the memory cell refered to by `sp`.
