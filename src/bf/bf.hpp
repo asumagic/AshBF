@@ -102,12 +102,12 @@ namespace bf
 
 		{"end", bfEnd, 0, false},
 
-		{"(ir)loopbegin", bfLoopBegin, 0, false},
-		{"(ir)loopend", bfLoopEnd, 0, false},
+		{"(tmp)loopbegin", bfLoopBegin, 0, false},
+		{"(tmp)loopend", bfLoopEnd, 0, false},
 
-		{"(ir)(bad)", bfTOTAL, 0, false},
+		{"(bad)", bfTOTAL, 0, false},
 
-		{"(ir)nop", bfNop, 0, false}
+		{"(tmp)nop", bfNop, 0, false}
 	}};
 
 	// Compile-time instruction representation
