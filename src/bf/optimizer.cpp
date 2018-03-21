@@ -7,6 +7,7 @@
 #include <array>
 #include <functional>
 #include <algorithm>
+#include <sstream>
 #include "../vecutils.hpp"
 
 // TODO split this into a few files
@@ -63,7 +64,58 @@ bool Optimizer::is_stackable(const VMOp& ins)
 bool Optimizer::is_nop(const VMOp& ins)
 {
 	return ins.opcode == bfNop ||
-		(is_stackable(ins) && ins.argument() == 0);
+			(is_stackable(ins) && ins.argument() == 0);
+}
+
+bool Optimizer::update_state_debug(Program &program)
+{
+	if (debug)
+	{
+		std::stringstream ss;
+
+		Brainfuck bf;
+		bf.program = program;
+		bf.pipeout = &ss;
+		bf.link();
+		bf.interprete(30000);
+
+		std::string program_output = ss.str();
+
+		Program &old_program = past_state.program;
+
+		if (past_state.program.empty())
+		{
+			infoout(optimizeinfo) << "Saving reference program output for regression testing.\n";
+		}
+		else if (program_output != past_state.output)
+		{
+			errout(optimizeinfo) << "Optimization #" << past_state.id << " has regressed!\n";
+			past_state.correct = false;
+
+			auto [a_mismatch_begin, b_mismatch_begin] = std::mismatch(old_program.begin(), old_program.end(), program.begin(), program.end());
+			auto [a_mismatch_end, b_mismatch_end] = std::mismatch(old_program.rbegin(), old_program.rend(), program.rbegin(), program.rend());
+
+			warnout(optimizeinfo) << "Latest correct assembly:\n";
+			disasm.print_range(a_mismatch_begin, a_mismatch_end.base());
+
+			warnout(optimizeinfo) << "Broken assembly:\n";
+			disasm.print_range(b_mismatch_begin, b_mismatch_end.base());
+		}
+		else if (past_state.correct)
+		{
+			infoout(optimizeinfo) << "Optimization marker #" << past_state.id << " correct.\n";
+		}
+		else
+		{
+			infoout(optimizeinfo) << "Optimization marker #" << past_state.id << " consistent with previous invalid results.\n";
+		}
+
+		past_state.program = program;
+		++past_state.id;
+		past_state.output = program_output;
+	}
+
+	return past_state.correct;
 }
 
 bool Optimizer::erase_nop(Program &program, ProgramIt begin, ProgramIt end)
