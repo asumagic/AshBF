@@ -40,12 +40,12 @@ namespace bf
 	
 	struct Brainfuck;
 
+	using VMArg = int;
+
 	struct VMOp
 	{
-		using Argument = int;
-
 		VMOp() = default;
-		VMOp(uint8_t opcode, Argument argument = 0, Argument argument2 = 0);
+		VMOp(uint8_t opcode, VMArg arg1 = 0, VMArg arg2 = 0);
 
 		union
 		{
@@ -53,19 +53,19 @@ namespace bf
 			Opcode opcode;
 		};
 
-		std::array<Argument, 2> arguments;
+		std::array<VMArg, 2> arguments;
 		
 		inline operator uint8_t() const // Implicit cast operator to opcode
 		{
 			return opcode;
 		}
 
-		inline Argument &argument(size_t n = 0)
+		inline VMArg &argument(size_t n = 0)
 		{
 			return arguments[n];
 		}
 
-		inline const Argument &argument(size_t n = 0) const
+		inline const VMArg &argument(size_t n = 0) const
 		{
 			return arguments[n];
 		}
@@ -115,7 +115,7 @@ namespace bf
 	{
 		char match;
 		Opcode base_opcode;
-		VMOp::Argument default_arg = 0;
+		VMArg default_arg = 0;
 	};
 
 	struct OptimizationSequence

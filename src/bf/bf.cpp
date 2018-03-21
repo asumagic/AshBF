@@ -6,8 +6,8 @@ namespace bf
 		warnings{warnings}
 	{}
 
-	VMOp::VMOp(uint8_t opcode, VMOp::Argument argument, VMOp::Argument argument2) :
+	VMOp::VMOp(uint8_t opcode, VMArg arg1, VMArg arg2) :
 		opcode{opcode},
-		arguments{{argument, argument2}}
+		arguments{{arg1, arg2}}
 	{}
 }
