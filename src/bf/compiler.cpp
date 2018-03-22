@@ -5,14 +5,16 @@
 
 namespace bf
 {
-	void Brainfuck::compile(const std::string &fname)
+	bool Brainfuck::compile(const std::string_view fname)
 	{
-		std::ifstream file{fname, std::ios::binary};
+		std::ifstream file{std::string{fname}};
 
 		if (!file)
-			throw std::runtime_error(std::string{"Could not load file '"} + fname + '\'');
+		{
+			return false;
+		}
 
-		static const std::array<BFOp, 8> instruction_list =
+		static const std::array<BFOp, 8> ops
 		{{
 			{'+', bfAdd, 1},
 			{'-', bfAdd, -1},
@@ -25,18 +27,16 @@ namespace bf
 		}};
 
 		char current;
-		file.get(current);
-
-		while (file.good())
+		while (file.get(current))
 		{
-			auto it = std::find_if(begin(instruction_list), end(instruction_list), [current](const BFOp& other) { return current == other.match; });
-
-			if (it != end(instruction_list))
+			if (auto it = std::find(ops.begin(), ops.end(), current); it != ops.end())
+			{
 				program.emplace_back(static_cast<uint8_t>(it->base_opcode), it->default_arg);
-
-			file.get(current);
+			}
 		}
 
 		program.emplace_back(bfEnd, 0);
+
+		return true;
 	}
 }

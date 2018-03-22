@@ -28,7 +28,7 @@ namespace bf
 		lMAC:  *sp += pc->argument() * sp[pc->argument(1)]; dispatch();
 		
 		lCOut: *pipeout << *sp; dispatch();
-		lCIn:  *sp = getchar(); dispatch();
+		lCIn:  *pipein >> *sp; dispatch();
 		
 		lJZ:  if (*sp == 0) { pc = program.data() + pc->argument(); dispatch_noinc(); } dispatch();
 		lJNZ: if (*sp != 0) { pc = program.data() + pc->argument(); dispatch_noinc(); } dispatch();

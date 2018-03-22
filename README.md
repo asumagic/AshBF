@@ -2,15 +2,16 @@
 
 ## Introduction
 
-[Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) is a very minimalist turing-complete esoteric language with only 8 instructions: `+-><[].,`.
+[Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) is a minimalist turing-complete esoteric language using only 8 instructions: `+-><[].,`.
 
 AshBF is an optimizing C++17 brainfuck interpreter tailored for speed.  
-Currently, AshBF relies on the [GNU "Label as Address" extension](https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html). `clang` and `gcc` both should compile AshBF fine, but Microsoft Visual Studio probably won't.  
 It recompiles brainfuck into an optimized IL, later interpreted by a VM.
 
 ## Compiling
 
-You will need `cmake` and `make`, unless you use `ninja` or something else:
+Currently, AshBF requires the [GNU "Label as Address" extension](https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html), supported by `gcc` and `clang`.
+
+Basic compilation on \*nix:
 
 ```bash
 cmake . && make
@@ -20,7 +21,8 @@ cmake . && make
 
 `./ashbf <filename> (flags)`
 
-Specify flags with `-flag=value`. When a flag is enabled (`-flag`) without a given value, it will default to `1`.
+Specify flags with `-flag=value`, `-flag` (defaults to 1), `-flagvalue` (when `value` is a numeric value).  
+Short names are available for a few flags, e.g. `-x` instead of `-execute`.
 
 ### `-optimize-passes`
 
@@ -29,7 +31,7 @@ Typically, one optimization pass will be sufficient. However, due to the way the
 Do note that not all optimizations are pass-based.
 `5` is the default.
 
-### `-optimize`
+### `-optimize` (`-O`)
 
 Enables IL optimizations.  
 When disabled, the IL will be very similar to the brainfuck source. Pattern optimization will not be performed and stackable instructions (e.g. +, -, >, <) will not be merged.  
@@ -44,12 +46,12 @@ Programs using `,` are not yet supported. Regressions involving VM crashes or sa
 `-msize` is ignored during debug.  
 Program output will not show to stdout.
 
-### `-optimize-verbose`
+### `-optimize-verbose` (`-v`)
 
 Verbose optimization feedback.  
-When enabled, the optimizer will give various information on optimization tasks and passes and even more in `-optimizedebug` mode.
+When enabled, the optimizer will give various information on optimization tasks and passes and even more in `-optimize-debug` mode.
 
-### `-msize`
+### `-memory-size` (`-m`)
 
 Defines the brainfuck tape allocated memory.  
 Do note that without the `-sanitize` flag passed, out of bounds memory accesses will cause problems.  
@@ -76,12 +78,12 @@ Compiler: Info: Compiled program size is 6 instructions (96 bytes)
 5 end
 ```
 
-### `-il-line-numbers`
+### `-print-il-line-numbers`
 
 Determines whether the IL assembly listings should display line numbers.  
 `0` is the default.
 
-### `-execute`
+### `-execute` (`-x`)
 
 Enables brainfuck program execution.  
 Disabling this may be useful when you are only interested by the IL assembly listings or when you want to profile IL generation.  
@@ -90,7 +92,6 @@ Disabling this may be useful when you are only interested by the IL assembly lis
 ## TODO list
 
 - More optimizations
-- Short flag versions (e.g. `-x` instead of `-execute`)
-- Optimization regression finder
 - Sanitization
+- Faster optimization regression finder
 - Unit tests for optimizations using `-optimize-debug -optimize-verbose -sanitize -execute=0`

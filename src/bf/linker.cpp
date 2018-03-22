@@ -2,7 +2,7 @@
 
 namespace bf
 {
-	void Brainfuck::link()
+	bool Brainfuck::link()
 	{
 		std::vector<uint16_t> jumps;
 		for (size_t i = 0; i < program.size(); ++i)
@@ -15,7 +15,11 @@ namespace bf
 				break;
 
 			case bfLoopEnd:
-				lassert(!jumps.empty(), compileinfo, "Loop '[' has no matching ']'");
+				if (jumps.empty())
+				{
+					errout(compileinfo) << "Unexpected ']': missing '['\n";
+					return false;
+				}
 				program[i].opcode = bfJmpNotZero;
 
 				program[jumps.back()].argument() = i + 1;
@@ -27,6 +31,12 @@ namespace bf
 			}
 		}
 
-		lassert(jumps.empty(), compileinfo, "Loop ']' has no matching '['");
+		if (!jumps.empty())
+		{
+			errout(compileinfo) << "Unexpected '[': missing ']'\n";
+			return false;
+		}
+
+		return true;
 	}
 }

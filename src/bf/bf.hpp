@@ -6,7 +6,6 @@
 #include <vector>
 #include <functional>
 #include "../logger.hpp"
-#include "vm.hpp"
 
 namespace bf
 {
@@ -38,8 +37,6 @@ namespace bf
 		bfNop // Used for convenience by the optimizer
 	};
 	
-	struct Brainfuck;
-
 	using VMArg = int;
 
 	struct VMOp
@@ -116,6 +113,8 @@ namespace bf
 		char match;
 		Opcode base_opcode;
 		VMArg default_arg = 0;
+
+		bool operator==(char c) const {	return c == match; }
 	};
 
 	struct OptimizationSequence
@@ -138,12 +137,13 @@ namespace bf
 	{
 		Brainfuck(const bool warnings = true);
 
-		void compile(const std::string& fname);
-		void link();
+		bool compile(const std::string_view fname);
+		bool link();
 		void interprete(size_t memory_size) noexcept;
 		
 		std::vector<VMOp> program;
 
+		std::istream* pipein = &std::cin;
 		std::ostream* pipeout = &std::cout;
 		
 		bool warnings;

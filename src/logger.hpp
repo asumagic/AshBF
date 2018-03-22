@@ -5,8 +5,6 @@
 #include <iostream>
 #include <array>
 
-#define lassert(check, sourceinfo, error) if (static_cast<bool>(check) == 0) { exceptionlog(sourceinfo, error); }
-
 struct LogLevel
 {
 	const std::string levelprefix;
@@ -22,20 +20,8 @@ struct LogLevel
 	}
 };
 
-struct LogLevelException : LogLevel
-{
-	LogLevelException() : LogLevel{"\033[91mException", std::cout} {}
-
-	void operator()(const std::string& sourceinfo = "", const std::string& error = "Assertion failed.")
-	{
-		LogLevel::operator()(sourceinfo) << error << std::endl;
-		throw std::runtime_error("Assertion failed.");
-	}
-};
-
 extern const std::string cmdinfo, bcinfo, compileinfo, optimizeinfo;
 
 extern LogLevel warnout, errout, verbout, infoout;
-extern LogLevelException exceptionlog;
 
 #endif

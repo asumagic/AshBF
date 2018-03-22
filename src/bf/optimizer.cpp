@@ -187,7 +187,7 @@ bool Optimizer::peephole_optimize(Program &program, ProgramIt begin, ProgramIt e
 			if (std::equal(extract.begin(), extract.end(), optimized.begin(), optimized.end()))
 				continue;
 
-			replace_subvector_smaller(program, i, i + extract.size(), optimized);
+			move_range(program, i, i + extract.size(), optimized);
 
 			effective = true;
 		}
@@ -304,7 +304,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 				unrolled.emplace_back(bfShift, -shift_count);
 				unrolled.emplace_back(bfSet, 0);
 
-				replace_subvector_smaller(program, loop_begin - 1, i + 1, unrolled);
+				move_range(program, loop_begin - 1, i + 1, unrolled);
 			}
 			else
 			{
@@ -344,7 +344,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 				unrolled.emplace_back(bfShift, -shift_count);
 				unrolled.emplace_back(bfSet, 0);
 
-				replace_subvector_smaller(program, loop_begin, i + 1, unrolled);
+				move_range(program, loop_begin, i + 1, unrolled);
 
 				update_state_debug(program);
 			}
