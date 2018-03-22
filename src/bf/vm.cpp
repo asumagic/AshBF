@@ -1,12 +1,23 @@
 #include "bf.hpp"
+#include <tuple>
 
+// Jump to the next goto label with instruction `target`
 #define dispatch(target) goto *(target)->handler
+
+// Define an instruction handler, its goto label, fetching a and b matching the program counter arguments
+#define handler(name) \
+	/* Goto label */				name: \
+	/* Fetch parameters */			auto [a, b] = [pc]{ return std::tuple{pc->args[0], pc->args[1]}; }(); \
+	/* Suppress unused warning */	(void)(a); (void)(b)
+
+// Perform branching
+#define jump() dispatch(pc = program.data() + a)
 
 namespace bf
 {
 void Brainfuck::interpret(size_t memory_size) noexcept
 {
-	static std::array labels { &&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd };
+	std::array labels { &&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd };
 
 	for (auto &i : program)
 	{
@@ -20,21 +31,21 @@ void Brainfuck::interpret(size_t memory_size) noexcept
 
 	dispatch(pc);
 
-	lAdd:  *sp += pc->args[0]; dispatch(++pc);
-	lShift: sp += pc->args[0]; dispatch(++pc);
+	{ handler(lAdd);  *sp += a; dispatch(++pc); }
+	{ handler(lShift); sp += a; dispatch(++pc); }
 
-	lMAC:  *sp += pc->args[0] * sp[pc->args[1]]; dispatch(++pc);
+	{ handler(lMAC);  *sp += a * sp[b]; dispatch(++pc); }
 
-	lCOut: *pipeout << *sp; dispatch(++pc);
-	lCIn:  *pipein >> *sp; dispatch(++pc);
+	{ handler(lCOut); *pipeout << *sp; dispatch(++pc); }
+	{ handler(lCIn);  *pipein  >> *sp; dispatch(++pc); }
 		
-	lJZ:  if (*sp == 0) { dispatch(pc = program.data() + pc->args[0]); } dispatch(++pc);
-	lJNZ: if (*sp != 0) { dispatch(pc = program.data() + pc->args[0]); } dispatch(++pc);
+	{ handler(lJZ);  if (*sp == 0) { jump(); } dispatch(++pc); }
+	{ handler(lJNZ); if (*sp != 0) { jump(); } dispatch(++pc); }
 		
-	lSet: *sp = pc->args[0]; dispatch(++pc);
+	{ handler(lSet); *sp = a; dispatch(++pc); }
 
-	lSUZ: while (*sp) { sp += pc->args[0]; } dispatch(++pc);
+	{ handler(lSUZ); while (*sp) { sp += a; } dispatch(++pc); }
 
-	lEnd: return;
+	{ handler(lEnd); return; }
 }
 }
