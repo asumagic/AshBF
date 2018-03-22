@@ -1,6 +1,8 @@
 #include "bf.hpp"
 #include "optimizer.hpp"
 #include "il.hpp"
+#include "logger.hpp"
+#include "vecutils.hpp"
 
 #include <vector>
 #include <map>
@@ -8,10 +10,6 @@
 #include <functional>
 #include <algorithm>
 #include <sstream>
-#include "../vecutils.hpp"
-
-// TODO split this into a few files
-// TODO unindent namespaces everywhere
 
 namespace bf
 {

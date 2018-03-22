@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include "../logger.hpp"
+#include <iostream>
 
 namespace bf
 {

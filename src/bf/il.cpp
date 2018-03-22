@@ -1,4 +1,5 @@
 #include "il.hpp"
+#include "logger.hpp"
 
 namespace bf
 {

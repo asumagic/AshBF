@@ -1,7 +1,7 @@
 #include "bf/bf.hpp"
 #include "bf/optimizer.hpp"
 #include "bf/il.hpp"
-#include "logger.hpp"
+#include "bf/logger.hpp"
 #include "commandline.hpp"
 
 int main(int argc, char** argv)

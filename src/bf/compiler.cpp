@@ -1,7 +1,6 @@
 #include "bf.hpp"
 #include <algorithm>
 #include <fstream>
-#include <iostream>
 
 namespace bf
 {
@@ -14,7 +13,7 @@ bool Brainfuck::compile(const std::string_view fname)
 		return false;
 	}
 
-	static const std::array<BFOp, 8> ops
+	static constexpr std::array<BFOp, 8> ops
 	{{
 		{'+', bfAdd, 1},
 		{'-', bfAdd, -1},

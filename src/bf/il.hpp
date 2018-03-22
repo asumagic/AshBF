@@ -5,16 +5,14 @@
 
 namespace bf
 {
-struct Disassembler
+extern struct Disassembler
 {
 	bool print_line_numbers;
 
 	std::string operator()(const VMOp &ins);
 	void print_range(Program::iterator begin, Program::iterator end);
 	void print_range(Program& program);
-};
-
-extern Disassembler disasm;
+} disasm;
 }
 
 #endif // IL_HPP
