@@ -1,11 +1,27 @@
 #ifndef OPTIMIZER_HPP
 #define OPTIMIZER_HPP
 
-#include "bf.hpp"
+#include <functional>
 #include <memory>
 
 namespace bf
 {
+struct OptimizationSequence
+{
+	std::vector<uint8_t> seq;
+	std::function<Program(const Program&)> callback;
+};
+
+struct CellOperation
+{
+	VMOp op;
+	bool any = false;
+
+	void apply(const VMOp& instruction);
+	void simplify();
+	void repeat(size_t n);
+};
+
 struct PastProgramState
 {
 	Program program;

@@ -1,8 +1,9 @@
 #include "bf/bf.hpp"
-#include "bf/optimizer.hpp"
 #include "bf/il.hpp"
+#include "bf/disasm.hpp"
 #include "bf/logger.hpp"
-#include "commandline.hpp"
+#include "bf/optimizer.hpp"
+#include "cli.hpp"
 
 int main(int argc, char** argv)
 {
@@ -16,7 +17,8 @@ int main(int argc, char** argv)
 
 	bool optimize = flags[Flag::optimize];
 
-	bf::Brainfuck bfi(flags[Flag::warnings]);
+	bf::Brainfuck bfi;
+	bfi.warnings = flags[Flag::warnings];
 
 	if (!bfi.compile(argv[1]))
 	{
@@ -47,6 +49,6 @@ int main(int argc, char** argv)
 
 	if (flags[Flag::execute])
 	{
-		bfi.interprete(std::stoul(flags[Flag::memory_size]));
+		bfi.interpret(std::stoul(flags[Flag::memory_size]));
 	}
 }

@@ -1,9 +1,24 @@
+#include "compiler.hpp"
 #include "bf.hpp"
+#include "il.hpp"
+#include <string_view>
 #include <algorithm>
 #include <fstream>
 
 namespace bf
 {
+const std::array<BFOp, 8> ops
+{{
+	{'+', bfAdd, 1},
+	{'-', bfAdd, -1},
+	{'>', bfShift, 1},
+	{'<', bfShift, -1},
+	{'.', bfCharOut},
+	{',', bfCharIn},
+	{'[', bfLoopBegin},
+	{']', bfLoopEnd}
+}};
+
 bool Brainfuck::compile(const std::string_view fname)
 {
 	std::ifstream file{std::string{fname}};
@@ -12,18 +27,6 @@ bool Brainfuck::compile(const std::string_view fname)
 	{
 		return false;
 	}
-
-	static constexpr std::array<BFOp, 8> ops
-	{{
-		{'+', bfAdd, 1},
-		{'-', bfAdd, -1},
-		{'>', bfShift, 1},
-		{'<', bfShift, -1},
-		{'.', bfCharOut},
-		{',', bfCharIn},
-		{'[', bfLoopBegin},
-		{']', bfLoopEnd}
-	}};
 
 	char current;
 	while (file.get(current))

@@ -1,4 +1,4 @@
-#include "bf.hpp"
+#include "disasm.hpp"
 #include "optimizer.hpp"
 #include "il.hpp"
 #include "logger.hpp"
@@ -75,7 +75,7 @@ bool Optimizer::update_state_debug(Program &program)
 		bf.program = program;
 		bf.pipeout = &ss;
 		bf.link();
-		bf.interprete(30000);
+		bf.interpret(30000);
 
 		std::string program_output = ss.str();
 

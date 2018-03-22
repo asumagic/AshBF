@@ -5,7 +5,7 @@
 
 namespace bf
 {
-void Brainfuck::interprete(size_t memory_size) noexcept
+void Brainfuck::interpret(size_t memory_size) noexcept
 {
 	constexpr std::array<void*, bfTOTAL> labels {{
 		&&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd
@@ -13,7 +13,9 @@ void Brainfuck::interprete(size_t memory_size) noexcept
 
 	// Compute the goto labels
 	for (auto &i : program)
+	{
 		i.handler = labels[i.opcode];
+	}
 
 	std::vector<uint8_t> memory(memory_size);
 
