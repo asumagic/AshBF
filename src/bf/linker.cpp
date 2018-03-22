@@ -23,8 +23,8 @@ bool Brainfuck::link()
 			}
 			program[i].opcode = bfJmpNotZero;
 
-			program[jumps.back()].argument() = i + 1;
-			program[i].argument() = jumps.back() + 1;
+			program[jumps.back()].args[0] = i + 1;
+			program[i].args[0] = jumps.back() + 1;
 			jumps.pop_back();
 			break;
 

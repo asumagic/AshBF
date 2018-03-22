@@ -1,17 +1,13 @@
 #include "bf.hpp"
 
-#define dispatch()       goto *(++pc)->handler
-#define dispatch_noinc() goto *pc->handler
+#define dispatch(target) goto *(target)->handler
 
 namespace bf
 {
 void Brainfuck::interpret(size_t memory_size) noexcept
 {
-	constexpr std::array<void*, bfTOTAL> labels {{
-		&&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd
-	}};
+	static std::array labels { &&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd };
 
-	// Compute the goto labels
 	for (auto &i : program)
 	{
 		i.handler = labels[i.opcode];
@@ -19,26 +15,26 @@ void Brainfuck::interpret(size_t memory_size) noexcept
 
 	std::vector<uint8_t> memory(memory_size);
 
-	uint8_t *sp = memory.data();
-	const VMOp *pc = program.data();
+	auto *sp = memory.data();
+	auto *pc = program.data();
 
-	dispatch_noinc();
-		
-	lAdd:  *sp += pc->argument(); dispatch();
-	lShift: sp += pc->argument(); dispatch();
+	dispatch(pc);
 
-	lMAC:  *sp += pc->argument() * sp[pc->argument(1)]; dispatch();
-		
-	lCOut: *pipeout << *sp; dispatch();
-	lCIn:  *pipein >> *sp; dispatch();
-		
-	lJZ:  if (*sp == 0) { pc = program.data() + pc->argument(); dispatch_noinc(); } dispatch();
-	lJNZ: if (*sp != 0) { pc = program.data() + pc->argument(); dispatch_noinc(); } dispatch();
-		
-	lSet: *sp = pc->argument(); dispatch();
+	lAdd:  *sp += pc->args[0]; dispatch(++pc);
+	lShift: sp += pc->args[0]; dispatch(++pc);
 
-	lSUZ: while (*sp) { sp += pc->argument(); } dispatch();
+	lMAC:  *sp += pc->args[0] * sp[pc->args[1]]; dispatch(++pc);
+
+	lCOut: *pipeout << *sp; dispatch(++pc);
+	lCIn:  *pipein >> *sp; dispatch(++pc);
 		
+	lJZ:  if (*sp == 0) { dispatch(pc = program.data() + pc->args[0]); } dispatch(++pc);
+	lJNZ: if (*sp != 0) { dispatch(pc = program.data() + pc->args[0]); } dispatch(++pc);
+		
+	lSet: *sp = pc->args[0]; dispatch(++pc);
+
+	lSUZ: while (*sp) { sp += pc->args[0]; } dispatch(++pc);
+
 	lEnd: return;
 }
 }

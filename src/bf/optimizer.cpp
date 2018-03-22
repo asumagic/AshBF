@@ -20,7 +20,7 @@ void CellOperation::apply(const VMOp& ins)
 	case bfAdd:
 		if (any && (op.opcode == bfAdd || op.opcode == bfSet))
 		{
-			op.argument() += ins.argument();
+			op.args[0] += ins.args[0];
 		}
 		else
 		{
@@ -39,7 +39,7 @@ void CellOperation::apply(const VMOp& ins)
 
 void CellOperation::simplify()
 {
-	if (any && instructions[op.opcode].stackable && op.argument() == 0)
+	if (any && instructions[op.opcode].stackable && op.args[0] == 0)
 	{
 		any = false;
 	}
@@ -50,7 +50,7 @@ void CellOperation::repeat(size_t n)
 	// Do not multiply set!
 	if (any && instructions[op.opcode].stackable)
 	{
-		op.argument() *= n;
+		op.args[0] *= n;
 	}
 }
 
@@ -62,7 +62,7 @@ bool Optimizer::is_stackable(const VMOp& ins)
 bool Optimizer::is_nop(const VMOp& ins)
 {
 	return ins.opcode == bfNop ||
-			(is_stackable(ins) && ins.argument() == 0);
+			(is_stackable(ins) && ins.args[0] == 0);
 }
 
 bool Optimizer::update_state_debug(Program &program)
@@ -132,7 +132,7 @@ bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end
 
 		for (auto j = i + 1; (j != end) && (j->opcode == i->opcode); ++j)
 		{
-			i->argument() += j->argument();
+			i->args[0] += j->args[0];
 			j->opcode = bfNop; // Mark for deletion
 		}
 	}
@@ -153,22 +153,22 @@ bool Optimizer::peephole_optimize(Program &program, ProgramIt begin, ProgramIt e
 
 		// Merge bfSet then bfAdd to a single set.
 		{{bfSet, bfAdd}, [](const Program &v) {
-			return Program{{bfSet, v[0].argument() + v[1].argument()}};
+			return Program{{bfSet, v[0].args[0] + v[1].args[0]}};
 		}},
 
 		// Optimize adding then setting, because adding will not be effective.
 		{{bfAdd, bfSet}, [](const Program& v) {
-			return Program{{bfSet, v[1].argument()}};
+			return Program{{bfSet, v[1].args[0]}};
 		}},
 
 		// Optimize 2 sets in a row.
 		{{bfSet, bfSet}, [](const Program& v) {
-			return Program{{bfSet, v[1].argument()}};
+			return Program{{bfSet, v[1].args[0]}};
 		}},
 
 		// [>]
 		{{bfLoopBegin, bfShift, bfLoopEnd}, [](const Program& v) {
-			return Program{{bfShiftUntilZero, v[1].argument()}};
+			return Program{{bfShiftUntilZero, v[1].args[0]}};
 		}}
 	}};
 
@@ -226,7 +226,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			continue;
 
 		if (i->opcode == bfShift)
-			shift_count += i->argument();
+			shift_count += i->args[0];
 
 		// We found the loop boundaries
 		if (i->opcode == bfLoopEnd)
@@ -243,7 +243,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			for (auto j = loop_begin; j != i; ++j)
 			{
 				if (j->opcode == bfShift)
-					shift_count += j->argument();
+					shift_count += j->args[0];
 				else
 					operations[shift_count].apply(*j);
 			}
@@ -263,13 +263,13 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			// We handle the offset 0 case manually.
 			operations.erase(loopit);
 
-			if (loopit_op.op.opcode == bfSet && loopit_op.op.argument() != 0)
+			if (loopit_op.op.opcode == bfSet && loopit_op.op.args[0] != 0)
 			{
-				warnout(optimizeinfo) << "Infinite loop: Iterator is always `" << loopit_op.op.argument() << "`\n";
+				warnout(optimizeinfo) << "Infinite loop: Iterator is always `" << loopit_op.op.args[0] << "`\n";
 				continue;
 			}
 
-			if (loopit_op.op.argument() != -1)
+			if (loopit_op.op.args[0] != -1)
 				continue;
 
 			Program unrolled;
@@ -277,14 +277,14 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			{
 				// We know how many times the loop runs.
 				VMOp &prec = *(loop_begin - 1);
-				if (prec.argument() == 0)
+				if (prec.args[0] == 0)
 				{
 					warnout(optimizeinfo) << "Loop never runs, iterator is initialized to 0\n";
 					// TODO erase
 					continue;
 				}
 
-				if (prec.argument() == 1)
+				if (prec.args[0] == 1)
 				{
 					warnout(optimizeinfo) << "Loop runs exactly once\n";
 				}
@@ -292,7 +292,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 				shift_count = 0;
 				for (auto &p : operations)
 				{
-					p.second.repeat(prec.argument());
+					p.second.repeat(prec.args[0]);
 					unrolled.emplace_back(bfShift, p.first - shift_count);
 					unrolled.push_back(p.second.op);
 					shift_count = p.first;
@@ -318,7 +318,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 
 					if (p.second.op.opcode == bfAdd)
 					{
-						unrolled.emplace_back(bfMAC, p.second.op.argument(), -shift_count);
+						unrolled.emplace_back(bfMAC, p.second.op.args[0], -shift_count);
 					}
 					else if (p.second.op.opcode == bfSet)
 					{

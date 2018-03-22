@@ -11,7 +11,7 @@ std::string Disassembler::operator()(const VMOp& ins)
 	std::string str = "\033[1m" + std::string{info.name} + "\033[0m";
 
 	for (size_t i = 0; i < info.arguments_used; ++i)
-		str += ' ' + std::to_string(ins.arguments[i]);
+		str += ' ' + std::to_string(ins.args[i]);
 
 	return str;
 }
