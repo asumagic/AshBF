@@ -28,7 +28,7 @@ enum class Flag
 	optimize_verbose,
 	memory_size,
 	//sanitize,
-	warnings,
+	//warnings,
 	print_il,
 	print_il_line_numbers,
 	execute
@@ -44,7 +44,7 @@ struct Flags
 		{ "optimize-verbose", 'v', "0", {"0", "1"} },
 		{ "memory-size", 'm', "30000" }, // Cells available to the program
 		//{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
-		{ "warnings", 'W', "1", {"0", "1"} }, // Controls compiler warnings
+		//{ "warnings", 'W', "1", {"0", "1"} }, // Controls compiler warnings
 		{ "print-il", 'a', "0", {"0", "1"} }, // Print VM IL
 		{ "print-il-line-numbers", '\0', "1", {"0", "1"} }, // Print VM IL line numbers
 		{ "execute", 'x', "1", {"0", "1"} } // Do execute the compiled program or not

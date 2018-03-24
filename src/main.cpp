@@ -18,7 +18,6 @@ int main(int argc, char** argv)
 	bool optimize = flags[Flag::optimize];
 
 	bf::Brainfuck bfi;
-	bfi.warnings = flags[Flag::warnings];
 
 	if (!bfi.compile_file(argv[1]))
 	{

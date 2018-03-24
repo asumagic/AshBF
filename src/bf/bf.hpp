@@ -24,8 +24,6 @@ struct Brainfuck
 
 	std::istream* pipein = &std::cin;
 	std::ostream* pipeout = &std::cout;
-		
-	bool warnings;
 };
 }
 
