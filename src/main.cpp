@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 	bf::Brainfuck bfi;
 	bfi.warnings = flags[Flag::warnings];
 
-	if (!bfi.compile(argv[1]))
+	if (!bfi.compile_file(argv[1]))
 	{
 		errout(compileinfo) << "Failed to load program from '" << argv[1] << "'\n";
 		return 1;

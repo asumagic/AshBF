@@ -21,6 +21,21 @@ const std::array<BFOp, 8> ops
 
 bool Brainfuck::compile(const std::string_view fname)
 {
+	for (const char c : fname)
+	{
+		if (auto it = std::find(ops.begin(), ops.end(), c); it != ops.end())
+		{
+			program.emplace_back(static_cast<uint8_t>(it->base_opcode), it->default_arg);
+		}
+	}
+
+	program.emplace_back(bfEnd, 0);
+
+	return true;
+}
+
+bool Brainfuck::compile_file(const std::string_view fname)
+{
 	std::ifstream file{std::string{fname}};
 
 	if (!file)
