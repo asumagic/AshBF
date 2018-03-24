@@ -21,6 +21,8 @@ const std::array<BFOp, 8> ops
 
 bool Brainfuck::compile(const std::string_view fname)
 {
+	program.clear();
+
 	for (const char c : fname)
 	{
 		if (auto it = std::find(ops.begin(), ops.end(), c); it != ops.end())
@@ -36,6 +38,8 @@ bool Brainfuck::compile(const std::string_view fname)
 
 bool Brainfuck::compile_file(const std::string_view fname)
 {
+	program.clear();
+
 	std::ifstream file{std::string{fname}};
 
 	if (!file)
