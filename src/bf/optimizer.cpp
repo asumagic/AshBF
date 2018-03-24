@@ -3,6 +3,7 @@
 #include "il.hpp"
 #include "logger.hpp"
 #include "vecutils.hpp"
+#include "span.hpp"
 
 #include <vector>
 #include <map>
@@ -47,7 +48,6 @@ void CellOperation::simplify()
 
 void CellOperation::repeat(size_t n)
 {
-	// Do not multiply set!
 	if (any && instructions[op.opcode].stackable)
 	{
 		op.args[0] *= n;
@@ -142,52 +142,47 @@ bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end
 
 bool Optimizer::peephole_optimize(Program &program, ProgramIt begin, ProgramIt end)
 {
-	bool effective = false;
-
 	static std::array<OptimizationSequence, 5> peephole_optimizers
 	{{
 		// [+] to bfSet 0
-		{{bfLoopBegin, bfAdd, bfLoopEnd}, [](const Program&) {
-			return Program{{bfSet, 0}};
+		{{bfLoopBegin, bfAdd, bfLoopEnd}, [](auto) -> Program {
+			return {{bfSet, 0}};
 		}},
 
 		// Merge bfSet then bfAdd to a single set.
-		{{bfSet, bfAdd}, [](const Program &v) {
-			return Program{{bfSet, v[0].args[0] + v[1].args[0]}};
+		{{bfSet, bfAdd}, [](auto v) -> Program {
+			return {{bfSet, v[0].args[0] + v[1].args[0]}};
 		}},
 
 		// Optimize adding then setting, because adding will not be effective.
-		{{bfAdd, bfSet}, [](const Program& v) {
-			return Program{{bfSet, v[1].args[0]}};
+		{{bfAdd, bfSet}, [](auto v) -> Program {
+			return {{bfSet, v[1].args[0]}};
 		}},
 
 		// Optimize 2 sets in a row.
-		{{bfSet, bfSet}, [](const Program& v) {
-			return Program{{bfSet, v[1].args[0]}};
+		{{bfSet, bfSet}, [](auto v) -> Program {
+			return {{bfSet, v[1].args[0]}};
 		}},
 
 		// [>]
-		{{bfLoopBegin, bfShift, bfLoopEnd}, [](const Program& v) {
-			return Program{{bfShiftUntilZero, v[1].args[0]}};
+		{{bfLoopBegin, bfShift, bfLoopEnd}, [](auto v) -> Program {
+			return {{bfShiftUntilZero, v[1].args[0]}};
 		}}
 	}};
+
+	bool effective = false;
 
 	for (auto &optimizer : peephole_optimizers)
 	{
 		for (auto i = begin; i != end; ++i)
 		{
-			if (!std::equal(i, i + optimizer.seq.size(), optimizer.seq.begin(), optimizer.seq.end()))
-				continue;
+			span candidate{i, i + optimizer.seq.size()};
 
-			Program extract(i, i + optimizer.seq.size()); // TODO pass iterators or some sort of view instead
-			Program optimized = optimizer.callback(extract);
-
-			if (std::equal(extract.begin(), extract.end(), optimized.begin(), optimized.end()))
-				continue;
-
-			move_range(program, i, i + extract.size(), optimized);
-
-			effective = true;
+			if (candidate == optimizer.seq)
+			{
+				move_range(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
+				effective = true;
+			}
 		}
 	}
 

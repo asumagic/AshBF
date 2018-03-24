@@ -3,13 +3,14 @@
 
 #include <functional>
 #include <memory>
+#include "span.hpp"
 
 namespace bf
 {
 struct OptimizationSequence
 {
-	std::vector<uint8_t> seq;
-	std::function<Program(const Program&)> callback;
+	const std::vector<uint8_t> seq;
+	std::function<Program(span<ProgramIt>)> optimize;
 };
 
 struct CellOperation

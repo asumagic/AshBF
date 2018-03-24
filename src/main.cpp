@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv)
 {
-	std::vector<std::string_view> args(argv, argv + argc);
+	const std::vector<std::string_view> args(argv, argv + argc);
 
 	Flags flags;
 	if (!flags.parse_commandline(args))
