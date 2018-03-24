@@ -61,7 +61,4 @@ public:
 	}
 };
 
-template<class It>
-span(It begin, It end) -> span<It>;
-
 #endif // SPAN_HPP
