@@ -12,6 +12,17 @@ class span
 public:
 	span() = default;
 
+	template<class T>
+	span(const T& container) :
+	    _begin(container.begin()),
+	    _end(container.end())
+	{}
+
+	template<class T>
+	span(T& container) :
+	    span(static_cast<const T&>(container))
+	{}
+
 	span(It begin, It end) :
 	    _begin(begin),
 	    _end(end)
@@ -49,16 +60,19 @@ public:
 	}
 
 	template<class T>
-	bool operator==(const T& other) const
+	bool operator==(span<T> other) const
 	{
 		return std::equal(begin(), end(), other.begin(), other.end());
 	}
 
 	template<class T>
-	bool operator!=(const T& other) const
+	bool operator!=(span<T> other) const
 	{
 		return !operator==(other);
 	}
 };
+
+template<typename T> span(const T&) -> span<typename T::const_iterator>;
+template<typename T> span(T&) -> span<typename T::iterator>;
 
 #endif // SPAN_HPP

@@ -178,7 +178,7 @@ bool Optimizer::peephole_optimize(Program &program, ProgramIt begin, ProgramIt e
 		{
 			span candidate{i, i + optimizer.seq.size()};
 
-			if (candidate == optimizer.seq)
+			if (candidate == span{optimizer.seq})
 			{
 				move_range(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
 				effective = true;
