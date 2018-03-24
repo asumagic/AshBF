@@ -3,9 +3,9 @@
 
 #include "vm.hpp"
 
-#include <string_view>
-#include <iostream>
 #include <cstdint>
+#include <iostream>
+#include <string_view>
 #include <vector>
 
 namespace bf
@@ -15,8 +15,8 @@ using ProgramIt = Program::iterator;
 
 struct Brainfuck
 {
-	bool compile(const std::string_view fname);
-	bool compile_file(const std::string_view fname);
+	bool compile(std::string_view fname);
+	bool compile_file(std::string_view fname);
 	bool link();
 	void interpret(size_t memory_size) noexcept;
 		

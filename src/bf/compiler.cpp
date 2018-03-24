@@ -1,9 +1,11 @@
 #include "compiler.hpp"
+
 #include "bf.hpp"
 #include "il.hpp"
-#include <string_view>
+
 #include <algorithm>
 #include <fstream>
+#include <string_view>
 
 namespace bf
 {
@@ -19,7 +21,7 @@ const std::array<BFOp, 8> ops
 	{']', bfLoopEnd}
 }};
 
-bool Brainfuck::compile(const std::string_view fname)
+bool Brainfuck::compile(std::string_view fname)
 {
 	program.clear();
 
@@ -36,7 +38,7 @@ bool Brainfuck::compile(const std::string_view fname)
 	return true;
 }
 
-bool Brainfuck::compile_file(const std::string_view fname)
+bool Brainfuck::compile_file(std::string_view fname)
 {
 	program.clear();
 

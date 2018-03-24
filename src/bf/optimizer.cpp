@@ -1,20 +1,20 @@
-#include "disasm.hpp"
 #include "optimizer.hpp"
+
+#include "disasm.hpp"
 #include "il.hpp"
 #include "logger.hpp"
-#include "vecutils.hpp"
 #include "span.hpp"
+#include "vecutils.hpp"
 
-#include <vector>
-#include <map>
+#include <algorithm>
 #include <array>
 #include <functional>
-#include <algorithm>
 #include <sstream>
+#include <vector>
 
 namespace bf
 {
-void CellOperation::apply(const VMOp& ins)
+bool CellOpSingle::apply(const VMOp& ins)
 {
 	switch (ins.opcode)
 	{
@@ -33,12 +33,15 @@ void CellOperation::apply(const VMOp& ins)
 	case bfSet:
 		op = ins;
 		any = true;
+	break;
 
 	default: break;
 	}
+
+	return false;
 }
 
-void CellOperation::simplify()
+void CellOpSingle::simplify()
 {
 	if (any && instructions[op.opcode].stackable && op.args[0] == 0)
 	{
@@ -46,7 +49,7 @@ void CellOperation::simplify()
 	}
 }
 
-void CellOperation::repeat(size_t n)
+void CellOpSingle::repeat(int n)
 {
 	if (any && instructions[op.opcode].stackable)
 	{
@@ -63,6 +66,19 @@ bool Optimizer::is_nop(const VMOp& ins)
 {
 	return ins.opcode == bfNop ||
 			(is_stackable(ins) && ins.args[0] == 0);
+}
+
+std::map<int, CellOp> Optimizer::make_operation_map(span<ProgramIt> range)
+{
+	std::map<int, CellOp> map;
+
+	int offset = 0;
+	for (const VMOp& ins : range)
+	{
+
+	}
+
+	return map;
 }
 
 bool Optimizer::update_state_debug(Program &program)
@@ -94,10 +110,10 @@ bool Optimizer::update_state_debug(Program &program)
 			auto [a_mismatch_end, b_mismatch_end] = std::mismatch(old_program.rbegin(), old_program.rend(), program.rbegin(), program.rend());
 
 			warnout(optimizeinfo) << "Latest correct assembly:\n";
-			disasm.print_range(a_mismatch_begin, a_mismatch_end.base());
+			disasm.print_range({a_mismatch_begin, a_mismatch_end.base()});
 
 			warnout(optimizeinfo) << "Broken assembly:\n";
-			disasm.print_range(b_mismatch_begin, b_mismatch_end.base());
+			disasm.print_range({b_mismatch_begin, b_mismatch_end.base()});
 		}
 		else if (past_state.correct)
 		{
@@ -128,7 +144,9 @@ bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end
 	for (auto i = begin; i != end; ++i)
 	{
 		if (!is_stackable(*i))
+		{
 			continue;
+		}
 
 		for (auto j = i + 1; (j != end) && (j->opcode == i->opcode); ++j)
 		{
@@ -176,7 +194,7 @@ bool Optimizer::peephole_optimize(Program &program, ProgramIt begin, ProgramIt e
 	{
 		for (auto i = begin; i != end; ++i)
 		{
-			span candidate{i, i + optimizer.seq.size()};
+			span candidate{i, optimizer.seq.size()};
 
 			if (candidate == span{optimizer.seq})
 			{
@@ -193,8 +211,8 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 {
 	auto loop_begin = begin;
 	bool expandable = true, effective = false;
-	size_t shift_count = 0;
-	std::map<int, CellOperation> operations;
+	int shift_count = 0;
+	std::map<int, CellOpSingle> operations;
 
 	// Reset counters when we enter a potentially expandable loop
 	auto mark_expandable = [&](ProgramIt current) {
@@ -208,20 +226,28 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 	{
 		// If we encounter a [ then the next ] we find ends it
 		if (i->opcode == bfLoopBegin)
+		{
 			mark_expandable(i);
+		}
 
 		if (i->opcode == bfShiftUntilZero ||
 			i->opcode == bfMAC ||
 			i->opcode == bfCharIn ||
 			i->opcode == bfCharOut) // TODO could be expanded
+		{
 			expandable = false;
+		}
 
 		// All we handle below assumes we are in an expandable loop
 		if (!expandable)
+		{
 			continue;
+		}
 
 		if (i->opcode == bfShift)
+		{
 			shift_count += i->args[0];
+		}
 
 		// We found the loop boundaries
 		if (i->opcode == bfLoopEnd)
@@ -231,20 +257,28 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 
 			// Unbalanced loop
 			if (shift_count != 0)
+			{
 				continue;
+			}
 
 			// Not great.. maybe instruction metadata could be nice at some point
 			shift_count = 0;
 			for (auto j = loop_begin; j != i; ++j)
 			{
 				if (j->opcode == bfShift)
+				{
 					shift_count += j->args[0];
+				}
 				else
+				{
 					operations[shift_count].apply(*j);
+				}
 			}
 
 			for (auto &p : operations)
+			{
 				p.second.simplify();
+			}
 
 			auto loopit = operations.find(0);
 			if (loopit == operations.end() || !loopit->second.any)
@@ -253,7 +287,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 				continue;
 			}
 
-			CellOperation loopit_op = loopit->second;
+			CellOpSingle loopit_op = loopit->second;
 
 			// We handle the offset 0 case manually.
 			operations.erase(loopit);
@@ -265,7 +299,9 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			}
 
 			if (loopit_op.op.args[0] != -1)
+			{
 				continue;
+			}
 
 			Program unrolled;
 			if (loop_begin != begin && (loop_begin - 1)->opcode == bfSet)
@@ -363,7 +399,9 @@ void Optimizer::optimize(Program& program)
 		bool pass_effective = false;
 
 		if (verbose)
+		{
 			infoout(optimizeinfo) << "Performing pass #" << p + 1 << '\n';
+		}
 
 		struct OptimizerTask
 		{
@@ -383,18 +421,21 @@ void Optimizer::optimize(Program& program)
 			bool effective = (this->*(task.callback))(program, program.begin(), program.end());
 
 			if (verbose)
+			{
 				infoout(optimizeinfo) << "Performed optimization task '" << task.name << "' and " << (effective ? "was effective\n" : "had no effect\n");
+			}
 
 			if (effective)
+			{
 				pass_effective = true;
+			}
 
 			update_state_debug(program);
 		}
 
-		if (!pass_effective)
+		if (!pass_effective && verbose)
 		{
-			if (verbose)
-				infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
+			infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
 			break;
 		}
 	}

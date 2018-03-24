@@ -3,7 +3,9 @@
 
 #include <functional>
 #include <memory>
+#include <map>
 #include "span.hpp"
+#include "bf.hpp"
 
 namespace bf
 {
@@ -13,12 +15,21 @@ struct OptimizationSequence
 	std::function<Program(span<ProgramIt>)> optimize;
 };
 
-struct CellOperation
+struct CellOpSingle
 {
 	VMOp op;
 	bool any = false;
 
-	void apply(const VMOp& instruction);
+	bool apply(const VMOp& instruction);
+	void simplify();
+	void repeat(int n);
+};
+
+struct CellOp
+{
+	std::vector<CellOpSingle> ops;
+
+	bool apply(const VMOp& instructon);
 	void simplify();
 	void repeat(size_t n);
 };
@@ -40,6 +51,9 @@ struct Optimizer
 
 	static bool is_stackable(const VMOp &ins); // True if the instruction is mergeable/stackable
 	static bool is_nop(const VMOp &ins); // True if the instruction has no visible effect
+
+	// Generates a map binding offsets from the current cell to cell operations.
+	std::map<int, CellOp> make_operation_map(span<ProgramIt> range);
 
 	PastProgramState past_state;
 	bool update_state_debug(Program &program);

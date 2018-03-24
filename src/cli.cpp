@@ -7,7 +7,7 @@ bool CommandlineFlag::has_expected_value() const
 	return expected.empty() || std::find(expected.begin(), expected.end(), value) != expected.end();
 }
 
-bool CommandlineFlag::operator==(const std::string_view other) const
+bool CommandlineFlag::operator==(std::string_view other) const
 {
 	return other == name || (other.size() == 1 && other[0] == short_name);
 }
@@ -47,7 +47,7 @@ bool Flags::parse_commandline(const std::vector<std::string_view>& args)
 
 		auto name_end_it = (equals_it != arg.end() ? equals_it : value_it);
 
-		const std::string_view name = arg.substr(1, std::distance(arg.begin() + 1, name_end_it));
+		std::string_view name = arg.substr(1, static_cast<size_t>(std::distance(arg.begin() + 1, name_end_it)));
 		auto match_it = std::find(begin(flags), end(flags), name);
 
 		if (match_it != end(flags))

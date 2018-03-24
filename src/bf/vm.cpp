@@ -42,9 +42,9 @@ void Brainfuck::interpret(size_t memory_size) noexcept
 	{ handler(lJZ);  if (*sp == 0) { jump(); } dispatch(++pc); }
 	{ handler(lJNZ); if (*sp != 0) { jump(); } dispatch(++pc); }
 		
-	{ handler(lSet); *sp = a; dispatch(++pc); }
+	{ handler(lSet); *sp = uint8_t(a); dispatch(++pc); }
 
-	{ handler(lSUZ); while (*sp) { sp += a; } dispatch(++pc); }
+	{ handler(lSUZ); while (*sp != 0) { sp += a; } dispatch(++pc); }
 
 	{ handler(lEnd); return; }
 }

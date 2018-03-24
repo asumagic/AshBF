@@ -17,7 +17,7 @@ struct CommandlineFlag
 
 	operator bool();
 	operator std::string&();
-	bool operator==(const std::string_view other) const;
+	bool operator==(std::string_view other) const;
 };
 
 enum class Flag

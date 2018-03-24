@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 
 template<class It>
 class span
@@ -14,18 +15,23 @@ public:
 
 	template<class T>
 	span(const T& container) :
-	    _begin(container.begin()),
-	    _end(container.end())
+		_begin{container.begin()},
+		_end{container.end()}
 	{}
 
 	template<class T>
 	span(T& container) :
-	    span(static_cast<const T&>(container))
+		span{static_cast<const T&>(container)}
 	{}
 
 	span(It begin, It end) :
-	    _begin(begin),
-	    _end(end)
+		_begin{begin},
+		_end{end}
+	{}
+
+	span(It begin, size_t count) :
+		_begin{begin},
+		_end{begin + static_cast<intptr_t>(count)}
 	{}
 
 	template<class T>
@@ -75,4 +81,4 @@ public:
 template<typename T> span(const T&) -> span<typename T::const_iterator>;
 template<typename T> span(T&) -> span<typename T::iterator>;
 
-#endif // SPAN_HPP
+#endif

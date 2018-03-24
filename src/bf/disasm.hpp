@@ -3,6 +3,7 @@
 
 #include "bf.hpp"
 #include "vm.hpp"
+#include "span.hpp"
 
 namespace bf
 {
@@ -11,7 +12,7 @@ struct Disassembler
 	bool print_line_numbers;
 
 	std::string operator()(const VMOp &ins);
-	void print_range(Program::iterator begin, Program::iterator end);
+	void print_range(span<ProgramIt> range);
 	void print_range(Program& program);
 };
 
