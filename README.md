@@ -17,6 +17,12 @@ Basic compilation on \*nix:
 cmake . && make
 ```
 
+It is possible to generate a JavaScript library using WebAssembly, which requires up-to-date emscripten and generates a ashbf.js library:
+
+```bash
+cmake -Djs=on -DCMAKE_BUILD_TYPE=Release . && make
+```
+
 ## Usage
 
 `./ashbf <filename> (flags)`
