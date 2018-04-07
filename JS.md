@@ -18,6 +18,7 @@ Loglevel `0` is verbose, `1` is info, `2` is warning, `3` is error.
 Example program:
 
 ```js
+bf_out = alert;
 bf_loglevel(3);
 bf(",.,.,.", "abc");
 ```
