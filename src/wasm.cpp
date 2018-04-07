@@ -1,4 +1,5 @@
 #include <emscripten/emscripten.h>
+#include <emscripten/bind.h>
 #include <vector>
 #include <sstream>
 #include "bf/bf.hpp"
@@ -9,53 +10,97 @@ extern "C"
 {
 bf::Brainfuck bfi;
 
-extern void js_bf_out(const char*);
-
-//! Silence all log-levels equal or lower than the level parameter.
-//! 0 = verbose, 1 = info, 2 = warning, 3 = error
-//! Set to a negative value (e.g. -1) to enable verbose logging.
-//! Set to 3 or higher to disable all logging.
-static void EMSCRIPTEN_KEEPALIVE brainfuck_loglevel(int32_t level)
+class BfJsWrapper
 {
-	static std::vector<LogLevel*> loggers{&verbout, &infoout, &warnout, &errout};
+	bf::Brainfuck bfi;
+	std::stringstream ssin, ssout;
 
-	for (auto* logger : loggers)
+public:
+	BfJsWrapper()
 	{
-		logger->silenced = false;
+		bfi.pipeout = &ssout;
 	}
 
-	if (level >= 0)
+	bool parse(std::string source)
 	{
-		for (int i = 0; i <= level && i < loggers.size(); ++i)
+		return bfi.compile(source);
+	}
+
+	bool optimize()
+	{
+		bf::Optimizer{}.optimize(bfi.program);
+		return true;
+	}
+
+	bool link()
+	{
+		return bfi.link();
+	}
+
+	bool compile(std::string source)
+	{
+		return parse(source) && optimize() && link();
+	}
+
+	std::string run()
+	{
+		ssout.str({}); // Clear
+		bfi.interpret(30000);
+		return ssout.str();
+	}
+
+	void setInputStdin()
+	{
+		bfi.pipein = &std::cin;
+	}
+
+	void setInputString(std::string str)
+	{
+		ssin.str(str); // Clear
+		bfi.pipein = &ssin;
+	}
+
+	// TODO:
+	void setInputCallback()
+	{
+
+	}
+
+	static void setLogLevel(int level)
+	{
+		static std::vector<LogLevel*> loggers{&verbout, &infoout, &warnout, &errout};
+
+		for (auto* logger : loggers)
 		{
-			loggers[i]->silenced = true;
+			logger->silenced = false;
+		}
+
+		if (level >= 0)
+		{
+			for (int i = 0; i <= level && i < loggers.size(); ++i)
+			{
+				loggers[i]->silenced = true;
+			}
 		}
 	}
-}
+};
 
-//! Compiles, optimizes and runs brainfuck program
-static bool EMSCRIPTEN_KEEPALIVE brainfuck(const char* program, const char* input)
+namespace
 {
-	if (!bfi.compile(program))
-	{
-		return false;
-	}
+using namespace emscripten;
 
-	std::stringstream ssin, ssout;
-	ssin << input;
-	bfi.pipein = &ssin;
-	bfi.pipeout = &ssout;
-
-	bf::Optimizer{}.optimize(bfi.program);
-
-	if (!bfi.link())
-	{
-		return false;
-	}
-
-	bfi.interpret(30000);
-	js_bf_out(ssout.str().c_str());
-
-	return true;
+EMSCRIPTEN_BINDINGS(brainfuck_wrapper) {
+	class_<BfJsWrapper>("Ashbf")
+	.constructor<>()
+	.function("parse", &BfJsWrapper::parse)
+	.function("optimize", &BfJsWrapper::optimize)
+	.function("link", &BfJsWrapper::link)
+	.function("compile", &BfJsWrapper::compile)
+	.function("run", &BfJsWrapper::run)
+	.function("setInputStdin", &BfJsWrapper::setInputStdin)
+	.function("setInputString", &BfJsWrapper::setInputString)
+	.class_function("setLogLevel", &BfJsWrapper::setLogLevel);
 }
+}
+
 }
