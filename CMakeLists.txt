@@ -26,7 +26,7 @@ if (js)
 		${core_files}
 		"src/wasm.cpp")
 
-	set(CMAKE_CXX_FLAGS "-s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]' --js-library ${CMAKE_SOURCE_DIR}/src/js/library.js")
+	set(CMAKE_CXX_FLAGS "-s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]' --js-library ${CMAKE_SOURCE_DIR}/src/js/library.js --post-js ${CMAKE_SOURCE_DIR}/src/js/postjs.js")
 	target_compile_options(ashbf.js PRIVATE ${core_flags} -std=c++1z -s WASM=1)
 	target_compile_definitions(ashbf.js PRIVATE WEB=1)
 else()
