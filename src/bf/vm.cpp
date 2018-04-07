@@ -17,7 +17,7 @@ namespace bf
 {
 void Brainfuck::interpret(size_t memory_size) noexcept
 {
-	std::array labels { &&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd };
+	std::array<void*, 10> labels {{ &&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd }};
 
 	for (auto &i : program)
 	{
