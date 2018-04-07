@@ -24,7 +24,7 @@ if (js)
 
 	add_executable(ashbf.js
 		${core_files}
-		"src/wasm.cpp")
+		"src/bfjswrapper.cpp")
 
 	set(CMAKE_CXX_FLAGS "-s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]' --bind")
 	target_compile_options(ashbf.js PRIVATE ${core_flags} -std=c++1z -s WASM=1)
