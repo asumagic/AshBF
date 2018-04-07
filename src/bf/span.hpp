@@ -60,9 +60,24 @@ public:
 		return _end;
 	}
 
+	auto rbegin() const
+	{
+		return std::reverse_iterator{_end};
+	}
+
+	auto rend() const
+	{
+		return std::reverse_iterator{_begin};
+	}
+
 	size_t size() const
 	{
 		return static_cast<size_t>(std::distance(_begin, _end));
+	}
+
+	bool empty() const
+	{
+		return _begin == _end;
 	}
 
 	template<class T>

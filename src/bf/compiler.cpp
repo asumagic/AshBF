@@ -15,17 +15,17 @@ const std::array<BFOp, 8> ops
 	{'-', bfAdd, -1},
 	{'>', bfShift, 1},
 	{'<', bfShift, -1},
-	{'.', bfCharOut},
-	{',', bfCharIn},
+	{'.', bfCharOut, 1},
+	{',', bfCharIn, 1},
 	{'[', bfLoopBegin},
 	{']', bfLoopEnd}
 }};
 
-bool Brainfuck::compile(std::string_view fname)
+bool Brainfuck::compile(std::string_view source)
 {
 	program.clear();
 
-	for (const char c : fname)
+	for (const char c : source)
 	{
 		if (auto it = std::find(ops.begin(), ops.end(), c); it != ops.end())
 		{

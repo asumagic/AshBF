@@ -36,8 +36,8 @@ void Brainfuck::interpret(size_t memory_size) noexcept
 
 	{ handler(lMAC);  *sp += a * sp[b]; dispatch(++pc); }
 
-	{ handler(lCOut); *pipeout << *sp; dispatch(++pc); }
-	{ handler(lCIn);  *pipein  >> *sp; dispatch(++pc); }
+	{ handler(lCOut); for (int i = 0; i < a; ++i) { *pipeout << *sp; } dispatch(++pc); }
+	{ handler(lCIn);  for (int i = 0; i < a; ++i) { *sp = pipein->get(); } dispatch(++pc); }
 		
 	{ handler(lJZ);  if (*sp == 0) { jump(); } dispatch(++pc); }
 	{ handler(lJNZ); if (*sp != 0) { jump(); } dispatch(++pc); }

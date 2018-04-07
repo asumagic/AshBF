@@ -29,9 +29,16 @@ struct CellOp
 {
 	std::vector<CellOpSingle> ops;
 
-	bool apply(const VMOp& instructon);
+	bool apply(const VMOp& instruction);
 	void simplify();
 	void repeat(size_t n);
+};
+
+struct CellOpMap
+{
+	std::map<int, CellOp> operation_map;
+	int offset_from_start = 0;
+	bool correct = false;
 };
 
 struct PastProgramState
@@ -53,7 +60,7 @@ struct Optimizer
 	static bool is_nop(const VMOp &ins); // True if the instruction has no visible effect
 
 	// Generates a map binding offsets from the current cell to cell operations.
-	std::map<int, CellOp> make_operation_map(span<ProgramIt> range);
+	CellOpMap make_operation_map(span<ProgramIt> range);
 
 	PastProgramState past_state;
 	bool update_state_debug(Program &program);
@@ -64,6 +71,7 @@ struct Optimizer
 	bool merge_stackable(Program &program, ProgramIt begin, ProgramIt end);
 	bool peephole_optimize(Program &program, ProgramIt begin, ProgramIt end);
 	bool balanced_loop_unrolling(Program &program, ProgramIt begin, ProgramIt end);
+	bool balanced_loop_unrolling_v2(Program &program, ProgramIt begin, ProgramIt end);
 };
 }
 

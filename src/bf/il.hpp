@@ -49,8 +49,8 @@ static constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions
 
 	{"mac", bfMAC, 2, false},
 
-	{"cout", bfCharOut, 0, false},
-	{"cin", bfCharIn, 0, false},
+	{"cout", bfCharOut, 1, true},
+	{"cin", bfCharIn, 1, true},
 
 	{"jz", bfJmpZero, 1, false},
 	{"jnz", bfJmpNotZero, 1, false},

@@ -16,6 +16,6 @@ struct BFOp
 };
 
 extern const std::array<BFOp, 8> ops;
-} // end namespace bf
+}
 
 #endif // COMPILER_HPP

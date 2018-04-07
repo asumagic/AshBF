@@ -19,31 +19,43 @@ bool CellOpSingle::apply(const VMOp& ins)
 	switch (ins.opcode)
 	{
 	case bfAdd:
-		if (any && (op.opcode == bfAdd || op.opcode == bfSet))
+		if (any)
 		{
-			op.args[0] += ins.args[0];
+			if (op.opcode == bfAdd || op.opcode == bfSet)
+			{
+				op.args[0] += ins.args[0];
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
-		else
+		[[fallthrough]];
+
+	case bfMAC:
+	case bfSet:
+	case bfCharIn:
+	case bfCharOut:
+		if (!any)
 		{
 			op = ins;
 			any = true;
+			return true;
 		}
-	break;
+		else
+		{
+			return false;
+		}
 
-	case bfSet:
-		op = ins;
-		any = true;
-	break;
-
-	default: break;
+	default:
+		return false;
 	}
-
-	return false;
 }
 
 void CellOpSingle::simplify()
 {
-	if (any && instructions[op.opcode].stackable && op.args[0] == 0)
+	if (any && Optimizer::is_nop(op))
 	{
 		any = false;
 	}
@@ -54,6 +66,50 @@ void CellOpSingle::repeat(int n)
 	if (any && instructions[op.opcode].stackable)
 	{
 		op.args[0] *= n;
+	}
+}
+
+bool CellOp::apply(const VMOp& instruction)
+{
+	if (ops.empty())
+	{
+		ops.emplace_back();
+	}
+	else
+	{
+		// Simplify the current op to avoid useless instructions
+		ops.back().simplify();
+	}
+
+	// If we can't apply the given instruction to the current op, then try with a clean one
+	if (!ops.back().apply(instruction))
+	{
+		ops.emplace_back();
+
+		// If we couldn't anyway then the op can't just apply, fail
+		if (!ops.back().apply(instruction))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void CellOp::repeat(size_t n)
+{
+	if (ops.size() == 1)
+	{
+		ops[0].repeat(int(n));
+	}
+	else
+	{
+		size_t size = ops.size();
+		for (size_t j = 0; j < n; ++j)
+		for (size_t i = 0; i < size; ++i)
+		{
+			ops.emplace_back(ops[i]);
+		}
 	}
 }
 
@@ -68,17 +124,31 @@ bool Optimizer::is_nop(const VMOp& ins)
 			(is_stackable(ins) && ins.args[0] == 0);
 }
 
-std::map<int, CellOp> Optimizer::make_operation_map(span<ProgramIt> range)
+CellOpMap Optimizer::make_operation_map(span<ProgramIt> range)
 {
-	std::map<int, CellOp> map;
+	CellOpMap ret;
 
-	int offset = 0;
 	for (const VMOp& ins : range)
 	{
+		switch (ins)
+		{
+		case bfShift:
+			ret.offset_from_start += ins.args[0];
+		break;
 
+		default:
+			if (!ret.operation_map[ret.offset_from_start].apply(ins))
+			{
+				warnout(optimizeinfo) << "Apply failed...\n";
+				disasm.print_range(range);
+				ret.correct = false;
+				return ret;
+			}
+		}
 	}
 
-	return map;
+	ret.correct = true;
+	return ret;
 }
 
 bool Optimizer::update_state_debug(Program &program)
@@ -386,6 +456,54 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 	return effective;
 }
 
+bool Optimizer::balanced_loop_unrolling_v2(Program& program, ProgramIt begin, ProgramIt end)
+{
+	span range{begin, end};
+
+	while (!range.empty())
+	{
+		auto loop_end = std::find(range.begin(), range.end(), bfLoopEnd);
+		auto loop_begin_reverse = std::find(std::reverse_iterator{loop_end}, range.rend(), bfLoopBegin);
+
+		if (loop_end == range.end() || loop_begin_reverse == range.rend())
+		{
+			break;
+		}
+
+		auto loop_begin = loop_begin_reverse.base();
+
+		auto map = make_operation_map({loop_begin + 1, loop_end});
+
+		verbout(optimizeinfo) << "Operation map size for current loop: " << map.operation_map.size() << '\n';
+
+		if (map.correct && map.offset_from_start == 0)
+		{
+			auto first_cell_it = map.operation_map.find(0);
+			if (first_cell_it != map.operation_map.end())
+			{
+				auto& first_cell = first_cell_it->second;
+				if (first_cell.ops.empty() || !first_cell.ops[0].any)
+				{
+					warnout(optimizeinfo) << "Loop has no iterator and will loop infinitely.\n";
+				}
+				else if (first_cell.ops[0].op == bfSet && first_cell.ops[0].op.args[0] != 0)
+				{
+					// TODO handle when setter is 0
+					warnout(optimizeinfo) << "Loop resets the iterator to a non-zero value and will loop infinitely.\n";
+				}
+				else if (first_cell.ops[0].op == bfAdd)
+				{
+					verbout(optimizeinfo) << "Loop iterator found\n";
+				}
+			}
+		}
+
+		range = {loop_end + 1, range.end()};
+	}
+
+	return erase_nop(program, program.begin(), program.end());
+}
+
 void Optimizer::optimize(Program& program)
 {
 	for (size_t p = 0;; ++p)
@@ -413,7 +531,8 @@ void Optimizer::optimize(Program& program)
 		{{
 			{&Optimizer::merge_stackable,         "Merge stackable instructions"},
 			{&Optimizer::peephole_optimize,       "Peephole"},
-			{&Optimizer::balanced_loop_unrolling, "Balanced loop unrolling"}
+			{&Optimizer::balanced_loop_unrolling, "Balanced loop unrolling"},
+			//{&Optimizer::balanced_loop_unrolling_v2, "Balanced loop unrolling v2 WIP"}
 		}};
 
 		for (auto &task : tasks)
@@ -442,4 +561,5 @@ void Optimizer::optimize(Program& program)
 
 	program.shrink_to_fit();
 }
+
 }

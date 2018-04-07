@@ -8,7 +8,11 @@ Disassembler disasm{};
 std::string Disassembler::operator()(const VMOp& ins)
 {
 	const VMOpInfo& info = instructions[static_cast<size_t>(ins.opcode)];
+#ifdef ANSICOLOR
 	std::string str = "\033[1m" + std::string{info.name} + "\033[0m";
+#else
+	std::string str = info.name;
+#endif
 
 	for (size_t i = 0; i < info.arguments_used; ++i)
 	{
