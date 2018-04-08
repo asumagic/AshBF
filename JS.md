@@ -8,6 +8,8 @@ Refer to [the README build steps](README.md).
 
 ## Basic usage
 
+You need to initialize the module using `ashbfInitialize()`.
+
 The `Module.Ashbf` class handles most of the interaction with the AshBF native code.  
 Instanciate it with:
 
@@ -28,10 +30,12 @@ bf.delete();
 Sample program:
 
 ```js
-var bf = new Module.Ashbf();
-bf.compile(",.,.,.");
-bf.setInputString("abc");
-console.log(bf.run());
+ashbfInitialize().then(function() {
+	var bf = new Module.Ashbf();
+	bf.compile(",.,.,.");
+	bf.setInputString("abc");
+	console.log(bf.run());
+});
 ```
 
 ## **`compile(source)`** - Compiling a Brainfuck program downto AshBF bytecode
