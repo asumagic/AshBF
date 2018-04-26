@@ -31,7 +31,8 @@ enum class Flag
 	//warnings,
 	print_il,
 	print_il_line_numbers,
-	execute
+	execute,
+	codegen_asm_x86_64_file
 };
 
 struct Flags
@@ -47,7 +48,8 @@ struct Flags
 		//{ "warnings", 'W', "1", {"0", "1"} }, // Controls compiler warnings
 		{ "print-il", 'a', "0", {"0", "1"} }, // Print VM IL
 		{ "print-il-line-numbers", '\0', "1", {"0", "1"} }, // Print VM IL line numbers
-		{ "execute", 'x', "1", {"0", "1"} } // Do execute the compiled program or not
+		{ "execute", 'x', "1", {"0", "1"} }, // Do execute the compiled program or not,
+		{ "asm-x86-64-output", '\0', "" }
 	}};
 
 	inline CommandlineFlag& operator[](const Flag flag)

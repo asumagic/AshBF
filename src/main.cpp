@@ -3,6 +3,7 @@
 #include "bf/disasm.hpp"
 #include "bf/logger.hpp"
 #include "bf/optimizer.hpp"
+#include "bf/codegen/codegen.hpp"
 #include "cli.hpp"
 
 int main(int argc, char** argv)
@@ -45,6 +46,21 @@ int main(int argc, char** argv)
 	{
 		bf::disasm.print_range(bfi.program);
 	}
+
+	auto codegen_to_file = [&](const std::string& str, std::function<bool(bf::codegen::Context)> codegen)
+	{
+		if (!str.empty())
+		{
+			std::ofstream of{str};
+			if (!of) return false;
+
+			return codegen({bfi.program, of});
+		}
+
+		return false;
+	};
+
+	codegen_to_file(flags[Flag::codegen_asm_x86_64_file].value, bf::codegen::asm_x86_64);
 
 	if (flags[Flag::execute])
 	{

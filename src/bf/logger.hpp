@@ -15,7 +15,7 @@ struct LogLevel
 	std::ostream& buffer = std::clog;
 	bool silenced = false;
 
-	std::ostream& operator()(const std::string& sourceinfo = "");
+	std::ostream& operator()(std::string_view sourceinfo = "");
 };
 
 class NullBuf : public std::streambuf
@@ -27,7 +27,7 @@ public:
 extern NullBuf null_buf;
 extern std::ostream null_stream;
 
-extern const std::string cmdinfo, bcinfo, compileinfo, optimizeinfo;
+extern const std::string_view cmdinfo, bcinfo, compileinfo, optimizeinfo, codegeninfo, codegenx8664info; // TODO refactor naming within this file
 extern LogLevel warnout, errout, verbout, infoout;
 
 #endif
