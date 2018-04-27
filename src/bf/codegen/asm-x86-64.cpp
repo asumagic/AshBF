@@ -45,36 +45,46 @@ bool asm_x86_64(Context ctx)
 			break;
 
 		case bf::Opcode::bfMAC:
-			// TODO: optimize out as it seems to actually harm performance
-			// e.g. perf report:
-/*
-	   │      mov    $0xfffffffffffffffd,%rax
- 74,02 │      mov    (%rdi,%rax,1),%rax <- address generation might be harmful
- 15,75 │      imul   $0x1,%rax,%rax
- 10,24 │      add    %al,(%rdi)
-*/
+			// TODO: optimize out at a maximum
 			ctx.out <<
-				"movq $" << op.args[1] << ", %rax\n"
-				"movq (%rdi, %rax, 1), %rax\n"
-				"imulq $" << op.args[0] << ", %rax\n"
-				"addb %al, (%rdi)\n";
+				"movq $" << op.args[1] << ", %rdx\n"
+				"movb (%rdi, %rdx), %al\n";
+
+			switch (op.args[0])
+			{
+			// TODO: optimize out -1, powers of two, negative powers of two
+			case  1: break;
+			//case -1: ctx.out << "negb %al\n";
+			default: ctx.out << "imull $" << op.args[0] << ", %eax\n";
+			}
+
+			ctx.out << "addb %al, (%rdi)\n";
 			break;
 
-		case bf::Opcode::bfCharOut:
-			// TODO: use a loop instead
-			for (size_t r = 0; r < op.args[0]; ++r)
+		case bf::Opcode::bfCharOut: {
+			bool is_looped = (op.args[0] > 2);
+
+			if (is_looped)
 			{
-				ctx.out <<
-					"# Write syscall (output character)\n"
-					"pushq %rdi\n"
-					"movq $1, %rax\n"
-					"movq %rdi, %rsi\n"
-					"movq $1, %rdi\n"
-					"movq $1, %rdx\n"
-					"syscall\n"
-					"popq %rdi\n";
+				ctx.out << "mov $" << op.args[0] << ", %rcx\n";
 			}
-			break;
+
+			ctx.out <<
+				"# Write syscall (output character)\n"
+				"pushq %rdi\n"
+				"movq $1, %rax\n"
+				"movq %rdi, %rsi\n"
+				"movq $1, %rdi\n"
+				"movq $1, %rdx\n"
+				"syscall\n"
+				"popq %rdi\n";
+
+			if (is_looped)
+			{
+				ctx.out << "loop " << i << '\n';
+			}
+
+			} break;
 
 		/*case bf::Opcode::bfCharIn:
 
