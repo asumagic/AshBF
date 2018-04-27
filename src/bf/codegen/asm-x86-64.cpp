@@ -19,6 +19,15 @@ bool asm_x86_64(Context ctx)
 	// TODO: use %rsi instead of %rdi to save opcodes in charout/charin
 	// it on the stack in the cout opcode
 
+	auto shift_ptr = [&ctx](VMArg by) {
+		switch (by)
+		{
+		case -1: ctx.out << "decq %rdi\n"; break;
+		case  1: ctx.out << "incq %rdi\n"; break;
+		default: ctx.out << "addq $" << by << ", %rdi\n";
+		}
+	};
+
 	for (size_t i = 0; i < ctx.program.size(); ++i)
 	{
 		auto& op = ctx.program[i];
@@ -32,21 +41,18 @@ bool asm_x86_64(Context ctx)
 			break;
 
 		case bf::Opcode::bfShift:
-			if (op.args[0] == 1)
-			{
-				ctx.out << "incq %rdi\n";
-			}
-			else if (op.args[0] == -1)
-			{
-				ctx.out << "decq %rdi\n";
-			}
-			else
-			{
-				ctx.out << "addq $" << op.args[0] << ", %rdi\n";
-			}
+			shift_ptr(op.args[0]);
 			break;
 
 		case bf::Opcode::bfMAC:
+			// TODO: optimize out as it seems to actually harm performance
+			// e.g. perf report:
+/*
+	   │      mov    $0xfffffffffffffffd,%rax
+ 74,02 │      mov    (%rdi,%rax,1),%rax <- address generation might be harmful
+ 15,75 │      imul   $0x1,%rax,%rax
+ 10,24 │      add    %al,(%rdi)
+*/
 			ctx.out <<
 				"movq $" << op.args[1] << ", %rax\n"
 				"movq (%rdi, %rax, 1), %rax\n"
@@ -93,8 +99,11 @@ bool asm_x86_64(Context ctx)
 		case bf::Opcode::bfShiftUntilZero:
 			ctx.out <<
 				"cmpb $0, (%rdi)\n"
-				"je bfop" << i + 1 << "\n"
-				"addq $" << op.args[0] << ", %rdi\n"
+				"je bfop" << i + 1 << "\n";
+
+			shift_ptr(op.args[0]);
+
+			ctx.out <<
 				"jmp bfop" << i << '\n';
 			break;
 
