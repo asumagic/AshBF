@@ -6,6 +6,7 @@ bool asm_x86_64(Context ctx)
 {
 	ctx.out <<
 		".text\n"
+		".globl _start\n"
 		"_start:\n"
 		"\n"
 		"# Allocating stack memory for the brainfuck program\n"
