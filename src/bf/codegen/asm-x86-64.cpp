@@ -52,13 +52,19 @@ bool asm_x86_64(Context ctx)
 
 			switch (op.args[0])
 			{
-			// TODO: optimize out -1, powers of two, negative powers of two
-			case  1: break;
-			//case -1: ctx.out << "negb %al\n";
-			default: ctx.out << "imull $" << op.args[0] << ", %eax\n";
+			// TODO: powers of two, negative powers of two
+			case 1:
+				ctx.out << "addb %al, (%rdi)\n";
+				break;
+			case -1:
+				ctx.out << "subb %al, (%rdi)\n";
+				break;
+			default:
+				ctx.out << "imull $" << op.args[0] << ", %eax\n";
+				ctx.out << "addb %al, (%rdi)\n";
 			}
 
-			ctx.out << "addb %al, (%rdi)\n";
+
 			break;
 
 		case bf::Opcode::bfCharOut: {
