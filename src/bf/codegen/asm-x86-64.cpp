@@ -32,6 +32,21 @@ bool asm_x86_64(Context ctx)
 		}
 	};
 
+	auto is_power_of_two = [](auto x) {
+		return !(x & (x - 1)); // Bitwise magic
+	};
+
+	// assuming is_power_of_two(x)
+	auto get_power_of_two = [](auto x) {
+		for (size_t i = 0;; ++i)
+		{
+			if ((1 << i) == x)
+			{
+				return i;
+			}
+		}
+	};
+
 	for (size_t i = 0; i < ctx.program.size(); ++i)
 	{
 		auto& op = ctx.program[i];
@@ -54,18 +69,28 @@ bool asm_x86_64(Context ctx)
 				"movq $" << op.args[1] << ", %rdx\n"
 				"movb (%rdi, %rdx), %al\n";
 
-			switch (op.args[0])
+			// TODO: handle negative power of two
+			// not currently doing it as i have to write a testcase
+
+			if (op.args[0] == 1)
 			{
-			// TODO: powers of two, negative powers of two
-			case 1:
 				ctx.out << "addb %al, (%rdi)\n";
-				break;
-			case -1:
+			}
+			else if (op.args[0] == -1)
+			{
 				ctx.out << "subb %al, (%rdi)\n";
-				break;
-			default:
-				ctx.out << "imull $" << op.args[0] << ", %eax\n";
-				ctx.out << "addb %al, (%rdi)\n";
+			}
+			else if (op.args[0] > 0 && is_power_of_two(op.args[0]))
+			{
+				ctx.out <<
+					"shll $" << get_power_of_two(op.args[0]) << ", %eax\n"
+					"addb %al, (%rdi)";
+			}
+			else
+			{
+				ctx.out <<
+					"imull $" << op.args[0] << ", %eax\n"
+					"addb %al, (%rdi)\n";
 			}
 
 
@@ -129,8 +154,8 @@ bool asm_x86_64(Context ctx)
 
 		case bf::Opcode::bfEnd:
 			ctx.out <<
-				"# Cleanup stack pointer\n"
-				"addq $30000, %rsp\n"
+				"# Cleanup stack pointer - unnecessary as proceeding with exit()\n"
+				"# addq $30000, %rsp\n"
 				"\n"
 				"# Exit syscall\n"
 				"movq $60, %rax\n"
