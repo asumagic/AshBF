@@ -15,19 +15,9 @@ struct OptimizationSequence
 	std::function<Program(span<ProgramIt>)> optimize;
 };
 
-struct CellOpSingle
-{
-	VMOp op;
-	bool any = false;
-
-	bool apply(const VMOp& instruction);
-	void simplify();
-	void repeat(int n);
-};
-
 struct CellOp
 {
-	std::vector<CellOpSingle> ops;
+	std::vector<VMOp> ops;
 
 	bool apply(const VMOp& instruction);
 	void simplify();
@@ -55,9 +45,6 @@ struct Optimizer
 	size_t pass_count = 5;
 	bool debug = false;
 	bool verbose = false;
-
-	static bool is_stackable(const VMOp &ins); // True if the instruction is mergeable/stackable
-	static bool is_nop(const VMOp &ins); // True if the instruction has no visible effect
 
 	// Generates a map binding offsets from the current cell to cell operations.
 	CellOpMap make_operation_map(span<ProgramIt> range);

@@ -14,61 +14,6 @@
 
 namespace bf
 {
-bool CellOpSingle::apply(const VMOp& ins)
-{
-	switch (ins.opcode)
-	{
-	case bfAdd:
-		if (any)
-		{
-			if (op.opcode == bfAdd || op.opcode == bfSet)
-			{
-				op.args[0] += ins.args[0];
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		[[fallthrough]];
-
-	case bfMAC:
-	case bfSet:
-	case bfCharIn:
-	case bfCharOut:
-		if (!any)
-		{
-			op = ins;
-			any = true;
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-
-	default:
-		return false;
-	}
-}
-
-void CellOpSingle::simplify()
-{
-	if (any && Optimizer::is_nop(op))
-	{
-		any = false;
-	}
-}
-
-void CellOpSingle::repeat(int n)
-{
-	if (any && instructions[op.opcode].stackable)
-	{
-		op.args[0] *= n;
-	}
-}
-
 bool CellOp::apply(const VMOp& instruction)
 {
 	if (ops.empty())
@@ -82,12 +27,12 @@ bool CellOp::apply(const VMOp& instruction)
 	}
 
 	// If we can't apply the given instruction to the current op, then try with a clean one
-	if (!ops.back().apply(instruction))
+	if (!ops.back().try_merge_with(instruction))
 	{
 		ops.emplace_back();
 
 		// If we couldn't anyway then the op can't just apply, fail
-		if (!ops.back().apply(instruction))
+		if (!ops.back().try_merge_with(instruction))
 		{
 			return false;
 		}
@@ -111,17 +56,6 @@ void CellOp::repeat(size_t n)
 			ops.emplace_back(ops[i]);
 		}
 	}
-}
-
-bool Optimizer::is_stackable(const VMOp& ins)
-{
-	return instructions[ins.opcode].stackable;
-}
-
-bool Optimizer::is_nop(const VMOp& ins)
-{
-	return ins.opcode == bfNop ||
-			(is_stackable(ins) && ins.args[0] == 0);
 }
 
 CellOpMap Optimizer::make_operation_map(span<ProgramIt> range)
@@ -155,8 +89,14 @@ bool Optimizer::update_state_debug(Program &program)
 {
 	if (debug)
 	{
+		if (past_state.program.empty())
+		{
+			infoout(optimizeinfo) << "Running reference unoptimized program for optimization regressiong testing.\n";
+		}
+
 		std::stringstream ss;
 
+		// TODO: make this parameterizable to some extent
 		Brainfuck bf;
 		bf.program = program;
 		bf.pipeout = &ss;
@@ -167,31 +107,30 @@ bool Optimizer::update_state_debug(Program &program)
 
 		Program &old_program = past_state.program;
 
-		if (past_state.program.empty())
+		if (!past_state.program.empty())
 		{
-			infoout(optimizeinfo) << "Saving reference program output for regression testing.\n";
-		}
-		else if (program_output != past_state.output)
-		{
-			errout(optimizeinfo) << "Optimization #" << past_state.id << " has regressed!\n";
-			past_state.correct = false;
+			if (program_output != past_state.output)
+			{
+				errout(optimizeinfo) << "Optimization #" << past_state.id << " has regressed!\n";
+				past_state.correct = false;
 
-			auto [a_mismatch_begin, b_mismatch_begin] = std::mismatch(old_program.begin(), old_program.end(), program.begin(), program.end());
-			auto [a_mismatch_end, b_mismatch_end] = std::mismatch(old_program.rbegin(), old_program.rend(), program.rbegin(), program.rend());
+				auto [a_mismatch_begin, b_mismatch_begin] = std::mismatch(old_program.begin(), old_program.end(), program.begin(), program.end());
+						auto [a_mismatch_end, b_mismatch_end] = std::mismatch(old_program.rbegin(), old_program.rend(), program.rbegin(), program.rend());
 
-			warnout(optimizeinfo) << "Latest correct assembly:\n";
-			disasm.print_range({a_mismatch_begin, a_mismatch_end.base()});
+						warnout(optimizeinfo) << "Latest correct assembly:\n";
+						disasm.print_range({a_mismatch_begin, a_mismatch_end.base()});
 
-			warnout(optimizeinfo) << "Broken assembly:\n";
-			disasm.print_range({b_mismatch_begin, b_mismatch_end.base()});
-		}
-		else if (past_state.correct)
-		{
-			infoout(optimizeinfo) << "Optimization marker #" << past_state.id << " correct.\n";
-		}
-		else
-		{
-			infoout(optimizeinfo) << "Optimization marker #" << past_state.id << " consistent with previous invalid results.\n";
+				warnout(optimizeinfo) << "Broken assembly:\n";
+				disasm.print_range({b_mismatch_begin, b_mismatch_end.base()});
+			}
+			else if (past_state.correct)
+			{
+				infoout(optimizeinfo) << "Optimization marker #" << past_state.id << " correct.\n";
+			}
+			else
+			{
+				infoout(optimizeinfo) << "Optimization marker #" << past_state.id << " consistent with previous invalid results.\n";
+			}
 		}
 
 		past_state.program = program;
@@ -205,7 +144,7 @@ bool Optimizer::update_state_debug(Program &program)
 bool Optimizer::erase_nop(Program &program, ProgramIt begin, ProgramIt end)
 {
 	size_t old_size = program.size();
-	program.erase(std::remove_if(begin, end, is_nop), end);
+	program.erase(std::remove_if(begin, end, [](auto op) { return op.is_nop_like(); }), end);
 	return program.size() != old_size;
 }
 
@@ -213,7 +152,7 @@ bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end
 {
 	for (auto i = begin; i != end; ++i)
 	{
-		if (!is_stackable(*i))
+		if (!i->is_stackable())
 		{
 			continue;
 		}
@@ -282,7 +221,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 	auto loop_begin = begin;
 	bool expandable = true, effective = false;
 	int shift_count = 0;
-	std::map<int, CellOpSingle> operations;
+	std::map<int, VMOp> operations;
 
 	// Reset counters when we enter a potentially expandable loop
 	auto mark_expandable = [&](ProgramIt current) {
@@ -341,7 +280,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 				}
 				else
 				{
-					operations[shift_count].apply(*j);
+					operations[shift_count].try_merge_with(*j);
 				}
 			}
 
@@ -351,24 +290,24 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			}
 
 			auto loopit = operations.find(0);
-			if (loopit == operations.end() || !loopit->second.any)
+			if (loopit == operations.end() || !loopit->second)
 			{
 				warnout(optimizeinfo) << "Infinite loop: Iterator is never modified\n";
 				continue;
 			}
 
-			CellOpSingle loopit_op = loopit->second;
+			VMOp loopit_op = loopit->second;
 
 			// We handle the offset 0 case manually.
 			operations.erase(loopit);
 
-			if (loopit_op.op.opcode == bfSet && loopit_op.op.args[0] != 0)
+			if (loopit_op.opcode == bfSet && loopit_op.args[0] != 0)
 			{
-				warnout(optimizeinfo) << "Infinite loop: Iterator is always `" << loopit_op.op.args[0] << "`\n";
+				warnout(optimizeinfo) << "Infinite loop: Iterator is always `" << loopit_op.args[0] << "`\n";
 				continue;
 			}
 
-			if (loopit_op.op.args[0] != -1)
+			if (loopit_op.args[0] != -1)
 			{
 				continue;
 			}
@@ -395,7 +334,7 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 				{
 					p.second.repeat(prec.args[0]);
 					unrolled.emplace_back(bfShift, p.first - shift_count);
-					unrolled.push_back(p.second.op);
+					unrolled.push_back(p.second);
 					shift_count = p.first;
 				}
 
@@ -417,18 +356,18 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 					unrolled.emplace_back(bfShift, p.first - shift_count);
 					shift_count = p.first;
 
-					if (p.second.op.opcode == bfAdd)
+					if (p.second.opcode == bfAdd)
 					{
-						unrolled.emplace_back(bfMAC, p.second.op.args[0], -shift_count);
+						unrolled.emplace_back(bfMAC, p.second.args[0], -shift_count);
 					}
-					else if (p.second.op.opcode == bfSet)
+					else if (p.second.opcode == bfSet)
 					{
 						legal_when_zero = false;
 						break;
 					}
 					else
 					{
-						unrolled.push_back(p.second.op);
+						unrolled.push_back(p.second);
 					}
 				}
 
@@ -482,16 +421,16 @@ bool Optimizer::balanced_loop_unrolling_v2(Program& program, ProgramIt begin, Pr
 			if (first_cell_it != map.operation_map.end())
 			{
 				auto& first_cell = first_cell_it->second;
-				if (first_cell.ops.empty() || !first_cell.ops[0].any)
+				if (first_cell.ops.empty() || !first_cell.ops[0])
 				{
 					warnout(optimizeinfo) << "Loop has no iterator and will loop infinitely.\n";
 				}
-				else if (first_cell.ops[0].op == bfSet && first_cell.ops[0].op.args[0] != 0)
+				else if (first_cell.ops[0] == bfSet && first_cell.ops[0].args[0] != 0)
 				{
 					// TODO handle when setter is 0
 					warnout(optimizeinfo) << "Loop resets the iterator to a non-zero value and will loop infinitely.\n";
 				}
-				else if (first_cell.ops[0].op == bfAdd)
+				else if (first_cell.ops[0] == bfAdd)
 				{
 					verbout(optimizeinfo) << "Loop iterator found\n";
 				}
@@ -506,6 +445,8 @@ bool Optimizer::balanced_loop_unrolling_v2(Program& program, ProgramIt begin, Pr
 
 void Optimizer::optimize(Program& program)
 {
+	update_state_debug(program);
+
 	for (size_t p = 0;; ++p)
 	{
 		if (p >= pass_count)
