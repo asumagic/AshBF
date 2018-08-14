@@ -17,7 +17,7 @@ CommandlineFlag::operator bool()
 	return value == "1";
 }
 
-CommandlineFlag::operator std::string&()
+CommandlineFlag::operator const std::string&()
 {
 	return value;
 }
