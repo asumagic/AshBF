@@ -17,7 +17,7 @@ bool asm_x86_64(Context ctx)
 		"loop bfzeromemory\n"
 		"\n"
 		"# Initialize brainfuck tape pointer\n"
-		"movq %rsp, %rdi"
+		"movq %rsp, %rsi"
 		"\n";
 
 	// TODO: use %rsi instead of %rdi to save opcodes in charout/charin
@@ -26,9 +26,9 @@ bool asm_x86_64(Context ctx)
 	auto shift_ptr = [&ctx](VMArg by) {
 		switch (by)
 		{
-		case -1: ctx.out << "decq %rdi\n"; break;
-		case  1: ctx.out << "incq %rdi\n"; break;
-		default: ctx.out << "addq $" << by << ", %rdi\n";
+		case -1: ctx.out << "decq %rsi\n"; break;
+		case  1: ctx.out << "incq %rsi\n"; break;
+		default: ctx.out << "addq $" << by << ", %rsi\n";
 		}
 	};
 
@@ -56,11 +56,11 @@ bool asm_x86_64(Context ctx)
 		switch (op.opcode)
 		{
 		case bf::Opcode::bfAdd:
-			ctx.out << "addb $" << op.args[0] << ", (%rdi)\n";
+			ctx.out << "addb $" << op.args[0] << ", (%rsi)\n";
 			break;
 
 		case bf::Opcode::bfAddOffset:
-			ctx.out << "addb $" << op.args[0] << ", " << op.args[1] << "(%rdi)\n";
+			ctx.out << "addb $" << op.args[0] << ", " << op.args[1] << "(%rsi)\n";
 			break;
 
 		case bf::Opcode::bfShift:
@@ -71,30 +71,30 @@ bool asm_x86_64(Context ctx)
 			// TODO: optimize out at a maximum
 			ctx.out <<
 				"movq $" << op.args[1] << ", %rdx\n"
-				"movb (%rdi, %rdx), %al\n";
+				"movb (%rsi, %rdx), %al\n";
 
 			// TODO: handle negative power of two
 			// not currently doing it as i have to write a testcase
 
 			if (op.args[0] == 1)
 			{
-				ctx.out << "addb %al, (%rdi)\n";
+				ctx.out << "addb %al, (%rsi)\n";
 			}
 			else if (op.args[0] == -1)
 			{
-				ctx.out << "subb %al, (%rdi)\n";
+				ctx.out << "subb %al, (%rsi)\n";
 			}
 			else if (op.args[0] > 0 && is_power_of_two(op.args[0]))
 			{
 				ctx.out <<
 					"shll $" << get_power_of_two(op.args[0]) << ", %eax\n"
-					"addb %al, (%rdi)";
+					"addb %al, (%rsi)";
 			}
 			else
 			{
 				ctx.out <<
 					"imull $" << op.args[0] << ", %eax\n"
-					"addb %al, (%rdi)\n";
+					"addb %al, (%rsi)\n";
 			}
 
 
@@ -110,13 +110,10 @@ bool asm_x86_64(Context ctx)
 
 			ctx.out <<
 				"# Write syscall (output character)\n"
-				"pushq %rdi\n"
 				"movq $1, %rax\n"
-				"movq %rdi, %rsi\n"
 				"movq $1, %rdi\n"
 				"movq $1, %rdx\n"
-				"syscall\n"
-				"popq %rdi\n";
+				"syscall\n";
 
 			if (is_looped)
 			{
@@ -131,27 +128,27 @@ bool asm_x86_64(Context ctx)
 
 		case bf::Opcode::bfJmpZero:
 			ctx.out <<
-				"cmpb $0, (%rdi)\n"
+				"cmpb $0, (%rsi)\n"
 				"je bfop" << op.args[0] << '\n';
 			break;
 
 		case bf::Opcode::bfJmpNotZero:
 			ctx.out <<
-				"cmpb $0, (%rdi)\n"
+				"cmpb $0, (%rsi)\n"
 				"jne bfop" << op.args[0] << '\n';
 			break;
 
 		case bf::Opcode::bfSet:
-			ctx.out << "movb $" << op.args[0] << ", (%rdi)\n";
+			ctx.out << "movb $" << op.args[0] << ", (%rsi)\n";
 			break;
 
 		case bf::Opcode::bfSetOffset:
-			ctx.out << "movb $" << op.args[0] << ", " << op.args[1] << "(%rdi)\n";
+			ctx.out << "movb $" << op.args[0] << ", " << op.args[1] << "(%rsi)\n";
 			break;
 
 		case bf::Opcode::bfShiftUntilZero:
 			ctx.out <<
-				"cmpb $0, (%rdi)\n"
+				"cmpb $0, (%rsi)\n"
 				"je bfop" << i + 1 << "\n";
 
 			shift_ptr(op.args[0]);
@@ -167,7 +164,7 @@ bool asm_x86_64(Context ctx)
 				"\n"
 				"# Exit syscall\n"
 				"movq $60, %rax\n"
-				"movq $0, %rdi\n"
+				"movq $0, %rsi\n"
 				"syscall";
 			break;
 
