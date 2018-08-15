@@ -1,4 +1,5 @@
 #include "codegen.hpp"
+#include <sstream>
 
 namespace bf::codegen
 {
@@ -20,15 +21,14 @@ bool asm_x86_64(Context ctx)
 		"movq %rsp, %rsi"
 		"\n";
 
-	// TODO: use %rsi instead of %rdi to save opcodes in charout/charin
-	// it on the stack in the cout opcode
+	std::stringstream late_labels;
 
-	auto shift_ptr = [&ctx](VMArg by) {
+	auto shift_ptr = [](VMArg by, std::ostream& out) {
 		switch (by)
 		{
-		case -1: ctx.out << "decq %rsi\n"; break;
-		case  1: ctx.out << "incq %rsi\n"; break;
-		default: ctx.out << "addq $" << by << ", %rsi\n";
+		case -1: out << "decq %rsi\n"; break;
+		case  1: out << "incq %rsi\n"; break;
+		default: out << "addq $" << by << ", %rsi\n";
 		}
 	};
 
@@ -45,6 +45,11 @@ bool asm_x86_64(Context ctx)
 				return i;
 			}
 		}
+	};
+
+	auto make_late_label = [&late_labels](auto x) -> std::stringstream& {
+		late_labels << "\nbfoplate" << x << ":\n";
+		return late_labels;
 	};
 
 	for (size_t i = 0; i < ctx.program.size(); ++i)
@@ -64,7 +69,7 @@ bool asm_x86_64(Context ctx)
 			break;
 
 		case bf::Opcode::bfShift:
-			shift_ptr(op.args[0]);
+			shift_ptr(op.args[0], ctx.out);
 			break;
 
 		case bf::Opcode::bfMAC:
@@ -160,12 +165,15 @@ bool asm_x86_64(Context ctx)
 		case bf::Opcode::bfShiftUntilZero:
 			ctx.out <<
 				"cmpb $0, (%rsi)\n"
-				"je bfop" << i + 1 << "\n";
+				"jne bfoplate" << i << "\n";
 
-			shift_ptr(op.args[0]);
+			make_late_label(i);
+			shift_ptr(op.args[0], late_labels);
+			late_labels <<
+				"cmpb $0, (%rsi)\n"
+				"jne bfoplate" << i << "\n"
+				"jmp bfop" << i + 1 << "\n";
 
-			ctx.out <<
-				"jmp bfop" << i << '\n';
 			break;
 
 		case bf::Opcode::bfEnd:
@@ -176,7 +184,7 @@ bool asm_x86_64(Context ctx)
 				"# Exit syscall\n"
 				"movq $60, %rax\n"
 				"movq $0, %rsi\n"
-				"syscall";
+				"syscall\n";
 			break;
 
 		default:
@@ -185,7 +193,10 @@ bool asm_x86_64(Context ctx)
 		}
 	}
 
-	ctx.out << '\n';
+	ctx.out <<
+		"\n# Late labels, reducing unnecessary branching in a few occasions\n"
+		<< late_labels.str() <<
+		'\n';
 
 	return true;
 }
