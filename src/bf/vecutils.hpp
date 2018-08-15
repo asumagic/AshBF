@@ -3,6 +3,12 @@
 
 #include <algorithm>
 
+//! Moves 'replacement' to 'target' in range {begin, end}. This effectively causes the chunk {begin, end} to be replaced by
+//! 'replacement'.
+//!
+//! The following extra rules apply:
+//! - When the original {begin, end} range is bigger than 'replacement', the values in the "gap" are shrinked.
+//! - When the replacement is larger than the {begin, end} range, the vector is expanded to fit in the new extra values.
 template<typename SrcC, typename DstC, typename Iterator>
 void move_range(DstC& target, Iterator begin, Iterator end, SrcC&& replacement)
 {
@@ -23,7 +29,7 @@ void move_range(DstC& target, Iterator begin, Iterator end, SrcC&& replacement)
 }
 
 //! Moves 'replacement' to 'target' in range {begin, end} but if the replacement is smaller than the source range, the target is not
-//! shrinked, but default-initialized values are left in the "gap" instead.
+//! shrinked, rather default-initialized values are left in the "gap" instead. Otherwise move_range() is applied.
 template<typename SrcC, typename DstC, typename Iterator>
 void move_range_no_shrink(DstC& target, Iterator begin, Iterator end, SrcC&& replacement)
 {
