@@ -109,11 +109,8 @@ Disabling this may be useful when you are only interested by the IL assembly lis
 ### Performance
 - Generally, creating and improving optimizations performed over the bytecode
 - Predetermining certain memory cells to enable more aggressive optimizations
-- Adding `addoff` to change cells relative to the current, however, this could be slightly complex to implement in the regular optimization stage
 - Allow passing the memory vector to the interpreter directly to avoid allocation within the interpreter, when running it often
 - Implement a vector with a short data optimization to use in the optimizer, avoiding dynamic allocation for small arrays
-- Optimize the optimization regression detector
-- x86-64 JIT
 
 ### Stability
 - Implement `-sanitize`, without reducing performance when disabled.
