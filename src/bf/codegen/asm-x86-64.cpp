@@ -59,6 +59,10 @@ bool asm_x86_64(Context ctx)
 			ctx.out << "addb $" << op.args[0] << ", (%rdi)\n";
 			break;
 
+		case bf::Opcode::bfAddOffset:
+			ctx.out << "addb $" << op.args[0] << ", " << op.args[1] << "(%rdi)\n";
+			break;
+
 		case bf::Opcode::bfShift:
 			shift_ptr(op.args[0]);
 			break;
@@ -139,6 +143,10 @@ bool asm_x86_64(Context ctx)
 
 		case bf::Opcode::bfSet:
 			ctx.out << "movb $" << op.args[0] << ", (%rdi)\n";
+			break;
+
+		case bf::Opcode::bfSetOffset:
+			ctx.out << "movb $" << op.args[0] << ", " << op.args[1] << "(%rdi)\n";
 			break;
 
 		case bf::Opcode::bfShiftUntilZero:

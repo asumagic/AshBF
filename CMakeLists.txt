@@ -15,7 +15,9 @@ set(core_files
 set(core_flags
 	"-Wall"
 	"-fno-exceptions"
-	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG>)
+	"-std=c++1z"
+	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG>
+	$<$<CONFIG:DEBUG>:-Og -ggdb>)
 
 if (js)
 	message("Generating a WebAssembly build.")
@@ -28,7 +30,7 @@ if (js)
 		"src/bfjswrapper.cpp")
 
 	set(CMAKE_CXX_FLAGS "-s WASM=1 --bind -s MODULARIZE=1 -s 'EXPORT_NAME=\"ashbfInitialize\"'")
-	target_compile_options(ashbf.js PRIVATE ${core_flags} -std=c++1z -s WASM=1)
+	target_compile_options(ashbf.js PRIVATE ${core_flags} -s WASM=1)
 	target_compile_definitions(ashbf.js PRIVATE WEB=1)
 else()
 	add_executable(ashbf
@@ -36,6 +38,6 @@ else()
 		"src/main.cpp"
 		"src/cli.cpp")
 
-	target_compile_options(ashbf PRIVATE ${core_flags} -std=c++17)
+	target_compile_options(ashbf PRIVATE ${core_flags})
 endif()
 

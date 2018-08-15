@@ -17,7 +17,7 @@ namespace bf
 {
 void Brainfuck::interpret(size_t memory_size) noexcept
 {
-	std::array<void*, 10> labels {{ &&lAdd, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSUZ, &&lEnd }};
+	std::array<void*, 12> labels {{ &&lAdd, &&lAddOff, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSetOff, &&lSUZ, &&lEnd }};
 
 	for (auto &i : program)
 	{
@@ -32,6 +32,8 @@ void Brainfuck::interpret(size_t memory_size) noexcept
 	dispatch(pc);
 
 	{ handler(lAdd);  *sp += a; dispatch(++pc); }
+	{ handler(lAddOff); *(sp + b) += a; dispatch(++pc); }
+
 	{ handler(lShift); sp += a; dispatch(++pc); }
 
 	{ handler(lMAC);  *sp += a * sp[b]; dispatch(++pc); }
@@ -43,6 +45,7 @@ void Brainfuck::interpret(size_t memory_size) noexcept
 	{ handler(lJNZ); if (*sp != 0) { jump(); } dispatch(++pc); }
 		
 	{ handler(lSet); *sp = uint8_t(a); dispatch(++pc); }
+	{ handler(lSetOff); *(sp + b) = uint8_t(a); dispatch(++pc); }
 
 	{ handler(lSUZ); while (*sp != 0) { sp += a; } dispatch(++pc); }
 

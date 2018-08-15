@@ -14,76 +14,6 @@
 
 namespace bf
 {
-bool CellOp::apply(const VMOp& instruction)
-{
-	if (ops.empty())
-	{
-		ops.emplace_back();
-	}
-	else
-	{
-		// Simplify the current op to avoid useless instructions
-		ops.back().simplify();
-	}
-
-	// If we can't apply the given instruction to the current op, then try with a clean one
-	if (!ops.back().try_merge_with(instruction))
-	{
-		ops.emplace_back();
-
-		// If we couldn't anyway then the op can't just apply, fail
-		if (!ops.back().try_merge_with(instruction))
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
-
-void CellOp::repeat(size_t n)
-{
-	if (ops.size() == 1)
-	{
-		ops[0].repeat(int(n));
-	}
-	else
-	{
-		size_t size = ops.size();
-		for (size_t j = 0; j < n; ++j)
-		for (size_t i = 0; i < size; ++i)
-		{
-			ops.emplace_back(ops[i]);
-		}
-	}
-}
-
-CellOpMap Optimizer::make_operation_map(span<ProgramIt> range)
-{
-	CellOpMap ret;
-
-	for (const VMOp& ins : range)
-	{
-		switch (ins)
-		{
-		case bfShift:
-			ret.offset_from_start += ins.args[0];
-		break;
-
-		default:
-			if (!ret.operation_map[ret.offset_from_start].apply(ins))
-			{
-				warnout(optimizeinfo) << "Apply failed...\n";
-				disasm.print_range(range);
-				ret.correct = false;
-				return ret;
-			}
-		}
-	}
-
-	ret.correct = true;
-	return ret;
-}
 
 bool Optimizer::update_state_debug(Program &program)
 {
@@ -148,6 +78,27 @@ bool Optimizer::erase_nop(Program &program, ProgramIt begin, ProgramIt end)
 	return program.size() != old_size;
 }
 
+bool Optimizer::peephole_optimize_for(Program& program, ProgramIt begin, ProgramIt end, const std::vector<OptimizationSequence>& optimizers)
+{
+	bool effective = false;
+
+	for (auto &optimizer : optimizers)
+	{
+		for (auto i = begin; i != end; ++i)
+		{
+			span candidate{i, optimizer.seq.size()};
+
+			if (candidate == span{optimizer.seq})
+			{
+				move_range(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
+				effective = true;
+			}
+		}
+	}
+
+	return effective;
+}
+
 bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end)
 {
 	for (auto i = begin; i != end; ++i)
@@ -167,9 +118,9 @@ bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end
 	return erase_nop(program, begin, end);
 }
 
-bool Optimizer::peephole_optimize(Program &program, ProgramIt begin, ProgramIt end)
+bool Optimizer::stage1_peephole_optimize(Program &program, ProgramIt begin, ProgramIt end)
 {
-	static std::array<OptimizationSequence, 5> peephole_optimizers
+	const std::vector<OptimizationSequence> peephole_optimizers
 	{{
 		// [+] to bfSet 0
 		{{bfLoopBegin, bfAdd, bfLoopEnd}, [](auto) -> Program {
@@ -197,23 +148,7 @@ bool Optimizer::peephole_optimize(Program &program, ProgramIt begin, ProgramIt e
 		}}
 	}};
 
-	bool effective = false;
-
-	for (auto &optimizer : peephole_optimizers)
-	{
-		for (auto i = begin; i != end; ++i)
-		{
-			span candidate{i, optimizer.seq.size()};
-
-			if (candidate == span{optimizer.seq})
-			{
-				move_range(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
-				effective = true;
-			}
-		}
-	}
-
-	return effective;
+	return peephole_optimize_for(program, begin, end, peephole_optimizers);
 }
 
 bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, ProgramIt end)
@@ -388,70 +323,60 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 			}
 
 			effective = true;
-			//i = begin; // HACK
 		}
 	}
 
 	return effective;
 }
 
-bool Optimizer::balanced_loop_unrolling_v2(Program& program, ProgramIt begin, ProgramIt end)
+bool Optimizer::stage2_peephole_optimize(Program& program, ProgramIt begin, ProgramIt end)
 {
-	span range{begin, end};
+	const std::vector<OptimizationSequence> peephole_optimizers
+	{{
+		// Shifted adds
+		{{bfShift, bfAdd, bfShift}, [](auto v) -> Program {
+			return {
+				{bfAddOffset, v[1].args[0], v[0].args[0]},
+				{bfShift, v[0].args[0] + v[2].args[0]}
+			};
+		}},
 
-	while (!range.empty())
-	{
-		auto loop_end = std::find(range.begin(), range.end(), bfLoopEnd);
-		auto loop_begin_reverse = std::find(std::reverse_iterator{loop_end}, range.rend(), bfLoopBegin);
+		// Shifted sets
+		{{bfShift, bfSet, bfShift}, [](auto v) -> Program {
+			return {
+				{bfSetOffset, v[1].args[0], v[0].args[0]},
+				{bfShift, v[0].args[0] + v[2].args[0]}
+			};
+		}},
+	}};
 
-		if (loop_end == range.end() || loop_begin_reverse == range.rend())
-		{
-			break;
-		}
-
-		auto loop_begin = loop_begin_reverse.base();
-
-		auto map = make_operation_map({loop_begin + 1, loop_end});
-
-		verbout(optimizeinfo) << "Operation map size for current loop: " << map.operation_map.size() << '\n';
-
-		if (map.correct && map.offset_from_start == 0)
-		{
-			auto first_cell_it = map.operation_map.find(0);
-			if (first_cell_it != map.operation_map.end())
-			{
-				auto& first_cell = first_cell_it->second;
-				if (first_cell.ops.empty() || !first_cell.ops[0])
-				{
-					warnout(optimizeinfo) << "Loop has no iterator and will loop infinitely.\n";
-				}
-				else if (first_cell.ops[0] == bfSet && first_cell.ops[0].args[0] != 0)
-				{
-					// TODO handle when setter is 0
-					warnout(optimizeinfo) << "Loop resets the iterator to a non-zero value and will loop infinitely.\n";
-				}
-				else if (first_cell.ops[0] == bfAdd)
-				{
-					verbout(optimizeinfo) << "Loop iterator found\n";
-				}
-			}
-		}
-
-		range = {loop_end + 1, range.end()};
-	}
-
-	return erase_nop(program, program.begin(), program.end());
+	return peephole_optimize_for(program, begin, end, peephole_optimizers);
 }
 
 void Optimizer::optimize(Program& program)
 {
 	update_state_debug(program);
 
+	const std::array<std::vector<OptimizerTask>, stage_count> tasks
+	{{
+		{
+			{&Optimizer::merge_stackable,          "Merge stackable instructions"},
+			{&Optimizer::stage1_peephole_optimize, "Peephole"},
+			{&Optimizer::balanced_loop_unrolling,  "Balanced loop unrolling"}
+		},
+
+		{
+			{&Optimizer::merge_stackable,          "Merge stackable instructions"},
+			{&Optimizer::stage2_peephole_optimize, "Optimize offset memory sets through specialized instructions"}
+		}
+	}};
+
+	for (size_t s = 0; s < stage_count; ++s)
 	for (size_t p = 0;; ++p)
 	{
 		if (p >= pass_count)
 		{
-			warnout(optimizeinfo) << "Maximal optimization pass reached. Consider increasing -optimizepasses.\n";
+			warnout(optimizeinfo) << "Maximal optimization pass reached for stage " << s << ". Consider increasing -optimizepasses.\n";
 			break;
 		}
 
@@ -462,21 +387,7 @@ void Optimizer::optimize(Program& program)
 			infoout(optimizeinfo) << "Performing pass #" << p + 1 << '\n';
 		}
 
-		struct OptimizerTask
-		{
-			bool (Optimizer::*callback)(Program&, ProgramIt, ProgramIt);
-			const char *name;
-		};
-
-		std::array<OptimizerTask, 3> tasks
-		{{
-			{&Optimizer::merge_stackable,         "Merge stackable instructions"},
-			{&Optimizer::peephole_optimize,       "Peephole"},
-			{&Optimizer::balanced_loop_unrolling, "Balanced loop unrolling"},
-			//{&Optimizer::balanced_loop_unrolling_v2, "Balanced loop unrolling v2 WIP"}
-		}};
-
-		for (auto &task : tasks)
+		for (auto& task : tasks[s])
 		{
 			bool effective = (this->*(task.callback))(program, program.begin(), program.end());
 
@@ -493,9 +404,13 @@ void Optimizer::optimize(Program& program)
 			update_state_debug(program);
 		}
 
-		if (!pass_effective && verbose)
+		if (!pass_effective)
 		{
-			infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
+			if (verbose)
+			{
+				infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
+			}
+
 			break;
 		}
 	}

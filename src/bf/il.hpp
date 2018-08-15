@@ -10,6 +10,8 @@ namespace bf
 enum Opcode : uint8_t
 {
 	bfAdd = 0,
+	bfAddOffset,
+
 	bfShift,
 
 	bfMAC,
@@ -21,6 +23,7 @@ enum Opcode : uint8_t
 	bfJmpNotZero,
 
 	bfSet,
+	bfSetOffset,
 
 	bfShiftUntilZero,
 
@@ -45,6 +48,8 @@ struct VMOpInfo
 static constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions
 {{
 	{"add", bfAdd, 1, true},
+	{"addoff", bfAddOffset, 2, false},
+
 	{"shift", bfShift, 1, true},
 
 	{"mac", bfMAC, 2, false},
@@ -56,6 +61,7 @@ static constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions
 	{"jnz", bfJmpNotZero, 1, false},
 
 	{"set", bfSet, 1, false},
+	{"setoff", bfSetOffset, 2, false},
 
 	{"suz", bfShiftUntilZero, 1, false},
 

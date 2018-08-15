@@ -41,11 +41,12 @@ struct VMOp
 		return opcode;
 	}
 
-	bool try_merge_with(const VMOp other)
+	bool try_merge_with(const VMOp& other)
 	{
 		if (opcode == bfNop)
 		{
-			(*this) = other;
+			opcode = other.opcode;
+			args = other.args;
 			return true;
 		}
 

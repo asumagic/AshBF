@@ -15,22 +15,6 @@ struct OptimizationSequence
 	std::function<Program(span<ProgramIt>)> optimize;
 };
 
-struct CellOp
-{
-	std::vector<VMOp> ops;
-
-	bool apply(const VMOp& instruction);
-	void simplify();
-	void repeat(size_t n);
-};
-
-struct CellOpMap
-{
-	std::map<int, CellOp> operation_map;
-	int offset_from_start = 0;
-	bool correct = false;
-};
-
 struct PastProgramState
 {
 	Program program;
@@ -41,13 +25,12 @@ struct PastProgramState
 
 struct Optimizer
 {
+	static constexpr size_t stage_count = 2;
+
 	// Parameters
 	size_t pass_count = 5;
 	bool debug = false;
 	bool verbose = false;
-
-	// Generates a map binding offsets from the current cell to cell operations.
-	CellOpMap make_operation_map(span<ProgramIt> range);
 
 	PastProgramState past_state;
 	bool update_state_debug(Program &program);
@@ -55,10 +38,22 @@ struct Optimizer
 	void optimize(Program &program);
 
 	bool erase_nop(Program &program, ProgramIt begin, ProgramIt end);
+	bool peephole_optimize_for(Program& program, ProgramIt begin, ProgramIt end, const std::vector<OptimizationSequence>& optimizers);
+
+	// Stage 1
 	bool merge_stackable(Program &program, ProgramIt begin, ProgramIt end);
-	bool peephole_optimize(Program &program, ProgramIt begin, ProgramIt end);
+	bool stage1_peephole_optimize(Program &program, ProgramIt begin, ProgramIt end);
 	bool balanced_loop_unrolling(Program &program, ProgramIt begin, ProgramIt end);
-	bool balanced_loop_unrolling_v2(Program &program, ProgramIt begin, ProgramIt end);
+
+	// Stage 2 - involves add-offset and set-offset. it is performed in a separate stage as to simplify stage 1 optimizations.
+	bool stage2_peephole_optimize(Program &program, ProgramIt begin, ProgramIt end);
+	bool simplify_offset_ops(Program& program, ProgramIt begin, ProgramIt end);
+};
+
+struct OptimizerTask
+{
+	bool (Optimizer::*callback)(Program&, ProgramIt, ProgramIt);
+	const std::string_view name;
 };
 }
 
