@@ -4,7 +4,7 @@
 #include <algorithm>
 
 template<typename SrcC, typename DstC, typename Iterator>
-void move_range(SrcC& target, Iterator begin, Iterator end, DstC&& replacement)
+void move_range(DstC& target, Iterator begin, Iterator end, SrcC&& replacement)
 {
 	auto range_diff = long(replacement.size()) - std::distance(begin, end);
 
@@ -20,6 +20,23 @@ void move_range(SrcC& target, Iterator begin, Iterator end, DstC&& replacement)
 	}
 
 	std::move(replacement.begin(), replacement.end(), begin);
+}
+
+//! Moves 'replacement' to 'target' in range {begin, end} but if the replacement is smaller than the source range, the target is not
+//! shrinked, but default-initialized values are left in the "gap" instead.
+template<typename SrcC, typename DstC, typename Iterator>
+void move_range_no_shrink(DstC& target, Iterator begin, Iterator end, SrcC&& replacement)
+{
+	auto range_diff = long(replacement.size()) - std::distance(begin, end);
+
+	if (range_diff >= 0)
+	{
+		move_range(target, begin, end, replacement);
+		return;
+	}
+
+	std::move(replacement.begin(), replacement.end(), begin);
+	std::fill(begin + replacement.size(), end, typename DstC::value_type{});
 }
 
 #endif

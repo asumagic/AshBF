@@ -37,6 +37,7 @@ void Optimizer::update_state_debug(Program &program)
 {
 	if (debug)
 	{
+		erase_nop(program, program.begin(), program.end()); // We do this because the interpreter can't handle bfNop.
 		debug_states.push_back({program, debug_states.size()});
 	}
 }
@@ -119,12 +120,14 @@ bool Optimizer::peephole_optimize_for(Program& program, ProgramIt begin, Program
 
 			if (candidate == span{optimizer.seq})
 			{
-				move_range(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
+				move_range_no_shrink(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
 				effective = true;
 				update_state_debug(program);
 			}
 		}
 	}
+
+	erase_nop(program, begin, end);
 
 	return effective;
 }
