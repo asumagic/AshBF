@@ -27,7 +27,7 @@ public:
 extern NullBuf null_buf;
 extern std::ostream null_stream;
 
-extern const std::string_view cmdinfo, bcinfo, compileinfo, optimizeinfo, codegeninfo, codegenx8664info; // TODO refactor naming within this file
+extern const std::string_view cmdinfo, bcinfo, compileinfo, optimizeinfo, codegeninfo, codegenx8664info, codegencinfo; // TODO refactor naming within this file
 extern LogLevel warnout, errout, verbout, infoout;
 
 #endif

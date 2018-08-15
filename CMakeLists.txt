@@ -10,7 +10,8 @@ set(core_files
 	"src/bf/logger.cpp"
 	"src/bf/optimizer.cpp"
 	"src/bf/vm.cpp"
-	"src/bf/codegen/asm-x86-64.cpp")
+	"src/bf/codegen/asm-x86-64.cpp"
+	"src/bf/codegen/c.cpp")
 
 set(core_flags
 	"-Wall"

@@ -3,7 +3,7 @@
 NullBuf null_buf;
 std::ostream null_stream(&null_buf);
 
-const std::string_view cmdinfo = "Commandline", bcinfo = "Interpreter", compileinfo = "Compiler", optimizeinfo = "Optimizer", codegeninfo = "CodeGen", codegenx8664info = "CodeGen (x86-64 asm)";
+const std::string_view cmdinfo = "Commandline", bcinfo = "Interpreter", compileinfo = "Compiler", optimizeinfo = "Optimizer", codegeninfo = "CodeGen", codegenx8664info = "CodeGen (x86-64 asm)", codegencinfo = "CodeGen (C source)";
 
 #ifdef ANSICOLOR
 	LogLevel warnout{"\033[93mWarning"},

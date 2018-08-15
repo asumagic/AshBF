@@ -61,6 +61,7 @@ int main(int argc, char** argv)
 	};
 
 	codegen_to_file(flags[Flag::codegen_asm_x86_64_file].value, bf::codegen::asm_x86_64);
+	codegen_to_file(flags[Flag::codegen_c_file].value, bf::codegen::c);
 
 	if (flags[Flag::execute])
 	{

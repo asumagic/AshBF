@@ -10,7 +10,7 @@ It recompiles brainfuck into an optimized IR to be interpreted by a VM or compil
 ## Features
 
 - Fast execution through a bytecode VM
-- AOT compilation to x86-64 assembly
+- AOT compilation to x86-64 assembly, C
 - Usable with WebAssembly thanks to emscripten
 - IR optimization
 - Internal debugging tools for optimizations
