@@ -24,7 +24,7 @@ Scope delimiters are always alone on their own line, e.g.:
 ```cpp
 if (cond())
 {
-    f();
+	f();
 }
 ```
 
