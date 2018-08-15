@@ -117,7 +117,21 @@ Disabling this may be useful when you are only interested by the IL assembly lis
 - Predetermining certain memory cells to enable more aggressive optimizations
 - Allow passing the memory vector to the interpreter directly to avoid allocation within the interpreter, when running it often
 - Implement a vector with a short data optimization to use in the optimizer, avoiding dynamic allocation for small arrays
+- WebAssembly JIT
 
 ### Stability
-- Implement `-sanitize`, without reducing performance when disabled.
+- Implement `-sanitize`, without reducing performance when disabled
+- Implementing a safe but fast enough VM (i.e. a `-sanitize`r VM?) for more solid optimization regression testing and VM regression testing
+- Watchdog to timeout execution of broken programs in regression testing
+- Regression testing for the AOTs
 - Unit tests
+- Asynchronous execution for the JS bindings
+
+### Usability
+- More warnings
+- Memory map exporter
+- Brainfuck debugger, including breakpoints
+
+### Project-based features
+- External IRC/Discord bot?
+- Web IDE
