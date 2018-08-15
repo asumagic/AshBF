@@ -15,60 +15,89 @@
 namespace bf
 {
 
-bool Optimizer::update_state_debug(Program &program)
+const std::string& ProgramState::get_output() const
+{
+	if (cached_output)
+	{
+		return cached_output.value();
+	}
+
+	std::stringstream ss;
+
+	Brainfuck bf;
+	bf.program = program;
+	bf.pipeout = &ss;
+	bf.link();
+	bf.interpret(30000);
+
+	return (cached_output = std::optional<std::string>{ss.str()}).value();
+}
+
+void Optimizer::update_state_debug(Program &program)
 {
 	if (debug)
 	{
-		if (past_state.program.empty())
-		{
-			infoout(optimizeinfo) << "Running reference unoptimized program for optimization regressiong testing.\n";
-		}
+		debug_states.push_back({program, debug_states.size()});
+	}
+}
 
-		std::stringstream ss;
+bool Optimizer::analyze_debug_states()
+{
+	if (debug_states.size() < 2)
+	{
+		warnout(optimizeinfo) << "No debug state collected, cannot analyze debug states. This may be a bug.\n";
+	}
 
-		// TODO: make this parameterizable to some extent
-		Brainfuck bf;
-		bf.program = program;
-		bf.pipeout = &ss;
-		bf.link();
-		bf.interpret(30000);
+	auto &initial_state = debug_states.front(),
+		 &final_state = debug_states.back();
 
-		std::string program_output = ss.str();
+	infoout(optimizeinfo) << "Checking for regressions...\n";
 
-		Program &old_program = past_state.program;
+	if (initial_state.get_output() == final_state.get_output())
+	{
+		infoout(optimizeinfo) << "No regression found.\n";
+		return true;
+	}
 
-		if (!past_state.program.empty())
-		{
-			if (program_output != past_state.output)
+	infoout(optimizeinfo) << "Regression found. Beginning bisect.\n";
+
+	auto culprit_it = std::lower_bound(
+		debug_states.begin() + 1,
+		debug_states.end(),
+		initial_state,
+		[](auto& current_state, auto& initial_state) {
+			infoout(optimizeinfo) << "Testing state #" << current_state.id << "... " << std::flush;
+
+			bool good = current_state.get_output() == initial_state.get_output();
+
+			if (good)
 			{
-				errout(optimizeinfo) << "Optimization #" << past_state.id << " has regressed!\n";
-				past_state.correct = false;
-
-				auto [a_mismatch_begin, b_mismatch_begin] = std::mismatch(old_program.begin(), old_program.end(), program.begin(), program.end());
-						auto [a_mismatch_end, b_mismatch_end] = std::mismatch(old_program.rbegin(), old_program.rend(), program.rbegin(), program.rend());
-
-						warnout(optimizeinfo) << "Latest correct assembly:\n";
-						disasm.print_range({a_mismatch_begin, a_mismatch_end.base()});
-
-				warnout(optimizeinfo) << "Broken assembly:\n";
-				disasm.print_range({b_mismatch_begin, b_mismatch_end.base()});
-			}
-			else if (past_state.correct)
-			{
-				infoout(optimizeinfo) << "Optimization marker #" << past_state.id << " correct.\n";
+				infoout.buffer << "good.\n";
 			}
 			else
 			{
-				infoout(optimizeinfo) << "Optimization marker #" << past_state.id << " consistent with previous invalid results.\n";
+				infoout.buffer << "bad.\n";
 			}
+
+			return good;
 		}
+	);
 
-		past_state.program = program;
-		++past_state.id;
-		past_state.output = program_output;
-	}
+	auto &last_good = *(culprit_it - 1),
+		 &culprit = *(culprit_it);
 
-	return past_state.correct;
+	warnout(optimizeinfo) << "Optimization #" << culprit.id << " is bad.\n";
+
+	auto [good_mismatch_begin, bad_mismatch_begin] = std::mismatch(last_good.program.begin(), last_good.program.end(), culprit.program.begin(),culprit.program.end());
+	auto [good_mismatch_end, bad_mismatch_end] = std::mismatch(last_good.program.rbegin(), last_good.program.rend(), culprit.program.rbegin(), culprit.program.rend());
+
+	warnout(optimizeinfo) << "Last correct assembly:\n";
+	disasm.print_range({good_mismatch_begin, good_mismatch_end.base()});
+
+	warnout(optimizeinfo) << "First bad assembly:\n";
+	disasm.print_range({bad_mismatch_begin, bad_mismatch_end.base()});
+
+	return false;
 }
 
 bool Optimizer::erase_nop(Program &program, ProgramIt begin, ProgramIt end)
@@ -92,6 +121,7 @@ bool Optimizer::peephole_optimize_for(Program& program, ProgramIt begin, Program
 			{
 				move_range(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
 				effective = true;
+				update_state_debug(program);
 			}
 		}
 	}
@@ -114,6 +144,8 @@ bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end
 			j->opcode = bfNop; // Mark for deletion
 		}
 	}
+
+	update_state_debug(program);
 
 	return erase_nop(program, begin, end);
 }
@@ -278,6 +310,8 @@ bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, Progr
 				unrolled.emplace_back(bfSet, 0);
 
 				move_range(program, loop_begin - 1, i + 1, unrolled);
+
+				update_state_debug(program);
 			}
 			else
 			{
@@ -367,7 +401,8 @@ void Optimizer::optimize(Program& program)
 
 		{
 			{&Optimizer::merge_stackable,          "Merge stackable instructions"},
-			{&Optimizer::stage2_peephole_optimize, "Optimize offset memory sets through specialized instructions"}
+			{&Optimizer::stage2_peephole_optimize, "Optimize offset memory sets through specialized instructions"},
+			{&Optimizer::stage1_peephole_optimize, "Peephole"}
 		}
 	}};
 
@@ -416,6 +451,11 @@ void Optimizer::optimize(Program& program)
 	}
 
 	program.shrink_to_fit();
+
+	if (debug)
+	{
+		analyze_debug_states();
+	}
 }
 
 }

@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <map>
+#include <optional>
 #include "span.hpp"
 #include "bf.hpp"
 
@@ -15,12 +16,20 @@ struct OptimizationSequence
 	std::function<Program(span<ProgramIt>)> optimize;
 };
 
-struct PastProgramState
+class ProgramState
 {
+	mutable std::optional<std::string> cached_output;
+
+public:
 	Program program;
-	std::string output;
-	size_t id = 0;
-	bool correct = true;
+	const size_t id;
+
+	ProgramState(const Program& p_program, const size_t p_id) :
+		program{p_program},
+		id{p_id}
+	{}
+
+	const std::string& get_output() const;
 };
 
 struct Optimizer
@@ -32,8 +41,9 @@ struct Optimizer
 	bool debug = false;
 	bool verbose = false;
 
-	PastProgramState past_state;
-	bool update_state_debug(Program &program);
+	std::vector<ProgramState> debug_states;
+	void update_state_debug(Program &program);
+	bool analyze_debug_states();
 
 	void optimize(Program &program);
 
