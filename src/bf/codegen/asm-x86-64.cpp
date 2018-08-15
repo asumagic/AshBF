@@ -185,8 +185,6 @@ bool asm_x86_64(Context ctx)
 		}
 	}
 
-	ctx.out << "";
-
 	ctx.out << '\n';
 
 	return true;
