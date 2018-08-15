@@ -113,17 +113,15 @@ bool Optimizer::peephole_optimize_for(Program& program, ProgramIt begin, Program
 	bool effective = false;
 
 	for (auto &optimizer : optimizers)
+	for (auto i = begin; i != end; ++i)
 	{
-		for (auto i = begin; i != end; ++i)
-		{
-			span candidate{i, optimizer.seq.size()};
+		span candidate{i, optimizer.seq.size()};
 
-			if (candidate == span{optimizer.seq})
-			{
-				move_range_no_shrink(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
-				effective = true;
-				update_state_debug(program);
-			}
+		if (candidate == span{optimizer.seq})
+		{
+			move_range_no_shrink(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
+			effective = true;
+			update_state_debug(program);
 		}
 	}
 
