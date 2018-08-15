@@ -42,7 +42,10 @@ struct VMOpInfo
 	const char* name;
 	Opcode opcode;
 	unsigned short arguments_used;
-	bool stackable; // Defines whether the optimizer should combine successive instructions by adding their first argument together in a single instruction.
+
+	//! Defines whether the optimizer should combine successive instructions by adding their first argument together in a single
+	//! instruction.
+	bool stackable;
 };
 
 static constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions

@@ -47,17 +47,50 @@ struct Optimizer
 
 	void optimize(Program &program);
 
-	bool erase_nop(Program &program, ProgramIt begin, ProgramIt end);
-	bool peephole_optimize_for(Program& program, ProgramIt begin, ProgramIt end, const std::vector<OptimizationSequence>& optimizers);
+	bool erase_nop(
+		Program &program,
+		ProgramIt begin,
+		ProgramIt end
+	);
+
+	bool peephole_optimize_for(
+		Program& program,
+		ProgramIt begin,
+		ProgramIt end,
+		const std::vector<OptimizationSequence>& optimizers
+	);
 
 	// Stage 1
-	bool merge_stackable(Program &program, ProgramIt begin, ProgramIt end);
-	bool stage1_peephole_optimize(Program &program, ProgramIt begin, ProgramIt end);
-	bool balanced_loop_unrolling(Program &program, ProgramIt begin, ProgramIt end);
+	bool merge_stackable(
+		Program &program,
+		ProgramIt begin,
+		ProgramIt end
+	);
+
+	bool stage1_peephole_optimize(
+		Program &program,
+		ProgramIt begin,
+		ProgramIt end
+	);
+
+	bool balanced_loop_unrolling(
+		Program &program,
+		ProgramIt begin,
+		ProgramIt end
+	);
 
 	// Stage 2 - involves add-offset and set-offset. it is performed in a separate stage as to simplify stage 1 optimizations.
-	bool stage2_peephole_optimize(Program &program, ProgramIt begin, ProgramIt end);
-	bool simplify_offset_ops(Program& program, ProgramIt begin, ProgramIt end);
+	bool stage2_peephole_optimize(
+		Program &program,
+		ProgramIt begin,
+		ProgramIt end
+	);
+
+	bool simplify_offset_ops(
+		Program& program,
+		ProgramIt begin,
+		ProgramIt end
+	);
 };
 
 struct OptimizerTask

@@ -33,7 +33,8 @@ void Disassembler::print_range(span<ProgramIt> range)
 
 void Disassembler::print_range(Program& program)
 {
-	infoout(compileinfo) << "Compiled program size is " << program.size() << " instructions (" << program.size() * sizeof(VMOp) << " bytes)\n";
+	infoout(compileinfo) <<
+		"Compiled program size is " << program.size() << " instructions (" << program.size() * sizeof(VMOp) << " bytes)\n";
 
 	size_t i = 0;
 	for (auto& it : program)

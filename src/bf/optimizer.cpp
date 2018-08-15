@@ -89,8 +89,19 @@ bool Optimizer::analyze_debug_states()
 
 	warnout(optimizeinfo) << "Optimization #" << culprit.id << " is bad.\n";
 
-	auto [good_mismatch_begin, bad_mismatch_begin] = std::mismatch(last_good.program.begin(), last_good.program.end(), culprit.program.begin(),culprit.program.end());
-	auto [good_mismatch_end, bad_mismatch_end] = std::mismatch(last_good.program.rbegin(), last_good.program.rend(), culprit.program.rbegin(), culprit.program.rend());
+	auto [good_mismatch_begin, bad_mismatch_begin] = std::mismatch(
+		last_good.program.begin(),
+		last_good.program.end(),
+		culprit.program.begin(),
+		culprit.program.end()
+	);
+
+	auto [good_mismatch_end, bad_mismatch_end] = std::mismatch(
+		last_good.program.rbegin(),
+		last_good.program.rend(),
+		culprit.program.rbegin(),
+		culprit.program.rend()
+	);
 
 	warnout(optimizeinfo) << "Last correct assembly:\n";
 	disasm.print_range({good_mismatch_begin, good_mismatch_end.base()});
@@ -108,7 +119,12 @@ bool Optimizer::erase_nop(Program &program, ProgramIt begin, ProgramIt end)
 	return program.size() != old_size;
 }
 
-bool Optimizer::peephole_optimize_for(Program& program, ProgramIt begin, ProgramIt end, const std::vector<OptimizationSequence>& optimizers)
+bool Optimizer::peephole_optimize_for(
+	Program& program,
+	ProgramIt begin,
+	ProgramIt end,
+	const std::vector<OptimizationSequence>& optimizers
+)
 {
 	bool effective = false;
 
@@ -134,7 +150,11 @@ bool Optimizer::peephole_optimize_for(Program& program, ProgramIt begin, Program
 	return effective;
 }
 
-bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end)
+bool Optimizer::merge_stackable(
+	Program &program,
+	ProgramIt begin,
+	ProgramIt end
+)
 {
 	for (auto i = begin; i != end; ++i)
 	{
@@ -155,7 +175,11 @@ bool Optimizer::merge_stackable(Program &program, ProgramIt begin, ProgramIt end
 	return erase_nop(program, begin, end);
 }
 
-bool Optimizer::stage1_peephole_optimize(Program &program, ProgramIt begin, ProgramIt end)
+bool Optimizer::stage1_peephole_optimize(
+	Program &program,
+	ProgramIt begin,
+	ProgramIt end
+)
 {
 	const std::vector<OptimizationSequence> peephole_optimizers
 	{{
@@ -188,7 +212,11 @@ bool Optimizer::stage1_peephole_optimize(Program &program, ProgramIt begin, Prog
 	return peephole_optimize_for(program, begin, end, peephole_optimizers);
 }
 
-bool Optimizer::balanced_loop_unrolling(Program& program, ProgramIt begin, ProgramIt end)
+bool Optimizer::balanced_loop_unrolling(
+	Program& program,
+	ProgramIt begin,
+	ProgramIt end
+)
 {
 	auto loop_begin = begin;
 	bool expandable = true, effective = false;
@@ -416,7 +444,8 @@ void Optimizer::optimize(Program& program)
 	{
 		if (p >= pass_count)
 		{
-			warnout(optimizeinfo) << "Maximal optimization pass reached for stage " << s << ". Consider increasing -optimizepasses.\n";
+			warnout(optimizeinfo) <<
+				"Maximal optimization pass reached for stage " << s << ". Consider increasing -optimizepasses.\n";
 			break;
 		}
 
@@ -433,7 +462,8 @@ void Optimizer::optimize(Program& program)
 
 			if (verbose)
 			{
-				infoout(optimizeinfo) << "Performed optimization task '" << task.name << "' and " << (effective ? "was effective\n" : "had no effect\n");
+				infoout(optimizeinfo) <<
+					"Performed optimization task '" << task.name << "' and " << (effective ? "was effective\n" : "had no effect\n");
 			}
 
 			if (effective)
