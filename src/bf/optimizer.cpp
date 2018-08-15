@@ -125,6 +125,10 @@ bool Optimizer::peephole_optimize_for(Program& program, ProgramIt begin, Program
 		}
 	}
 
+	// We do this as an optimization: rather than moving the range every time we cause a shrink somewhere in the program, we leave
+	// a hole of bfNop, avoiding unnecessary moves.
+	// However this can reduce peephole optimization potential, but this is acceptable: It only results in supplementary passes,
+	// which is not very expensive since move_range() was the worst offender by far.
 	erase_nop(program, begin, end);
 
 	return effective;
