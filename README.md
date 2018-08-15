@@ -5,11 +5,20 @@
 [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) is a minimalist turing-complete esoteric language using only 8 instructions: `+-><[].,`.
 
 AshBF is an optimizing C++17 brainfuck interpreter tailored for speed.  
-It recompiles brainfuck into an optimized IL, later interpreted by a VM.
+It recompiles brainfuck into an optimized IR to be interpreted by a VM or compiled down to native code.
+
+## Features
+
+- Fast execution through a bytecode VM
+- AOT compilation to x86-64 assembly
+- Usable with WebAssembly thanks to emscripten
+- IR optimization
+- Internal debugging tools for optimizations
 
 ## Compiling
 
-Currently, AshBF requires the [GNU "Label as Address" extension](https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html), supported by `gcc` and `clang`.
+Currently, the AshBF VM requires the [GNU "Label as Address" extension](https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html).  
+You will only be able to compile AshBF with compatible compilers, most notably `gcc` and `clang`-family compilers.
 
 Basic compilation on \*nix:
 
@@ -32,7 +41,7 @@ Short names are available for a few flags, e.g. `-x` instead of `-execute`.
 
 ### `-optimize-passes`
 
-Prevents the optimizer from iterating over N times.  
+Prevents the optimizer from running each optimizer more than N times for each stage.  
 Typically, one optimization pass will be sufficient. However, due to the way the optimizer is built, one optimization may enable another one next pass.  
 Do note that not all optimizations are pass-based.
 `5` is the default.

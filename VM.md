@@ -14,6 +14,10 @@ The VM makes use of two registers:
 
 Adds `[increment]` to the memory cell refered to by `sp`.
 
+### `addoffset [increment] [offset]`
+
+Adds `[increment]` to the memory cell refered to by `sp + [offset]`.
+
 ### `shift [offset]`
 
 Move the `sp` memory pointer by `offset`.
@@ -44,6 +48,10 @@ This is generally what the `]` brainfuck command is compiled to.
 ### `set [value]`
 
 Changes the value refered to by `sp` to `[value]`.
+
+### `setoffset [value]`
+
+Changes the value refered to by `sp + [offset]` to `[value]`.
 
 ### `suz [increment]`
 

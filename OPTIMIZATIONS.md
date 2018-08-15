@@ -1,7 +1,5 @@
 # AshBF optimizer
 
-*Please note that some of the optimizations marked as UNIMPLEMENTED are experimentally implemented in the `optimization-set-balanced` branch. However, these currently break some complex programs and aren't merged in `master` just yet.*
-
 ## Instruction stacking
 
 Some instructions are "stackable", meaning that they can be merged into one in some way.
