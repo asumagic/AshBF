@@ -110,6 +110,15 @@ bool asm_x86_64(Context ctx)
 
 			ctx.out <<
 				"# Write syscall (output character)\n"
+				"bfopcore" << i << ":\n";
+
+			if (is_looped)
+			{
+				// %rcx is clobbered by the syscall
+				ctx.out << "movq %rcx, %r15\n";
+			}
+
+			ctx.out <<
 				"movq $1, %rax\n"
 				"movq $1, %rdi\n"
 				"movq $1, %rdx\n"
@@ -117,7 +126,9 @@ bool asm_x86_64(Context ctx)
 
 			if (is_looped)
 			{
-				ctx.out << "loop " << i << '\n';
+				ctx.out <<
+					"movq %r15, %rcx\n"
+					"loop bfopcore" << i << '\n';
 			}
 
 			} break;
