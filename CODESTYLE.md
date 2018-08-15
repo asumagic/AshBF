@@ -107,12 +107,12 @@ The same rationale is used for multiline strings. Do not separate string literal
 		"Lorem ipsum dolor sir amet.\n";
 ```
 
-## Operator overloading, implicit cast
+## Operator overloading, implicit conversions
 
 Operator overloading is acceptable, but should not hide unexpected behavior: Keep your overload behavior to something related to the operator itself, unless there is a strong rationale behind it.
 
-Implicit cast to different types is acceptable for `struct`s when relevant.  
-Implicit cast to `bool` is recommended for `class`es and `struct`s in order to check whether it is in a "good" (usable) state.
+Implicit conversions to different types is acceptable for `struct`s when relevant.  
+Implicit conversion to `bool` is recommended for `class`es and `struct`s in order to check whether it is in a "good" (usable) state.
 
 ## Standard library
 
