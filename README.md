@@ -4,7 +4,7 @@
 
 [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) is a minimalist turing-complete esoteric language using only 8 instructions: `+-><[].,`.
 
-AshBF is an optimizing C++17 brainfuck interpreter tailored for speed.  
+AshBF is an optimizing C++17 brainfuck interpreter tailored for speed, written entirely from scratch.  
 It recompiles brainfuck into an optimized IR to be interpreted by a VM or compiled down to native code.
 
 ## Features
@@ -14,6 +14,12 @@ It recompiles brainfuck into an optimized IR to be interpreted by a VM or compil
 - Usable with WebAssembly thanks to emscripten
 - IR optimization
 - Internal debugging tools for optimizations
+
+## Why the hell would you do that?
+
+Learning.
+
+Borderline insanity may as well be involved.
 
 ## Compiling
 
