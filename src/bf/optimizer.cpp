@@ -129,15 +129,17 @@ bool Optimizer::peephole_optimize_for(
 	bool effective = false;
 
 	for (auto &optimizer : optimizers)
-	for (auto i = begin; i != end; ++i)
 	{
-		span candidate{i, optimizer.seq.size()};
-
-		if (candidate == span{optimizer.seq})
+		auto pos = begin;
+		while ((pos = std::search(pos, end, optimizer.seq.begin(), optimizer.seq.end())) != end)
 		{
+			span candidate{pos, optimizer.seq.size()};
+
 			move_range_no_shrink(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
 			effective = true;
 			update_state_debug(program);
+
+			++pos;
 		}
 	}
 
