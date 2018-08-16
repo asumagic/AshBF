@@ -11,7 +11,7 @@ struct CommandlineFlag
 	const std::string_view name;
 	const char short_name;
 	std::string value;
-	const std::vector<std::string_view> expected;
+	const std::vector<std::string_view> expected{};
 
 	bool has_expected_value() const;
 

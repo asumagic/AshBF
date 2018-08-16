@@ -6,34 +6,26 @@
 #include <algorithm>
 #include <fstream>
 #include <string_view>
+#include <memory>
 
 namespace bf
 {
-const std::array<BFOp, 8> ops
-{{
-	{'+', bfAdd, 1},
-	{'-', bfAdd, -1},
-	{'>', bfShift, 1},
-	{'<', bfShift, -1},
-	{'.', bfCharOut, 1},
-	{',', bfCharIn, 1},
-	{'[', bfLoopBegin},
-	{']', bfLoopEnd}
-}};
-
 bool Brainfuck::compile(std::string_view source)
 {
 	program.clear();
+	program.reserve(source.size());
 
-	for (const char c : source)
+	for (const char& c : source)
 	{
-		if (auto it = std::find(ops.begin(), ops.end(), c); it != ops.end())
+		if (ops[c])
 		{
-			program.emplace_back(static_cast<uint8_t>(it->base_opcode), it->default_arg);
+			program.emplace_back(static_cast<uint8_t>(ops[c].base_opcode), ops[c].default_arg);
 		}
 	}
 
 	program.emplace_back(bfEnd, 0);
+
+	program.shrink_to_fit();
 
 	return true;
 }
@@ -49,17 +41,15 @@ bool Brainfuck::compile_file(std::string_view fname)
 		return false;
 	}
 
-	char current;
-	while (file.get(current))
-	{
-		if (auto it = std::find(ops.begin(), ops.end(), current); it != ops.end())
-		{
-			program.emplace_back(static_cast<uint8_t>(it->base_opcode), it->default_arg);
-		}
-	}
+	file.seekg(0, std::ios::end);
+	size_t size = file.tellg();
 
-	program.emplace_back(bfEnd, 0);
+	// We use this instead of std::vector so we don't get the performance penalty because of default-initialization
+	auto buffer = std::unique_ptr<char[]>(new char[size]);
 
-	return true;
+	file.seekg(0);
+	file.read(&buffer[0], size);
+
+	return compile({buffer.get(), size});
 }
 }
