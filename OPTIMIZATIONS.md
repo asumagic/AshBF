@@ -170,5 +170,6 @@ However, we know `*sp` because of the `set 4` instruction! Plus, when the loop e
 
 TODO: detail
 
-The `mac` (multiply-accumulate) instruction is used to add the current cell by the cell refered to by the second argument multiplied by the first argument, i.e. `*sp += arg1 * sp[arg2]`.  
-For now, `set` inside such loops can not be optimized away.
+The `mac` (multiply-accumulate) instruction is used to add the current cell by the cell refered to by the second argument multiplied by the first argument, i.e. `*sp += arg1 * sp[arg2]`.
+
+In general, `set` inside such loops can not be optimized away. However, when `-legalize-overflow` is disabled, `+` just behind a loop start allows the compiler to assume that the loop is always entered.
