@@ -436,6 +436,52 @@ bool Optimizer::stage2_peephole_optimize(Program& program, ProgramIt begin, Prog
 	return peephole_optimize_for(program, begin, end, peephole_optimizers);
 }
 
+bool Optimizer::stage3_peephole_optimize(Program& program, ProgramIt begin, ProgramIt end)
+{
+	const std::vector<OptimizationSequence> peephole_optimizers
+	{{
+		// Cleanup shifted ops
+		{{bfAddOffset, bfShift}, [](auto v) -> Program {
+			return {
+				v[1],
+				{bfAddOffset, v[0].args[0], v[0].args[1] - v[1].args[0]}
+			};
+		}},
+
+		{{bfSetOffset, bfShift}, [](auto v) -> Program {
+			return {
+				v[1],
+				{bfSetOffset, v[0].args[0], v[0].args[1] - v[1].args[0]}
+			};
+		}},
+
+		// Simplify back shifted ops when possible
+		{{bfAddOffset}, [](auto v) -> Program {
+			if (v[0].args[1] == 0)
+			{
+				return {{bfAdd, v[0].args[0]}};
+			}
+			else
+			{
+				return {v[0]};
+			}
+		}},
+
+		{{bfSetOffset}, [](auto v) -> Program {
+			if (v[0].args[1] == 0)
+			{
+				return {{bfSet, v[0].args[0]}};
+			}
+			else
+			{
+				return {v[0]};
+			}
+		}},
+	}};
+
+	return peephole_optimize_for(program, begin, end, peephole_optimizers);
+}
+
 void Optimizer::optimize(Program& program)
 {
 	update_state_debug(program);
@@ -451,6 +497,12 @@ void Optimizer::optimize(Program& program)
 		{
 			{&Optimizer::merge_stackable,          "Merge stackable instructions"},
 			{&Optimizer::stage2_peephole_optimize, "Optimize offset memory sets through specialized instructions"},
+			{&Optimizer::stage1_peephole_optimize, "Peephole"}
+		},
+
+		{
+			{&Optimizer::merge_stackable,          "Merge stackable instructions"},
+			{&Optimizer::stage3_peephole_optimize, "Finalize stage 2 optimizations"},
 			{&Optimizer::stage1_peephole_optimize, "Peephole"}
 		}
 	}};

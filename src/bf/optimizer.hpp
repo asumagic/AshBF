@@ -12,6 +12,7 @@ namespace bf
 {
 struct OptimizationSequence
 {
+	// TODO: more intelligent sequences. For example, support wildcards, multiple choices for one op in particular, etc.
 	const std::vector<uint8_t> seq;
 	std::function<Program(span<ProgramIt>)> optimize;
 };
@@ -34,7 +35,7 @@ public:
 
 struct Optimizer
 {
-	static constexpr size_t stage_count = 2;
+	static constexpr size_t stage_count = 3;
 
 	// Parameters
 	size_t pass_count = 5;
@@ -88,6 +89,13 @@ struct Optimizer
 
 	bool simplify_offset_ops(
 		Program& program,
+		ProgramIt begin,
+		ProgramIt end
+	);
+
+	// Stage 3 - related to cleaning up stage 2 changes
+	bool stage3_peephole_optimize(
+		Program &program,
 		ProgramIt begin,
 		ProgramIt end
 	);
