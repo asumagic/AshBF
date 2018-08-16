@@ -403,18 +403,32 @@ bool Optimizer::stage2_peephole_optimize(Program& program, ProgramIt begin, Prog
 	const std::vector<OptimizationSequence> peephole_optimizers
 	{{
 		// Shifted adds
-		{{bfShift, bfAdd, bfShift}, [](auto v) -> Program {
+		{{bfShift, bfAdd}, [](auto v) -> Program {
 			return {
 				{bfAddOffset, v[1].args[0], v[0].args[0]},
-				{bfShift, v[0].args[0] + v[2].args[0]}
+				v[0]
+			};
+		}},
+
+		{{bfShift, bfAddOffset}, [](auto v) -> Program {
+			return {
+				{bfAddOffset, v[1].args[0], v[1].args[1] + v[0].args[0]},
+				v[0]
 			};
 		}},
 
 		// Shifted sets
-		{{bfShift, bfSet, bfShift}, [](auto v) -> Program {
+		{{bfShift, bfSet}, [](auto v) -> Program {
 			return {
 				{bfSetOffset, v[1].args[0], v[0].args[0]},
-				{bfShift, v[0].args[0] + v[2].args[0]}
+				v[0]
+			};
+		}},
+
+		{{bfShift, bfSetOffset}, [](auto v) -> Program {
+			return {
+				{bfSetOffset, v[1].args[0], v[1].args[1] + v[0].args[0]},
+				v[0]
 			};
 		}},
 	}};
