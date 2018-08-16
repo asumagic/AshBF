@@ -41,7 +41,7 @@ struct Flags
 {
 	std::array<CommandlineFlag, 11> flags
 	{{
-		{ "optimize-passes", '\0', "5" }, // Optimization pass count
+		{ "optimize-passes", '\0', "10" }, // Optimization pass count
 		{ "optimize", 'O', "1", {"0", "1"} }, // Optimization level (any or 1)
 		{ "optimize-debug", '\0', "0", {"0", "1"} }, // Optimization regression verification
 		{ "optimize-verbose", 'v', "0", {"0", "1"} },
