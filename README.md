@@ -72,6 +72,11 @@ Program output will not show to stdout.
 Verbose optimization feedback.  
 When enabled, the optimizer will give various information on optimization tasks and passes and even more in `-optimize-debug` mode.
 
+### `-legalize-overflow`
+
+By default, cell overflow is assumed illegal, as this is okay with most programs.  
+This enables better optimizations in general, but certain programs may encounter issues, in which case you may want to set this flag.
+
 ### `-memory-size` (`-m`)
 
 Defines the brainfuck tape allocated memory.  

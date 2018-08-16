@@ -225,21 +225,19 @@ bool Optimizer::balanced_loop_unrolling(
 	int shift_count = 0;
 	std::map<int, VMOp> operations;
 
-	// Reset counters when we enter a potentially expandable loop
-	auto mark_expandable = [&](ProgramIt current) {
-		loop_begin = current;
-		expandable = true;
-		shift_count = 0;
-		operations.clear();
-	};
-
 	for (auto i = begin; i != end; ++i)
 	{
+		// Reset counters when we enter a potentially expandable loop
 		// If we encounter a [ then the next ] we find ends it
 		if (i->opcode == bfLoopBegin)
 		{
-			mark_expandable(i);
+			loop_begin = i;
+			expandable = true;
+			shift_count = 0;
+			operations.clear();
 		}
+
+		auto& op_before_loop = *(loop_begin - 1);
 
 		if (i->opcode == bfShiftUntilZero ||
 			i->opcode == bfMAC ||
@@ -315,18 +313,17 @@ bool Optimizer::balanced_loop_unrolling(
 			}
 
 			Program unrolled;
-			if (loop_begin != begin && (loop_begin - 1)->opcode == bfSet)
+			if (loop_begin != begin && op_before_loop.opcode == bfSet)
 			{
 				// We know how many times the loop runs.
-				VMOp &prec = *(loop_begin - 1);
-				if (prec.args[0] == 0)
+				if (op_before_loop.args[0] == 0)
 				{
 					warnout(optimizeinfo) << "Loop never runs, iterator is initialized to 0\n";
 					// TODO erase
 					continue;
 				}
 
-				if (prec.args[0] == 1)
+				if (op_before_loop.args[0] == 1)
 				{
 					warnout(optimizeinfo) << "Loop runs exactly once\n";
 				}
@@ -334,7 +331,7 @@ bool Optimizer::balanced_loop_unrolling(
 				shift_count = 0;
 				for (auto &p : operations)
 				{
-					p.second.repeat(prec.args[0]);
+					p.second.repeat(op_before_loop.args[0]);
 					unrolled.emplace_back(bfShift, p.first - shift_count);
 					unrolled.push_back(p.second);
 					shift_count = p.first;
@@ -366,8 +363,14 @@ bool Optimizer::balanced_loop_unrolling(
 					}
 					else if (p.second.opcode == bfSet)
 					{
-						legal_when_zero = false;
-						break;
+						bool is_illegal_op = op_before_loop.opcode == bfAdd && op_before_loop.args[0] > 0 && !legal_overflow;
+
+						if (!is_illegal_op
+						 || op_before_loop.opcode != bfAdd)
+						{
+							legal_when_zero = false;
+							break;
+						}
 					}
 					else
 					{
@@ -375,7 +378,6 @@ bool Optimizer::balanced_loop_unrolling(
 					}
 				}
 
-				// TODO: conditionals to allow some optimization anyway
 				if (!legal_when_zero)
 				{
 					update_state_debug(program);

@@ -41,6 +41,7 @@ struct Optimizer
 	size_t pass_count = 5;
 	bool debug = false;
 	bool verbose = false;
+	bool legal_overflow = true;
 
 	std::vector<ProgramState> debug_states;
 	void update_state_debug(Program &program);

@@ -32,6 +32,7 @@ int main(int argc, char** argv)
 		opt.pass_count = std::stoul(flags[Flag::optimize_passes]);
 		opt.debug = flags[Flag::optimize_debug];
 		opt.verbose = flags[Flag::optimize_verbose];
+		opt.legal_overflow = flags[Flag::legalize_overflow];
 		opt.optimize(bfi.program);
 	}
 

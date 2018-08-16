@@ -26,6 +26,7 @@ enum class Flag
 	optimize,
 	optimize_debug,
 	optimize_verbose,
+	legalize_overflow,
 	memory_size,
 	//sanitize,
 	//warnings,
@@ -38,12 +39,13 @@ enum class Flag
 
 struct Flags
 {
-	std::array<CommandlineFlag, 10> flags
+	std::array<CommandlineFlag, 11> flags
 	{{
 		{ "optimize-passes", '\0', "5" }, // Optimization pass count
 		{ "optimize", 'O', "1", {"0", "1"} }, // Optimization level (any or 1)
 		{ "optimize-debug", '\0', "0", {"0", "1"} }, // Optimization regression verification
 		{ "optimize-verbose", 'v', "0", {"0", "1"} },
+		{ "legalize-overflow", '\0', "0", {"0", "1"} },
 		{ "memory-size", 'm', "30000" }, // Cells available to the program
 		//{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
 		//{ "warnings", 'W', "1", {"0", "1"} }, // Controls compiler warnings
