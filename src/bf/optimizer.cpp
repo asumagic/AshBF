@@ -274,7 +274,7 @@ bool Optimizer::balanced_loop_unrolling(
 
 			// Not great.. maybe instruction metadata could be nice at some point
 			shift_count = 0;
-			for (auto j = loop_begin; j != i; ++j)
+			for (auto j = loop_begin + 1; j != i; ++j)
 			{
 				if (j->opcode == bfShift)
 				{
@@ -292,7 +292,7 @@ bool Optimizer::balanced_loop_unrolling(
 			}
 
 			auto loopit = operations.find(0);
-			if (loopit == operations.end() || !loopit->second)
+			if (loopit == operations.end() || loopit->second.is_nop_like())
 			{
 				warnout(optimizeinfo) << "Infinite loop: Iterator is never modified\n";
 				continue;

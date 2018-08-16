@@ -36,9 +36,9 @@ struct VMOp
 		args{{arg1, arg2}}
 	{}
 
-	inline operator uint8_t() const // Implicit cast operator to opcode
+	bool operator==(const VMOp& other) const
 	{
-		return opcode;
+		return opcode == other.opcode;
 	}
 
 	bool try_merge_with(const VMOp& other)
@@ -70,7 +70,7 @@ struct VMOp
 
 	bool repeat(size_t n)
 	{
-		if (opcode && instructions[opcode].stackable)
+		if (opcode != bfNop && instructions[opcode].stackable)
 		{
 			args[0] *= n;
 			return true;
