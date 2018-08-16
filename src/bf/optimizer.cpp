@@ -341,7 +341,7 @@ bool Optimizer::balanced_loop_unrolling(
 				unrolled.emplace_back(bfShift, -shift_count);
 				unrolled.emplace_back(bfSet, 0);
 
-				move_range(program, loop_begin - 1, i + 1, unrolled);
+				move_range_no_shrink(program, loop_begin - 1, i + 1, unrolled);
 
 				update_state_debug(program);
 			}
@@ -388,7 +388,7 @@ bool Optimizer::balanced_loop_unrolling(
 				unrolled.emplace_back(bfShift, -shift_count);
 				unrolled.emplace_back(bfSet, 0);
 
-				move_range(program, loop_begin, i + 1, unrolled);
+				move_range_no_shrink(program, loop_begin, i + 1, unrolled);
 
 				update_state_debug(program);
 			}
@@ -396,6 +396,8 @@ bool Optimizer::balanced_loop_unrolling(
 			effective = true;
 		}
 	}
+
+	erase_nop(program, begin, end);
 
 	return effective;
 }
