@@ -15,10 +15,12 @@ set(core_files
 
 set(core_flags
 	"-Wall"
+	"-Wextra"
 	"-fno-exceptions"
 	"-std=c++1z"
+	"-ggdb"
 	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG>
-	$<$<CONFIG:DEBUG>:-Og -ggdb>)
+	$<$<CONFIG:DEBUG>:-Og -g>)
 
 if (js)
 	message("Generating a WebAssembly build.")
@@ -31,7 +33,7 @@ if (js)
 		"src/bfjswrapper.cpp")
 
 	set(CMAKE_CXX_FLAGS "-s WASM=1 --bind -s MODULARIZE=1 -s 'EXPORT_NAME=\"ashbfInitialize\"'")
-	target_compile_options(ashbf.js PRIVATE ${core_flags} -s WASM=1)
+	target_compile_options(ashbf.js PRIVATE ${core_flags} "-s WASM=1")
 	target_compile_definitions(ashbf.js PRIVATE WEB=1)
 else()
 	add_executable(ashbf
@@ -42,3 +44,7 @@ else()
 	target_compile_options(ashbf PRIVATE ${core_flags})
 endif()
 
+# TODO: support ashbf.js again
+target_link_libraries(ashbf PRIVATE
+	fmt
+)

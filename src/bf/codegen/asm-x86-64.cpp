@@ -1,25 +1,29 @@
 #include "codegen.hpp"
+#include <fmt/core.h>
 #include <sstream>
+#include <string_view>
 
 namespace bf::codegen
 {
 bool asm_x86_64(Context ctx)
 {
 	ctx.out <<
-		".text\n"
-		".globl _start\n"
-		"_start:\n"
-		"\n"
-		"# Zero-out stack memory we will be using\n"
-		"movq $30000, %rcx\n"
-		"bfzeromemory:\n"
-		"movq $0, (%rsp)\n"
-		"decq %rsp\n"
-		"loop bfzeromemory\n"
-		"\n"
-		"# Initialize brainfuck tape pointer\n"
-		"movq %rsp, %rsi"
-		"\n";
+R"(
+.text
+.globl _start
+_start:
+
+# Stack initialization
+movq $30000, %rcx
+
+bfzeromemory:
+movq $0, (%rsp)
+decq %rsp
+loopq bfzeromemory
+
+# Init tape pointer
+movq %rsp, %rsi
+)";
 
 	std::stringstream late_labels;
 
@@ -28,7 +32,7 @@ bool asm_x86_64(Context ctx)
 		{
 		case -1: out << "decq %rsi\n"; break;
 		case  1: out << "incq %rsi\n"; break;
-		default: out << "addq $" << by << ", %rsi\n";
+		default: out << fmt::format("addq ${}, %rsi\n", by);
 		}
 	};
 
@@ -48,24 +52,23 @@ bool asm_x86_64(Context ctx)
 	};
 
 	auto make_late_label = [&late_labels](auto x) -> std::stringstream& {
-		late_labels << "\nbfoplate" << x << ":\n";
+		late_labels << fmt::format("\nbfoplate{}:\n", x);
 		return late_labels;
 	};
 
-	for (size_t i = 0; i < ctx.program.size(); ++i)
+	std::size_t i = 0;
+	for (auto& op : ctx.program)
 	{
-		auto& op = ctx.program[i];
-
-		ctx.out << "\nbfop" << i << ":\n";
+		ctx.out << fmt::format("\nbfop{}:\n", i);
 
 		switch (op.opcode)
 		{
 		case bf::Opcode::bfAdd:
-			ctx.out << "addb $" << op.args[0] << ", (%rsi)\n";
+			ctx.out << fmt::format("addb ${}, (%rsi)\n", op.args[0]);
 			break;
 
 		case bf::Opcode::bfAddOffset:
-			ctx.out << "addb $" << op.args[0] << ", " << op.args[1] << "(%rsi)\n";
+			ctx.out << fmt::format("addb ${}, {}(%rsi)\n", op.args[0], op.args[1]);
 			break;
 
 		case bf::Opcode::bfShift:
@@ -74,9 +77,8 @@ bool asm_x86_64(Context ctx)
 
 		case bf::Opcode::bfMAC:
 			// TODO: optimize out at a maximum
-			ctx.out <<
-				"movq $" << op.args[1] << ", %rdx\n"
-				"movb (%rsi, %rdx), %al\n";
+			ctx.out << fmt::format("movq ${}, %rdx\n"
+								   "movb (%rsi, %rdx), %al\n", op.args[1]);
 
 			// TODO: handle negative power of two
 			// not currently doing it as i have to write a testcase
@@ -91,15 +93,13 @@ bool asm_x86_64(Context ctx)
 			}
 			else if (op.args[0] > 0 && is_power_of_two(op.args[0]))
 			{
-				ctx.out <<
-					"shll $" << get_power_of_two(op.args[0]) << ", %eax\n"
-					"addb %al, (%rsi)";
+				ctx.out << fmt::format("shll ${}, %eax\n"
+									   "addb %al, (%rsi)\n", get_power_of_two(op.args[0]));
 			}
 			else
 			{
-				ctx.out <<
-					"imull $" << op.args[0] << ", %eax\n"
-					"addb %al, (%rsi)\n";
+				ctx.out << fmt::format("imull ${}, %eax\n"
+									   "addb %al, (%rsi)\n", op.args[0]);
 			}
 
 
@@ -110,30 +110,33 @@ bool asm_x86_64(Context ctx)
 
 			if (is_looped)
 			{
-				ctx.out << "mov $" << op.args[0] << ", %rcx\n";
+				ctx.out <<
+fmt::format(R"(
+mov ${}, %rcx
+
+# Write syscall (output character)
+bfopcore{}:
+movq %rcx, %r15 # Because %rcx is overriden by syscall
+movq $1, %rax
+movq $1, %rdi
+movq $1, %rdx
+syscall
+
+movq %r15, %rcx
+loop bfopcore{}
+)", op.args[0], i, i);
 			}
-
-			ctx.out <<
-				"# Write syscall (output character)\n"
-				"bfopcore" << i << ":\n";
-
-			if (is_looped)
-			{
-				// %rcx is clobbered by the syscall
-				ctx.out << "movq %rcx, %r15\n";
-			}
-
-			ctx.out <<
-				"movq $1, %rax\n"
-				"movq $1, %rdi\n"
-				"movq $1, %rdx\n"
-				"syscall\n";
-
-			if (is_looped)
+			else
 			{
 				ctx.out <<
-					"movq %r15, %rcx\n"
-					"loop bfopcore" << i << '\n';
+fmt::format(R"(
+# Write syscall (output character)
+bfopcore{}:
+movq $1, %rax
+movq $1, %rdi
+movq $1, %rdx
+syscall
+)", i);
 			}
 
 			} break;
@@ -191,6 +194,8 @@ bool asm_x86_64(Context ctx)
 			errout(codegenx8664info) << "Unhandled opcode: " << int(op.opcode) << '\n';
 			return false;
 		}
+
+		++i;
 	}
 
 	ctx.out <<
