@@ -240,7 +240,6 @@ bool Optimizer::balanced_loop_unrolling(
 		auto& op_before_loop = *(loop_begin - 1);
 
 		if (i->opcode == bfShiftUntilZero ||
-			i->opcode == bfMAC ||
 			i->opcode == bfCharIn ||
 			i->opcode == bfCharOut) // TODO could be expanded
 		{
@@ -331,7 +330,10 @@ bool Optimizer::balanced_loop_unrolling(
 				shift_count = 0;
 				for (auto &p : operations)
 				{
-					p.second.repeat(op_before_loop.args[0]);
+					if (!p.second.repeat(op_before_loop.args[0]))
+					{
+						unrolled.push_back(p.second);
+					}
 					unrolled.emplace_back(bfShift, p.first - shift_count);
 					unrolled.push_back(p.second);
 					shift_count = p.first;
@@ -447,7 +449,7 @@ void Optimizer::optimize(Program& program)
 	const std::array<std::vector<OptimizerTask>, stage_count> tasks
 	{{
 		{
-			{&Optimizer::merge_stackable,          "Merge stackable instructions"},
+			{&Optimizer::merge_stackable, "Merge stackable instructions"},
 			{&Optimizer::stage1_peephole_optimize, "Peephole"},
 			{&Optimizer::balanced_loop_unrolling,  "Balanced loop unrolling"}
 		},

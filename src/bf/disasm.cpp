@@ -1,5 +1,6 @@
 #include "disasm.hpp"
 #include "logger.hpp"
+#include <iomanip>
 
 namespace bf
 {
@@ -36,17 +37,23 @@ void Disassembler::print_range(Program& program)
 	infoout(compileinfo) <<
 		"Compiled program size is " << program.size() << " instructions (" << program.size() * sizeof(VMOp) << " bytes)\n";
 
-	size_t i = 0;
+	size_t i = 0, depth = 0;
 	for (auto& it : program)
 	{
+		if (it.opcode == bfJmpNotZero) --depth;
+
 		if (print_line_numbers)
 		{
-			std::cout << ++i << '\t' << (*this)(it) << '\n';
+			std::cout << std::setw(5) << i++ << " | ";
+			for (int i = 0; i < depth; ++i) { std::cout << "  "; }
+			std::cout << (*this)(it) << '\n';
 		}
 		else
 		{
 			std::cout << (*this)(it) << '\n';
 		}
+
+		if (it.opcode == bfJmpZero) ++depth;
 	}
 }
 }
