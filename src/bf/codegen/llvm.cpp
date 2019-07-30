@@ -267,18 +267,6 @@ bool llvm(Context ctx)
 		return false;
 	}
 
-	FunctionPassManager pass_manager;
-	pass_manager.addPass(InstCombinePass());
-
-	FunctionAnalysisManager analysis_manager;
-	LoopAnalysisManager loop_analysis_manager;
-
-	PassBuilder pass_builder;
-	pass_builder.registerFunctionAnalyses(analysis_manager);
-	pass_builder.registerLoopAnalyses(loop_analysis_manager);
-
-	pass_manager.run(*main_func, analysis_manager);
-
 	main_module.print(outs(), nullptr);
 
 	return true;
