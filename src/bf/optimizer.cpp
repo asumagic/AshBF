@@ -206,8 +206,16 @@ bool Optimizer::stage1_peephole_optimize(
 		}},
 
 		// [>]
-		{{bfLoopBegin, bfShift, bfLoopEnd}, [](auto v) -> Program {
-			return {{bfShiftUntilZero, v[1].args[0]}};
+		{{bfLoopBegin, bfShift, bfLoopEnd}, [this](auto v) -> Program {
+			if (allow_suz)
+			{
+				return {{bfShiftUntilZero, v[1].args[0]}};
+			}
+			else
+			{
+				// TODO: just dont have this in the optimizers list when !allow_suz
+				return {v[0], v[1], v[2]};
+			}
 		}}
 	}};
 
