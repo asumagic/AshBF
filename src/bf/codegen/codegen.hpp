@@ -1,7 +1,7 @@
 #ifndef CODEGEN_HPP
 #define CODEGEN_HPP
 
-#include <fstream>
+#include <ostream>
 #include "../bf.hpp"
 #include "../logger.hpp"
 
@@ -16,5 +16,6 @@ struct Context
 
 #include "asm-x86-64.hpp"
 #include "c.hpp"
+#include "llvm.hpp"
 
 #endif

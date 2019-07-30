@@ -35,7 +35,8 @@ extern const std::string_view
 	optimizeinfo,
 	codegeninfo,
 	codegenx8664info,
-	codegencinfo;
+	codegencinfo,
+	codegenllvminfo;
 
 extern LogLevel
 	warnout,

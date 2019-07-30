@@ -42,6 +42,7 @@ struct Optimizer
 	bool debug = false;
 	bool verbose = false;
 	bool legal_overflow = true;
+	bool allow_suz = true;
 
 	std::vector<ProgramState> debug_states;
 	void update_state_debug(Program &program);

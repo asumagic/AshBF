@@ -45,7 +45,7 @@ void Disassembler::print_range(Program& program)
 		if (print_line_numbers)
 		{
 			std::cout << std::setw(5) << i++ << " | ";
-			for (int i = 0; i < depth; ++i) { std::cout << "  "; }
+			for (std::size_t i = 0; i < depth; ++i) { std::cout << "  "; }
 			std::cout << (*this)(it) << '\n';
 		}
 		else

@@ -26,6 +26,7 @@ enum class Flag
 	optimize,
 	optimize_debug,
 	optimize_verbose,
+	optimize_allow_suz,
 	legalize_overflow,
 	memory_size,
 	//sanitize,
@@ -34,17 +35,19 @@ enum class Flag
 	print_il_line_numbers,
 	execute,
 	codegen_asm_x86_64_file,
-	codegen_c_file
+	codegen_c_file,
+	codegen_llvm_file
 };
 
 struct Flags
 {
-	std::array<CommandlineFlag, 11> flags
+	std::array<CommandlineFlag, 13> flags
 	{{
 		{ "optimize-passes", '\0', "10" }, // Optimization pass count
 		{ "optimize", 'O', "1", {"0", "1"} }, // Optimization level (any or 1)
 		{ "optimize-debug", '\0', "0", {"0", "1"} }, // Optimization regression verification
 		{ "optimize-verbose", 'v', "0", {"0", "1"} },
+		{ "optimize-suz", '\0', "1", {"0", "1"} }, // Allow to the shift-until-zero instruction
 		{ "legalize-overflow", '\0', "0", {"0", "1"} },
 		{ "memory-size", 'm', "30000" }, // Cells available to the program
 		//{ "sanitize", "0", {"0", "1"} }, // Enable brainfuck sanitizers to the brainfuck program (enforce proper memory access)
@@ -53,7 +56,8 @@ struct Flags
 		{ "print-il-line-numbers", '\0', "1", {"0", "1"} }, // Print VM IL line numbers
 		{ "execute", 'x', "1", {"0", "1"} }, // Do execute the compiled program or not,
 		{ "asm-x86-64-output", '\0', "" },
-		{ "asm-c-output", '\0', "" }
+		{ "asm-c-output", '\0', "" },
+		{ "asm-llvm-output", '\0', "" }
 	}};
 
 	inline CommandlineFlag& operator[](const Flag flag)

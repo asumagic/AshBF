@@ -11,7 +11,8 @@ set(core_files
 	"src/bf/optimizer.cpp"
 	"src/bf/vm.cpp"
 	"src/bf/codegen/asm-x86-64.cpp"
-	"src/bf/codegen/c.cpp")
+	"src/bf/codegen/c.cpp"
+	"src/bf/codegen/llvm.cpp")
 
 set(core_flags
 	"-Wall"
@@ -47,4 +48,5 @@ endif()
 # TODO: support ashbf.js again
 target_link_libraries(ashbf PRIVATE
 	fmt
+	LLVM
 )

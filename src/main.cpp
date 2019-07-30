@@ -5,6 +5,7 @@
 #include "bf/optimizer.hpp"
 #include "bf/codegen/codegen.hpp"
 #include "cli.hpp"
+#include <fstream>
 
 int main(int argc, char** argv)
 {
@@ -33,19 +34,8 @@ int main(int argc, char** argv)
 		opt.debug = flags[Flag::optimize_debug];
 		opt.verbose = flags[Flag::optimize_verbose];
 		opt.legal_overflow = flags[Flag::legalize_overflow];
+		opt.allow_suz = flags[Flag::optimize_allow_suz];
 		opt.optimize(bfi.program);
-	}
-
-	if (!bfi.link())
-	{
-		errout(compileinfo) << "Failed to link brainfuck program\n";
-	}
-
-	bf::disasm.print_line_numbers = flags[Flag::print_il_line_numbers];
-
-	if (flags[Flag::print_il])
-	{
-		bf::disasm.print_range(bfi.program);
 	}
 
 	auto codegen_to_file = [&](const std::string& str, std::function<bool(bf::codegen::Context)> codegen)
@@ -61,8 +51,24 @@ int main(int argc, char** argv)
 		return false;
 	};
 
-	codegen_to_file(flags[Flag::codegen_asm_x86_64_file].value, bf::codegen::asm_x86_64);
+	// LLVM and C codegen occurs before linking
+	codegen_to_file(flags[Flag::codegen_llvm_file].value, bf::codegen::llvm);
 	codegen_to_file(flags[Flag::codegen_c_file].value, bf::codegen::c);
+
+	if (!bfi.link())
+	{
+		errout(compileinfo) << "Failed to link brainfuck program\n";
+	}
+
+	// Assembly codegen occurs after linking
+	codegen_to_file(flags[Flag::codegen_asm_x86_64_file].value, bf::codegen::asm_x86_64);
+
+	bf::disasm.print_line_numbers = flags[Flag::print_il_line_numbers];
+
+	if (flags[Flag::print_il])
+	{
+		bf::disasm.print_range(bfi.program);
+	}
 
 	if (flags[Flag::execute])
 	{

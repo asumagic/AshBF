@@ -10,7 +10,8 @@ const std::string_view
 	optimizeinfo = "Optimizer",
 	codegeninfo = "CodeGen",
 	codegenx8664info = "CodeGen (x86-64 asm)",
-	codegencinfo = "CodeGen (C source)";
+	codegencinfo = "CodeGen (C source)",
+	codegenllvminfo = "CodeGen (LLVM IR)";
 
 #ifdef ANSICOLOR
 LogLevel
