@@ -1,30 +1,27 @@
 #include "llvm.hpp"
 
 #include "codegen.hpp"
+#include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
-#include <llvm/IR/PassManager.h>
-#include <llvm/Passes/PassBuilder.h>
-#include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <stack>
 
 namespace bf::codegen
 {
-
 // Strongly inspired from https://github.com/jeremyroman/llvm-brainfuck
 
 struct Loop
 {
 	llvm::BasicBlock *entry, *body, *exit;
-	llvm::PHINode *data_ptr_body, *data_ptr_exit;
+	llvm::PHINode *   data_ptr_body, *data_ptr_exit;
 };
 
 bool llvm(Context ctx)
 {
 	using namespace llvm;
 	LLVMContext llvm_context;
-	Module main_module{"brainfuck program", llvm_context};
+	Module      main_module{"brainfuck program", llvm_context};
 
 	IRBuilder builder{llvm_context};
 
@@ -33,57 +30,25 @@ bool llvm(Context ctx)
 	ArrayType* memory_type = ArrayType::get(cell_type, 30000);
 
 	GlobalVariable* memory = new GlobalVariable(
-		main_module,
-		memory_type,
-		false,
-		GlobalVariable::InternalLinkage,
-		Constant::getNullValue(memory_type),
-		"data"
-	);
+		main_module, memory_type, false, GlobalVariable::InternalLinkage, Constant::getNullValue(memory_type), "data");
 
-	Value* data_ptr = builder.CreateConstInBoundsGEP2_32(
-		nullptr,
-		memory,
-		0,
-		0,
-		"ptr"
-	);
+	Value* data_ptr = builder.CreateConstInBoundsGEP2_32(nullptr, memory, 0, 0, "ptr");
 
-	FunctionType* cout_function_type = FunctionType::get(
-		Type::getVoidTy(llvm_context),
-		std::array<Type*, 1>{cell_type},
-		false
-	);
+	FunctionType* cout_function_type
+		= FunctionType::get(Type::getVoidTy(llvm_context), std::array<Type*, 1>{cell_type}, false);
 
-	Function* cout_function = Function::Create(
-		cout_function_type,
-		Function::ExternalLinkage,
-		"brainfuck_put",
-		main_module
-	);
+	Function* cout_function
+		= Function::Create(cout_function_type, Function::ExternalLinkage, "brainfuck_put", main_module);
 
-	FunctionType* main_func_type = FunctionType::get(
-		Type::getVoidTy(llvm_context),
-		{},
-		false
-	);
+	FunctionType* main_func_type = FunctionType::get(Type::getVoidTy(llvm_context), {}, false);
 
-	Function* main_func = Function::Create(
-		main_func_type,
-		Function::ExternalLinkage,
-		"brainfuck_main",
-		&main_module
-	);
+	Function* main_func = Function::Create(main_func_type, Function::ExternalLinkage, "brainfuck_main", &main_module);
 
-	BasicBlock* main_block = BasicBlock::Create(
-		llvm_context,
-		"entry",
-		main_func
-	);
+	BasicBlock* main_block = BasicBlock::Create(llvm_context, "entry", main_func);
 
 	builder.SetInsertPoint(main_block);
 
-	Loop current_loop;
+	Loop             current_loop;
 	std::stack<Loop> loops;
 
 	for (std::size_t i = 0; i < ctx.program.size(); ++i)
@@ -94,12 +59,7 @@ bool llvm(Context ctx)
 		case Opcode::bfAdd:
 		{
 			builder.CreateStore(
-				builder.CreateAdd(
-					builder.CreateLoad(data_ptr),
-					ConstantInt::get(cell_type, op.args[0])
-				),
-				data_ptr
-			);
+				builder.CreateAdd(builder.CreateLoad(data_ptr), ConstantInt::get(cell_type, op.args[0])), data_ptr);
 
 			break;
 		}
@@ -109,12 +69,7 @@ bool llvm(Context ctx)
 			auto* offset_ptr = builder.CreateConstGEP1_32(data_ptr, op.args[1], "tmp_ptr");
 
 			builder.CreateStore(
-				builder.CreateAdd(
-					builder.CreateLoad(offset_ptr),
-					ConstantInt::get(cell_type, op.args[0])
-				),
-				offset_ptr
-			);
+				builder.CreateAdd(builder.CreateLoad(offset_ptr), ConstantInt::get(cell_type, op.args[0])), offset_ptr);
 
 			break;
 		}
@@ -132,23 +87,15 @@ bool llvm(Context ctx)
 			builder.CreateStore(
 				builder.CreateAdd(
 					builder.CreateLoad(data_ptr),
-					builder.CreateMul(
-						ConstantInt::get(cell_type, op.args[0]),
-						builder.CreateLoad(offset_ptr)
-					)
-				),
-				data_ptr
-			);
+					builder.CreateMul(ConstantInt::get(cell_type, op.args[0]), builder.CreateLoad(offset_ptr))),
+				data_ptr);
 
 			break;
 		}
 
 		case Opcode::bfCharOut:
 		{
-			builder.CreateCall(
-				cout_function,
-				builder.CreateLoad(data_ptr)
-			);
+			builder.CreateCall(cout_function, builder.CreateLoad(data_ptr));
 			break;
 		}
 
@@ -161,16 +108,14 @@ bool llvm(Context ctx)
 		case Opcode::bfJmpZero:
 		case Opcode::bfJmpNotZero:
 		{
-			errout(codegenllvminfo) << "Unexpected conditional jump. LLVM IR compilation must occur before BF linking.\n";
+			errout(codegenllvminfo)
+				<< "Unexpected conditional jump. LLVM IR compilation must occur before BF linking.\n";
 			return false;
 		}
 
 		case Opcode::bfSet:
 		{
-			builder.CreateStore(
-				ConstantInt::get(cell_type, op.args[0]),
-				data_ptr
-			);
+			builder.CreateStore(ConstantInt::get(cell_type, op.args[0]), data_ptr);
 			break;
 		}
 
@@ -178,10 +123,7 @@ bool llvm(Context ctx)
 		{
 			auto* offset_ptr = builder.CreateConstGEP1_32(data_ptr, op.args[1], "tmp_ptr");
 
-			builder.CreateStore(
-				ConstantInt::get(cell_type, op.args[0]),
-				offset_ptr
-			);
+			builder.CreateStore(ConstantInt::get(cell_type, op.args[0]), offset_ptr);
 
 			break;
 		}
@@ -189,16 +131,11 @@ bool llvm(Context ctx)
 		case Opcode::bfLoopBegin:
 		{
 			current_loop.entry = builder.GetInsertBlock();
-			current_loop.body = BasicBlock::Create(llvm_context, "loop", main_func);
-			current_loop.exit = BasicBlock::Create(llvm_context, "exit", main_func);
+			current_loop.body  = BasicBlock::Create(llvm_context, "loop", main_func);
+			current_loop.exit  = BasicBlock::Create(llvm_context, "exit", main_func);
 
 			builder.CreateCondBr(
-				builder.CreateIsNotNull(
-					builder.CreateLoad(data_ptr)
-				),
-				current_loop.body,
-				current_loop.exit
-			);
+				builder.CreateIsNotNull(builder.CreateLoad(data_ptr)), current_loop.body, current_loop.exit);
 
 			builder.SetInsertPoint(current_loop.exit);
 			current_loop.data_ptr_exit = builder.CreatePHI(data_ptr->getType(), 2, "ptr");
@@ -229,12 +166,7 @@ bool llvm(Context ctx)
 			current_loop.data_ptr_exit->addIncoming(data_ptr, builder.GetInsertBlock());
 
 			builder.CreateCondBr(
-				builder.CreateIsNotNull(
-					builder.CreateLoad(data_ptr)
-				),
-				current_loop.body,
-				current_loop.exit
-			);
+				builder.CreateIsNotNull(builder.CreateLoad(data_ptr)), current_loop.body, current_loop.exit);
 
 			current_loop.exit->moveAfter(builder.GetInsertBlock());
 			data_ptr = current_loop.data_ptr_exit;
@@ -255,9 +187,7 @@ bool llvm(Context ctx)
 			break;
 		}
 
-		default:
-			errout(codegenllvminfo) << "Unhandled opcode: " << int(op.opcode) << '\n';
-			return false;
+		default: errout(codegenllvminfo) << "Unhandled opcode: " << int(op.opcode) << '\n'; return false;
 		}
 	}
 
@@ -267,9 +197,15 @@ bool llvm(Context ctx)
 		return false;
 	}
 
-	main_module.print(outs(), nullptr);
+	// HACK: This is a slow way to do this, but llvm's ostream is different from std::ostream
+	//       Consider buffer_ostream?
+	std::vector<char> str;
+	/*raw_svector_ostream stream{str};
+	WriteBitcodeToFile(main_module, stream);
+	stream.flush();
+	ctx.out << str;*/
 
 	return true;
 }
 
-}
+} // namespace bf::codegen

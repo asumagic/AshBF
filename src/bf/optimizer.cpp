@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <map>
 #include <sstream>
 #include <vector>
 
@@ -26,9 +27,8 @@ const std::string& ProgramState::get_output() const
 
 	Brainfuck bf;
 	bf.program = program;
-	bf.pipeout = &ss;
 	bf.link();
-	bf.interpret(30000);
+	bf.interpret({30000, &ss, &ss});
 
 	return (cached_output = std::optional<std::string>{ss.str()}).value();
 }
@@ -38,7 +38,7 @@ void Optimizer::update_state_debug(Program &program)
 	if (debug)
 	{
 		erase_nop(program, program.begin(), program.end()); // We do this because the interpreter can't handle bfNop.
-		debug_states.push_back({program, debug_states.size()});
+		debug_states.emplace_back(program, debug_states.size());
 	}
 }
 
@@ -49,8 +49,8 @@ bool Optimizer::analyze_debug_states()
 		warnout(optimizeinfo) << "No debug state collected, cannot analyze debug states. This may be a bug.\n";
 	}
 
-	auto &initial_state = debug_states.front(),
-		 &final_state = debug_states.back();
+	auto &initial_state = debug_states.front();
+	auto &final_state = debug_states.back();
 
 	infoout(optimizeinfo) << "Checking for regressions...\n";
 
@@ -84,8 +84,8 @@ bool Optimizer::analyze_debug_states()
 		}
 	);
 
-	auto &last_good = *(culprit_it - 1),
-		 &culprit = *(culprit_it);
+	auto &last_good = *(culprit_it - 1);
+	auto &culprit = *(culprit_it);
 
 	warnout(optimizeinfo) << "Optimization #" << culprit.id << " is bad.\n";
 
@@ -186,7 +186,7 @@ bool Optimizer::stage1_peephole_optimize(
 	const std::vector<OptimizationSequence> peephole_optimizers
 	{{
 		// [+] to bfSet 0
-		{{bfLoopBegin, bfAdd, bfLoopEnd}, [](auto) -> Program {
+		{{bfLoopBegin, bfAdd, bfLoopEnd}, [](auto /*unused*/) -> Program {
 			return {{bfSet, 0}};
 		}},
 
@@ -211,11 +211,10 @@ bool Optimizer::stage1_peephole_optimize(
 			{
 				return {{bfShiftUntilZero, v[1].args[0]}};
 			}
-			else
-			{
-				// TODO: just dont have this in the optimizers list when !allow_suz
+			
+							// TODO: just dont have this in the optimizers list when !allow_suz
 				return {v[0], v[1], v[2]};
-			}
+		
 		}}
 	}};
 
@@ -229,7 +228,8 @@ bool Optimizer::balanced_loop_unrolling(
 )
 {
 	auto loop_begin = begin;
-	bool expandable = true, effective = false;
+	bool expandable = true;
+	bool effective = false;
 	int shift_count = 0;
 	std::map<int, VMOp> operations;
 

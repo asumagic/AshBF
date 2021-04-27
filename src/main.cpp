@@ -1,9 +1,9 @@
 #include "bf/bf.hpp"
-#include "bf/il.hpp"
+#include "bf/codegen/codegen.hpp"
 #include "bf/disasm.hpp"
+#include "bf/il.hpp"
 #include "bf/logger.hpp"
 #include "bf/optimizer.hpp"
-#include "bf/codegen/codegen.hpp"
 #include "cli.hpp"
 #include <fstream>
 
@@ -30,20 +30,22 @@ int main(int argc, char** argv)
 	if (optimize)
 	{
 		bf::Optimizer opt;
-		opt.pass_count = std::stoul(flags[Flag::optimize_passes]);
-		opt.debug = flags[Flag::optimize_debug];
-		opt.verbose = flags[Flag::optimize_verbose];
+		opt.pass_count     = std::stoul(flags[Flag::optimize_passes]);
+		opt.debug          = flags[Flag::optimize_debug];
+		opt.verbose        = flags[Flag::optimize_verbose];
 		opt.legal_overflow = flags[Flag::legalize_overflow];
-		opt.allow_suz = flags[Flag::optimize_allow_suz];
+		opt.allow_suz      = flags[Flag::optimize_allow_suz];
 		opt.optimize(bfi.program);
 	}
 
-	auto codegen_to_file = [&](const std::string& str, std::function<bool(bf::codegen::Context)> codegen)
-	{
+	auto codegen_to_file = [&](const std::string& str, const std::function<bool(bf::codegen::Context)>& codegen) {
 		if (!str.empty())
 		{
 			std::ofstream of{str};
-			if (!of) return false;
+			if (!of)
+			{
+				return false;
+			}
 
 			return codegen({bfi.program, of});
 		}
@@ -61,6 +63,7 @@ int main(int argc, char** argv)
 	}
 
 	// Assembly codegen occurs after linking
+	codegen_to_file(flags[Flag::codegen_smol_file].value, bf::codegen::asm_smol);
 	codegen_to_file(flags[Flag::codegen_asm_x86_64_file].value, bf::codegen::asm_x86_64);
 
 	bf::disasm.print_line_numbers = flags[Flag::print_il_line_numbers];
@@ -72,6 +75,6 @@ int main(int argc, char** argv)
 
 	if (flags[Flag::execute])
 	{
-		bfi.interpret(std::stoul(flags[Flag::memory_size]));
+		bfi.interpret({std::stoul(flags[Flag::memory_size]), &std::cin, &std::cout});
 	}
 }

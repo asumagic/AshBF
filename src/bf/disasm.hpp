@@ -11,7 +11,7 @@ struct Disassembler
 {
 	bool print_line_numbers;
 
-	std::string operator()(const VMOp &ins);
+	std::string operator()(bf::VMOp ins);
 	void print_range(span<ProgramIt> range);
 	void print_range(Program& program);
 };

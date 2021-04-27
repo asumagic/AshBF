@@ -1,10 +1,8 @@
 #ifndef OPTIMIZER_HPP
 #define OPTIMIZER_HPP
 
-#include <functional>
-#include <memory>
-#include <map>
 #include <optional>
+#include <string>
 #include "span.hpp"
 #include "bf.hpp"
 

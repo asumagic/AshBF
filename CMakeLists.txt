@@ -12,7 +12,8 @@ set(core_files
 	"src/bf/vm.cpp"
 	"src/bf/codegen/asm-x86-64.cpp"
 	"src/bf/codegen/c.cpp"
-	"src/bf/codegen/llvm.cpp")
+	"src/bf/codegen/llvm.cpp"
+	"src/bf/codegen/smol.cpp")
 
 set(core_flags
 	"-Wall"
@@ -20,7 +21,7 @@ set(core_flags
 	"-fno-exceptions"
 	"-std=c++1z"
 	"-ggdb"
-	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG>
+	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG -flto>
 	$<$<CONFIG:DEBUG>:-Og -g>)
 
 if (js)
@@ -42,7 +43,8 @@ else()
 		"src/main.cpp"
 		"src/cli.cpp")
 
-	target_compile_options(ashbf PRIVATE ${core_flags})
+	target_compile_options(ashbf PRIVATE ${core_flags} "-fno-pic")
+	target_link_options(ashbf PRIVATE "-no-pie" "-flto")
 endif()
 
 # TODO: support ashbf.js again

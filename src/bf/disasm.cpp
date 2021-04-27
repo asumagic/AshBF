@@ -6,7 +6,7 @@ namespace bf
 {
 Disassembler disasm{};
 
-std::string Disassembler::operator()(const VMOp& ins)
+std::string Disassembler::operator()(bf::VMOp ins)
 {
 	const VMOpInfo& info = instructions[static_cast<size_t>(ins.opcode)];
 #ifdef ANSICOLOR

@@ -1,56 +1,128 @@
 #include "bf.hpp"
-#include <tuple>
 
-// Jump to the next goto label with instruction `target`
-#define dispatch(target) goto *(target)->handler
-
-// Define an instruction handler, its goto label, fetching a and b matching the program counter arguments
-#define handler(name) \
-	/* Goto label */				name: \
-	/* Fetch parameters */			auto [a, b] = [pc]{ return std::tuple{pc->args[0], pc->args[1]}; }(); \
-	/* Suppress unused warning */	(void)(a); (void)(b)
-
-// Perform branching
-#define jump() dispatch(pc = program.data() + a)
+#include <istream>
+#include <ostream>
 
 namespace bf
 {
-void Brainfuck::interpret(size_t memory_size) noexcept
+void Brainfuck::interpret(const VmParams& params) noexcept
 {
-	std::array<void*, 12> labels {{
-		&&lAdd, &&lAddOff, &&lShift, &&lMAC, &&lCOut, &&lCIn, &&lJZ, &&lJNZ, &&lSet, &&lSetOff, &&lSUZ, &&lEnd
-	}};
+	std::vector<uint8_t> memory(params.memory_size);
 
-	for (auto &i : program)
+	auto sp = memory.begin();
+	auto ip = program.begin();
+
+	for (;;)
 	{
-		i.handler = labels[i.opcode];
+		const auto& op = *ip;
+
+		const auto& a = op.args[0];
+		const auto& b = op.args[1];
+
+		switch (op.opcode)
+		{
+		case Opcode::bfAdd:
+		{
+			*sp += a;
+			++ip;
+			break;
+		}
+
+		case Opcode::bfAddOffset:
+		{
+			*(sp + b) += a;
+			++ip;
+			break;
+		}
+
+		case Opcode::bfShift:
+		{
+			sp += a;
+			++ip;
+			break;
+		}
+
+		case Opcode::bfMAC:
+		{
+			*sp += a * *(sp + b);
+			++ip;
+			break;
+		}
+
+		case Opcode::bfCharOut:
+		{
+			for (int i = 0; i < a; ++i)
+			{
+				params.out_stream->put(*sp);
+			}
+			++ip;
+			break;
+		}
+
+		case Opcode::bfCharIn:
+		{
+			for (int i = 0; i < a; ++i)
+			{
+				*sp = params.in_stream->get();
+			}
+			++ip;
+			break;
+		}
+
+		case Opcode::bfJmpZero:
+		{
+			++ip;
+			if (*sp == 0)
+			{
+				ip = program.begin() + a;
+			}
+			break;
+		}
+
+		case Opcode::bfJmpNotZero:
+		{
+			++ip;
+			if (*sp != 0)
+			{
+				ip = program.begin() + a;
+			}
+			break;
+		}
+
+		case Opcode::bfSet:
+		{
+			*sp = a;
+			++ip;
+			break;
+		}
+
+		case Opcode::bfSetOffset:
+		{
+			*(sp + b) = a;
+			++ip;
+			break;
+		}
+
+		case Opcode::bfShiftUntilZero:
+		{
+			while (*sp != 0)
+			{
+				sp += a;
+			}
+			++ip;
+			break;
+		}
+
+		case Opcode::bfEnd:
+		{
+			return;
+		}
+
+		default:
+		{
+			__builtin_unreachable();
+		}
+		}
 	}
-
-	std::vector<uint8_t> memory(memory_size);
-
-	auto *sp = memory.data();
-	auto *pc = program.data();
-
-	dispatch(pc);
-
-	{ handler(lAdd);  *sp += a; dispatch(++pc); }
-	{ handler(lAddOff); *(sp + b) += a; dispatch(++pc); }
-
-	{ handler(lShift); sp += a; dispatch(++pc); }
-
-	{ handler(lMAC);  *sp += a * sp[b]; dispatch(++pc); }
-
-	{ handler(lCOut); for (int i = 0; i < a; ++i) { *pipeout << *sp; } dispatch(++pc); }
-	{ handler(lCIn);  for (int i = 0; i < a; ++i) { *sp = pipein->get(); } dispatch(++pc); }
-		
-	{ handler(lJZ);  if (*sp == 0) { jump(); } dispatch(++pc); }
-	{ handler(lJNZ); if (*sp != 0) { jump(); } dispatch(++pc); }
-		
-	{ handler(lSet); *sp = uint8_t(a); dispatch(++pc); }
-	{ handler(lSetOff); *(sp + b) = uint8_t(a); dispatch(++pc); }
-
-	{ handler(lSUZ); while (*sp != 0) { sp += a; } dispatch(++pc); }
-
-	{ handler(lEnd); return; }
 }
 }
