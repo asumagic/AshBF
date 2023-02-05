@@ -1,6 +1,5 @@
 #include "optimizer.hpp"
 
-#include "compiler.hpp"
 #include "disasm.hpp"
 #include "il.hpp"
 #include "logger.hpp"
@@ -9,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <fmt/core.h>
 #include <functional>
 #include <map>
 #include <sstream>
@@ -458,14 +458,14 @@ bool Optimizer::stage2_peephole_optimize(Program& program, ProgramIt begin, Prog
 	return peephole_optimize_for(program, begin, end, peephole_optimizers);
 }
 
-bool Optimizer::stage3_transform(Program &program, ProgramIt begin, ProgramIt end)
+bool Optimizer::stage3_transform([[maybe_unused]] Program &program, ProgramIt begin, ProgramIt end)
 {
-	for (auto it = begin; it != end; ++it)
+	for (VMOp& op : std::span{begin, end})
 	{
-		switch (it->opcode)
+		switch (op.opcode)
 		{
-			case bfAdd: { *it = VMOp{bfAddOffset, it->args[0], 0}; break; }
-			case bfSet: { *it = VMOp{bfSetOffset, it->args[0], 0}; break; }
+			case bfAdd: { op = VMOp{bfAddOffset, op.args[0], 0}; break; }
+			case bfSet: { op = VMOp{bfSetOffset, op.args[0], 0}; break; }
 			default: break;
 		} 
 	}
@@ -497,49 +497,50 @@ void Optimizer::optimize(Program& program)
 		}
 	}};
 
-	for (size_t s = 0; s < stage_count; ++s)
-	for (size_t p = 0;; ++p)
+	for (size_t stage = 0; stage < stage_count; ++stage)
 	{
-		if (p >= pass_count)
+		for (size_t pass = 0;; ++pass)
 		{
-			warnout(optimizeinfo) <<
-				"Maximal optimization pass reached for stage " << s << ". Consider increasing -optimizepasses.\n";
-			break;
-		}
+			if (pass >= pass_count)
+			{
+				warnout(optimizeinfo) <<
+					"Maximal optimization pass reached for stage " << stage << ". Consider increasing -optimizepasses.\n";
+				break;
+			}
 
-		bool pass_effective = false;
-
-		if (verbose)
-		{
-			infoout(optimizeinfo) << "Performing pass #" << p + 1 << '\n';
-		}
-
-		for (auto& task : tasks[s])
-		{
-			bool effective = (this->*(task.callback))(program, program.begin(), program.end());
+			bool pass_effective = false;
 
 			if (verbose)
 			{
-				infoout(optimizeinfo) <<
-					"Performed optimization task '" << task.name << "' and " << (effective ? "was effective\n" : "had no effect\n");
+				infoout(optimizeinfo) << "Performing pass #" << pass + 1 << '\n';
 			}
 
-			if (effective)
+			for (auto& task : tasks[stage])
 			{
-				pass_effective = true;
+				bool effective = (this->*(task.callback))(program, program.begin(), program.end());
+
+				if (verbose)
+				{
+					infoout(optimizeinfo) << fmt::format("Performed optimization task '{}', effectiveness={}\n", task.name, effective);
+				}
+
+				if (effective)
+				{
+					pass_effective = true;
+				}
+
+				update_state_debug(program);
 			}
 
-			update_state_debug(program);
-		}
-
-		if (!pass_effective)
-		{
-			if (verbose)
+			if (!pass_effective)
 			{
-				infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
-			}
+				if (verbose)
+				{
+					infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
+				}
 
-			break;
+				break;
+			}
 		}
 	}
 

@@ -16,6 +16,5 @@ struct Context
 
 #include "asm-x86-64.hpp"
 #include "c.hpp"
-#include "smol.hpp"
 
 #endif

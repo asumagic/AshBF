@@ -35,13 +35,12 @@ enum class Flag
 	print_il_line_numbers,
 	execute,
 	codegen_asm_x86_64_file,
-	codegen_c_file,
-	codegen_smol_file
+	codegen_c_file
 };
 
 struct Flags
 {
-	std::array<CommandlineFlag, 14> flags{
+	std::array<CommandlineFlag, 12> flags = {
 		{{"optimize-passes", '\0', "10"},           // Optimization pass count
 		 {"optimize", 'O', "1", {"0", "1"}},        // Optimization level (any or 1)
 		 {"optimize-debug", '\0', "0", {"0", "1"}}, // Optimization regression verification
@@ -55,8 +54,7 @@ struct Flags
 		 {"print-il-line-numbers", '\0', "1", {"0", "1"}}, // Print VM IL line numbers
 		 {"execute", 'x', "1", {"0", "1"}},                // Do execute the compiled program or not,
 		 {"asm-x86-64-output", '\0', ""},
-		 {"asm-c-output", '\0', ""},
-		 {"asm-smol-output", '\0', ""}}};
+		 {"asm-c-output", '\0', ""}}};
 
 	inline CommandlineFlag& operator[](const Flag flag) { return flags[static_cast<size_t>(flag)]; }
 

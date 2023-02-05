@@ -22,11 +22,11 @@ enum Opcode : uint8_t
 	bfCharOut,
 	bfCharIn,
 
+	bfEnd,
+
 	// begin compiler ops
 	bfAdd,
 	bfSet,
-
-	bfEnd,
 
 	bfLoopBegin,
 	bfLoopEnd,
@@ -58,10 +58,10 @@ static constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions
 	{"jnz", bfJmpNotZero, 1, false},
 	{"cout", bfCharOut, 1, false},
 	{"cin", bfCharIn, 1, false},
+	{"end", bfEnd, 0, false},
 
 	{"(tmp)add", bfAdd, 1, true},
 	{"(tmp)set", bfSet, 1, false},
-	{"(tmp)end", bfEnd, 0, false},
 
 	{"(tmp)loopbegin", bfLoopBegin, 0, false},
 	{"(tmp)loopend", bfLoopEnd, 0, false},

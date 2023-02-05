@@ -1,7 +1,6 @@
 #include "bf/bf.hpp"
 #include "bf/codegen/codegen.hpp"
 #include "bf/disasm.hpp"
-#include "bf/il.hpp"
 #include "bf/logger.hpp"
 #include "bf/vm.hpp"
 #include "bf/optimizer.hpp"
@@ -63,7 +62,6 @@ int main(int argc, char** argv)
 	}
 
 	// Assembly codegen occurs after linking
-	codegen_to_file(flags[Flag::codegen_smol_file].value, bf::codegen::asm_smol);
 	codegen_to_file(flags[Flag::codegen_asm_x86_64_file].value, bf::codegen::asm_x86_64);
 
 	bf::disasm.print_line_numbers = flags[Flag::print_il_line_numbers];
