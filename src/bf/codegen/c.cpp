@@ -2,6 +2,7 @@
 
 namespace bf::codegen
 {
+// FIXME: woops i forgot i did the luajit stuff here
 bool c(Context ctx)
 {
 	ctx.out <<
