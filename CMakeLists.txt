@@ -20,7 +20,7 @@ set(core_flags
 	"-std=c++20"
 	"-ggdb"
 	"-fnew-infallible"
-	"-mllvm" "-align-all-nofallthru-blocks=5"
+	"-mllvm" "-align-all-nofallthru-blocks=7"
 	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG -flto=thin>
 	$<$<CONFIG:DEBUG>:-Og -g>)
 
