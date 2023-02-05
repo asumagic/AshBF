@@ -3,7 +3,7 @@ project(ashbf)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 
-set(core_files
+add_executable(ashbf
 	"src/bf/compiler.cpp"
 	"src/bf/disasm.cpp"
 	"src/bf/linker.cpp"
@@ -11,26 +11,24 @@ set(core_files
 	"src/bf/optimizer.cpp"
 	"src/bf/vm.cpp"
 	"src/bf/codegen/asm-x86-64.cpp"
-	"src/bf/codegen/c.cpp")
+	"src/bf/codegen/c.cpp"
+	"src/main.cpp"
+	"src/cli.cpp"
+)
 
-set(core_flags
+target_compile_options(ashbf PRIVATE ${core_flags} 
 	"-Wall"
 	"-Wextra"
+	"-fno-pic"
 	"-fno-exceptions"
+	"-fno-rtti"
 	"-std=c++20"
 	"-ggdb"
 	"-fnew-infallible"
 	"-mllvm" "-align-all-nofallthru-blocks=7"
 	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG -flto=thin>
-	$<$<CONFIG:DEBUG>:-Og -g>)
-
-add_executable(ashbf
-	${core_files}
-	"src/main.cpp"
-	"src/cli.cpp"
+	$<$<CONFIG:DEBUG>:-Og -g>
 )
-
-target_compile_options(ashbf PRIVATE ${core_flags} "-fno-pic")
 target_link_options(ashbf PRIVATE
 	"-no-pie"
 	"-flto=thin"
