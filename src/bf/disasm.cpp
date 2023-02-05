@@ -34,8 +34,7 @@ void Disassembler::print_range(std::span<bf::VMOp> range)
 
 void Disassembler::print_range(Program& program)
 {
-	infoout(compileinfo) <<
-		"Compiled program size is " << program.size() << " instructions (" << program.size() * sizeof(VMOp) << " bytes)\n";
+	fmt::print(infoout(compileinfo), "Compiled program size is {} insns ({} bytes)\n", program.size(), program.size() * sizeof(VMOp));
 
 	size_t i = 0, depth = 0;
 	for (auto& it : program)
@@ -44,13 +43,11 @@ void Disassembler::print_range(Program& program)
 
 		if (print_line_numbers)
 		{
-			std::cout << std::setw(5) << i++ << " | ";
-			for (std::size_t i = 0; i < depth; ++i) { std::cout << "  "; }
-			std::cout << (*this)(it) << '\n';
+			fmt::print("{:<5} | {: >{}} {}\n", i++, "", 2 * depth, (*this)(it));
 		}
 		else
 		{
-			std::cout << (*this)(it) << '\n';
+			fmt::print("{}\n", (*this)(it));
 		}
 
 		if (it.opcode == bfJmpZero) ++depth;
