@@ -8,6 +8,16 @@
 namespace bf
 {
 
+//! This class allows for easier experimenting of instruction decoding.
+//! This mostly allows you to easily play around with when instructions are decoded.
+//!
+//! If you change the opcode/a/b methods to use `m_cached_opcode/a/b`, then these will
+//! all be determined during instruction fetching at the end of an handler.
+//!
+//! Don't worry about leaving `m_cached_*` unused, the compiler will optimize it away.
+//!
+//! This can simplify decoding, but means a/b are unconditionally decoded even when the
+//! incoming handler does not require them (which we cannot know in advance).
 class VMDecompressedOp
 {
     public:
@@ -39,6 +49,7 @@ void interpret(VmParams params, std::span<const VMCompactOp> compact_program)
 {
 	const auto tape = std::make_unique<std::uint8_t[]>(params.memory_size);
 
+	// We use pointers as opposed to indices here because it optimizes marginally better.
 	std::uint8_t* sp = tape.get();
     const VMCompactOp* ip = compact_program.data();
 
@@ -53,7 +64,7 @@ void interpret(VmParams params, std::span<const VMCompactOp> compact_program)
 	};
 
 	const auto fetch = [&] {
-		op = *ip; //compact_program[ip];
+		op = *ip;
 	};
 
 	const auto inc_fetch = [&] {
@@ -65,6 +76,15 @@ void interpret(VmParams params, std::span<const VMCompactOp> compact_program)
 
 	for (;;)
 	{
+		// The interpreter loop here is carefully crafted for clang to optimize this into
+		// "threaded" code, i.e. each of the `case`s here directly embed the "goto" to the
+		// next handler, instead of looping back to a common point in the loop.
+		//
+		// This avoids 1 branch, but has a more important effect of significantly reducing
+		// branch mispredictions.
+		//
+		// This is essentially the same as precomputed gotos, but we're actually relying on
+		// the compiler not to be an idiot, which only clang manages.
 		switch (op.opcode())
 		{
 		case Opcode::bfAddOffset:
@@ -157,6 +177,8 @@ void interpret(VmParams params, std::span<const VMCompactOp> compact_program)
 
 		default:
 		{
+			// This part appears to be fairly essential for the compiler to optimize into
+			// threaded code
 			__builtin_unreachable();
 		}
 		}
