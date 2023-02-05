@@ -4,38 +4,30 @@
 
 [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) is a minimalist turing-complete esoteric language using only 8 instructions: `+-><[].,`.
 
-AshBF is an optimizing C++17 brainfuck interpreter tailored for speed, written entirely from scratch.  
+AshBF is C++20 optimizing brainfuck interpreter tailored for speed, written entirely from scratch.  
 It recompiles brainfuck into an optimized IR to be interpreted by a VM or compiled down to native code.
 
 ## Features
 
-- Fast execution through a bytecode VM
+- Fast execution through an optimized bytecode VM
+- Speedy compilation and optimization
 - AOT compilation to x86-64 assembly, C
-- Usable with WebAssembly thanks to emscripten
 - IR optimization
 - Internal debugging tools for optimizations
 
-## Why the hell would you do that?
+## Rationale
 
-Learning.
-
-Borderline insanity may as well be involved.
+lol
 
 ## Compiling
 
-Currently, the AshBF VM requires the [GNU "Label as Address" extension](https://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html).  
-You will only be able to compile AshBF with compatible compilers, most notably `gcc` and `clang`-family compilers.
-
-Basic compilation on \*nix:
+`clang` is strongly recommended. `gcc` works, but may poorly optimize the main interpreter loop.
 
 ```bash
-cmake . && make
-```
-
-It is possible to generate a JavaScript library using WebAssembly, which requires up-to-date emscripten and generates a ashbf.js library:
-
-```bash
-cmake -Djs=on -DCMAKE_BUILD_TYPE=Release . && make
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -GNinja ..
+ninja
 ```
 
 ## Usage
@@ -114,29 +106,3 @@ Determines whether the IL assembly listings should display line numbers.
 Enables brainfuck program execution.  
 Disabling this may be useful when you are only interested by the IL assembly listings or when you want to profile IL generation.  
 `1` is the default.
-
-## TODO list
-
-### Performance
-- Generally, creating and improving optimizations performed over the bytecode
-- Predetermining certain memory cells to enable more aggressive optimizations
-- Allow passing the memory vector to the interpreter directly to avoid allocation within the interpreter, when running it often
-- Implement a vector with a short data optimization to use in the optimizer, avoiding dynamic allocation for small arrays
-- WebAssembly JIT
-
-### Stability
-- Implement `-sanitize`, without reducing performance when disabled
-- Implementing a safe but fast enough VM (i.e. a `-sanitize`r VM?) for more solid optimization regression testing and VM regression testing
-- Watchdog to timeout execution of broken programs in regression testing
-- Regression testing for the AOTs
-- Unit tests
-- Asynchronous execution for the JS bindings
-
-### Usability
-- More warnings
-- Memory map exporter
-- Brainfuck debugger, including breakpoints
-
-### Project-based features
-- External IRC/Discord bot?
-- Web IDE
