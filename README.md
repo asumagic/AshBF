@@ -5,7 +5,7 @@
 [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) is a minimalist turing-complete esoteric language using only 8 instructions: `+-><[].,`.
 
 AshBF is C++20 optimizing brainfuck interpreter tailored for speed, written entirely from scratch.  
-It recompiles brainfuck into an optimized IR to be interpreted by a VM or compiled down to native code.
+It compiles brainfuck into an optimized IR to be interpreted by a VM or compiled down to native code.
 
 ## Features
 
