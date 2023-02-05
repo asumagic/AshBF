@@ -16,7 +16,7 @@ add_executable(ashbf
 	"src/cli.cpp"
 )
 
-target_compile_options(ashbf PRIVATE ${core_flags} 
+target_compile_options(ashbf PRIVATE
 	"-Wall"
 	"-Wextra"
 	"-fno-pic"

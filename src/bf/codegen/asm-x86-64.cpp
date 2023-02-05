@@ -1,5 +1,5 @@
 #include "codegen.hpp"
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <sstream>
 #include <string_view>
 

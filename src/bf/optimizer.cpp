@@ -8,7 +8,7 @@
 
 #include <algorithm>
 #include <array>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <functional>
 #include <map>
 #include <sstream>
