@@ -36,7 +36,6 @@ enum class Flag
 	execute,
 	codegen_asm_x86_64_file,
 	codegen_c_file,
-	codegen_llvm_file,
 	codegen_smol_file
 };
 
@@ -57,7 +56,6 @@ struct Flags
 		 {"execute", 'x', "1", {"0", "1"}},                // Do execute the compiled program or not,
 		 {"asm-x86-64-output", '\0', ""},
 		 {"asm-c-output", '\0', ""},
-		 {"asm-llvm-output", '\0', ""},
 		 {"asm-smol-output", '\0', ""}}};
 
 	inline CommandlineFlag& operator[](const Flag flag) { return flags[static_cast<size_t>(flag)]; }

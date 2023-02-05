@@ -3,6 +3,7 @@
 #include "bf/disasm.hpp"
 #include "bf/il.hpp"
 #include "bf/logger.hpp"
+#include "bf/vm.hpp"
 #include "bf/optimizer.hpp"
 #include "cli.hpp"
 #include <fstream>
@@ -54,7 +55,6 @@ int main(int argc, char** argv)
 	};
 
 	// LLVM and C codegen occurs before linking
-	codegen_to_file(flags[Flag::codegen_llvm_file].value, bf::codegen::llvm);
 	codegen_to_file(flags[Flag::codegen_c_file].value, bf::codegen::c);
 
 	if (!bfi.link())
@@ -75,6 +75,13 @@ int main(int argc, char** argv)
 
 	if (flags[Flag::execute])
 	{
-		bfi.interpret({std::stoul(flags[Flag::memory_size]), &std::cin, &std::cout});
+		bf::interpret(
+			bf::VmParams{
+				.memory_size = std::stoul(flags[Flag::memory_size]),
+				.in_stream = &std::cin,
+				.out_stream = &std::cout
+			},
+			std::vector<bf::VMCompactOp>(bfi.program.begin(), bfi.program.end())
+		);
 	}
 }

@@ -23,12 +23,12 @@ std::string Disassembler::operator()(bf::VMOp ins)
 	return str;
 }
 
-void Disassembler::print_range(span<ProgramIt> range)
+void Disassembler::print_range(std::span<bf::VMOp> range)
 {
 	size_t i = 0;
-	for (auto& it : range)
+	for (const auto& op : range)
 	{
-		std::cout << '+' << ++i << '\t' << (*this)(it) << '\n';
+		std::cout << '+' << ++i << '\t' << (*this)(op) << '\n';
 	}
 }
 

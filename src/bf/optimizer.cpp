@@ -1,16 +1,18 @@
 #include "optimizer.hpp"
 
+#include "compiler.hpp"
 #include "disasm.hpp"
 #include "il.hpp"
 #include "logger.hpp"
-#include "span.hpp"
 #include "vecutils.hpp"
+#include "vm.hpp"
 
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <map>
 #include <sstream>
+#include <span>
 #include <vector>
 
 namespace bf
@@ -28,7 +30,7 @@ const std::string& ProgramState::get_output() const
 	Brainfuck bf;
 	bf.program = program;
 	bf.link();
-	bf.interpret({30000, &ss, &ss});
+	bf::interpret({30000, &ss, &ss}, std::vector<bf::VMCompactOp>(bf.program.begin(), bf.program.end()));
 
 	return (cached_output = std::optional<std::string>{ss.str()}).value();
 }
@@ -133,9 +135,15 @@ bool Optimizer::peephole_optimize_for(
 		auto pos = begin;
 		while ((pos = std::search(pos, end, optimizer.seq.begin(), optimizer.seq.end())) != end)
 		{
-			span candidate{pos, optimizer.seq.size()};
+			std::span candidate{pos, optimizer.seq.size()};
 
-			move_range_no_shrink(program, candidate.begin(), candidate.end(), optimizer.optimize(candidate));
+			move_range_no_shrink(
+				program,
+				candidate.begin(),
+				candidate.end(),
+				optimizer.optimize(candidate)
+			);
+
 			effective = true;
 			update_state_debug(program);
 
@@ -450,6 +458,22 @@ bool Optimizer::stage2_peephole_optimize(Program& program, ProgramIt begin, Prog
 	return peephole_optimize_for(program, begin, end, peephole_optimizers);
 }
 
+bool Optimizer::stage3_transform(Program &program, ProgramIt begin, ProgramIt end)
+{
+	for (auto it = begin; it != end; ++it)
+	{
+		switch (it->opcode)
+		{
+			case bfAdd: { *it = VMOp{bfAddOffset, it->args[0], 0}; break; }
+			case bfSet: { *it = VMOp{bfSetOffset, it->args[0], 0}; break; }
+			default: break;
+		} 
+	}
+
+	// this never needs to be run twice
+	return false;
+}
+
 void Optimizer::optimize(Program& program)
 {
 	update_state_debug(program);
@@ -466,6 +490,10 @@ void Optimizer::optimize(Program& program)
 			{&Optimizer::merge_stackable,          "Merge stackable instructions"},
 			{&Optimizer::stage2_peephole_optimize, "Optimize offset memory sets through specialized instructions"},
 			{&Optimizer::stage1_peephole_optimize, "Peephole"}
+		},
+
+		{
+			{&Optimizer::stage3_transform, "Enforce op variants that use offsets"}
 		}
 	}};
 

@@ -2,6 +2,10 @@
 #define VM_HPP
 
 #include "il.hpp"
+#include <cstdio>
+#include <istream>
+#include <ostream>
+#include <span>
 
 namespace bf
 {
@@ -63,6 +67,42 @@ struct VMOp
 		}
 	}
 };
+
+struct VMCompactOp
+{
+	VMCompactOp() = default;
+
+	VMCompactOp(const VMCompactOp&) = default;
+	VMCompactOp& operator=(const VMCompactOp&) = default;
+
+	VMCompactOp(VMOp op) :
+		_op(
+			(std::uint64_t(op.opcode))
+			| (((std::uint64_t(op.args[1]) & 0xFFFFFF) << 40))
+			| ((std::uint64_t(op.args[0]) & 0xFFFFFFFF) << 8)
+		)
+	{
+		// if (opcode() != op.opcode) { printf("op: %d vs %d\n", int(opcode()), int(op.opcode)); }
+		// if (a() != op.args[0]) { printf("a: %d vs %d\n", int(a()), int(op.args[0])); }
+		// if (b() != op.args[1]) { printf("b: %d vs %d\n", int(b()), int(op.args[1])); }
+	}
+
+	std::uint64_t _op;
+
+	Opcode opcode() const { return Opcode(_op & 0xFF); }
+	std::int32_t a() const { return std::int32_t(_op >> 8); }
+	std::int32_t b() const { return std::int64_t(_op) >> 40; }
+};
+
+struct VmParams
+{
+	size_t memory_size;
+	std::istream* in_stream;
+	std::ostream* out_stream;
+};
+
+void interpret(VmParams params, std::span<const VMCompactOp> program);
+
 } // namespace bf
 
 #endif // VM_HPP

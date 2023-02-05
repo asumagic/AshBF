@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
 project(ashbf)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS true)
+
 option(js "Generate a JavaScript library using emscripten and WebAssembly" off)
 
 set(core_files
@@ -12,16 +14,17 @@ set(core_files
 	"src/bf/vm.cpp"
 	"src/bf/codegen/asm-x86-64.cpp"
 	"src/bf/codegen/c.cpp"
-	"src/bf/codegen/llvm.cpp"
 	"src/bf/codegen/smol.cpp")
 
 set(core_flags
 	"-Wall"
 	"-Wextra"
 	"-fno-exceptions"
-	"-std=c++1z"
+	"-std=c++20"
 	"-ggdb"
-	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG -flto>
+	"-fnew-infallible"
+	"-mllvm" "-align-all-nofallthru-blocks=5"
+	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG -flto=thin>
 	$<$<CONFIG:DEBUG>:-Og -g>)
 
 if (js)
@@ -50,5 +53,4 @@ endif()
 # TODO: support ashbf.js again
 target_link_libraries(ashbf PRIVATE
 	fmt
-	LLVM
 )

@@ -22,11 +22,11 @@ void move_range(
 	if (range_diff > 0)
 	{
 		target.resize(target.size() + range_diff);
-		std::move_backward(end, target.end(), end + range_diff);
+		std::move_backward(&*end, &*target.end(), end + range_diff);
 	}
 	else if (range_diff < 0)
 	{
-		std::move(end, target.end(), end + range_diff);
+		std::move(&*end, &*target.end(), end + range_diff);
 		target.resize(target.size() + range_diff);
 	}
 
