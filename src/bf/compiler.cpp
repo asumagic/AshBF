@@ -17,7 +17,8 @@ bool Brainfuck::compile(std::string_view source)
 
 	for (const char& c : source)
 	{
-		if (ops[c])
+        const BFOp op = ops[c];
+		if (op.base_opcode != bfNop)
 		{
 			program.emplace_back(static_cast<uint8_t>(ops[c].base_opcode), ops[c].default_arg);
 		}
