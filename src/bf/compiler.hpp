@@ -10,7 +10,7 @@ struct BFOp
 {
 	char match = '\0';
 	Opcode base_opcode = bfNop;
-	VMArg default_arg = 0;
+	std::int8_t default_arg = 0;
 
 	bool operator==(char c) const
 	{
