@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
 	if (!bfi.compile_file(argv[1]))
 	{
-		errout(compileinfo) << "Failed to load program from '" << argv[1] << "'\n";
+		fmt::print(errout(compileinfo), "Failed to load program from '{}'\n", argv[1]);
 		return 1;
 	}
 
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
 	if (!bfi.link())
 	{
-		errout(compileinfo) << "Failed to link brainfuck program\n";
+		fmt::print(errout(compileinfo), "Failed to link brainfuck program\n");
 	}
 
 	// Assembly codegen occurs after linking

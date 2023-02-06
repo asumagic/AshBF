@@ -7,7 +7,7 @@ namespace bf::codegen
 {
 bool asm_x86_64(Context ctx)
 {
-	ctx.out <<
+	fmt::print(ctx.out,
 R"(
 .text
 .globl _start
@@ -23,16 +23,16 @@ loopq bfzeromemory
 
 # Init tape pointer
 movq %rsp, %rsi
-)";
+)");
 
 	std::stringstream late_labels;
 
 	auto shift_ptr = [](VMArg by, std::ostream& out) {
 		switch (by)
 		{
-		case -1: out << "decq %rsi\n"; break;
-		case  1: out << "incq %rsi\n"; break;
-		default: out << fmt::format("addq ${}, %rsi\n", by);
+		case -1: fmt::print(out, "decq %rsi\n"); break;
+		case  1: fmt::print("incq %rsi\n"); break;
+		default: fmt::print("addq ${}, %rsi\n", by);
 		}
 	};
 
@@ -52,54 +52,63 @@ movq %rsp, %rsi
 	};
 
 	auto make_late_label = [&late_labels](auto x) -> std::stringstream& {
-		late_labels << fmt::format("\nbfoplate{}:\n", x);
+		fmt::print(late_labels, "\nbfoplate{}:\n", x);
 		return late_labels;
 	};
 
 	std::size_t i = 0;
 	for (auto& op : ctx.program)
 	{
-		ctx.out << fmt::format("\nbfop{}:\n", i);
+		fmt::print(ctx.out, "\nbfop{}:\n", i);
 
 		switch (op.opcode)
 		{
 		case bf::Opcode::bfAdd:
-			ctx.out << fmt::format("addb ${}, (%rsi)\n", op.args[0]);
+			fmt::print(ctx.out, "addb ${}, (%rsi)\n", op.args[0]);
 			break;
 
 		case bf::Opcode::bfAddOffset:
-			ctx.out << fmt::format("addb ${}, {}(%rsi)\n", op.args[0], op.args[1]);
+			fmt::print(ctx.out, "addb ${}, {}(%rsi)\n", op.args[0], op.args[1]);
 			break;
 
 		case bf::Opcode::bfShift:
-			shift_ptr(op.args[0], ctx.out);
+		    shift_ptr(op.args[0], ctx.out);
 			break;
 
 		case bf::Opcode::bfMAC:
 			// TODO: optimize out at a maximum
-			ctx.out << fmt::format("movq ${}, %rdx\n"
-								   "movb (%rsi, %rdx), %al\n", op.args[1]);
+			fmt::print(ctx.out,
+                "movq ${}, %rdx\n"
+				"movb (%rsi, %rdx), %al\n",
+                op.args[1]
+            );
 
 			// TODO: handle negative power of two
 			// not currently doing it as i have to write a testcase
 
 			if (op.args[0] == 1)
 			{
-				ctx.out << "addb %al, (%rsi)\n";
+				fmt::print(ctx.out, "addb %al, (%rsi)\n");
 			}
 			else if (op.args[0] == -1)
 			{
-				ctx.out << "subb %al, (%rsi)\n";
+				fmt::print(ctx.out, "subb %al, (%rsi)\n");
 			}
 			else if (op.args[0] > 0 && is_power_of_two(op.args[0]))
 			{
-				ctx.out << fmt::format("shll ${}, %eax\n"
-									   "addb %al, (%rsi)\n", get_power_of_two(op.args[0]));
+				fmt::print(ctx.out,
+                    "shll ${}, %eax\n"
+						"addb %al, (%rsi)\n",
+                        get_power_of_two(op.args[0])
+                );
 			}
 			else
 			{
-				ctx.out << fmt::format("imull ${}, %eax\n"
-									   "addb %al, (%rsi)\n", op.args[0]);
+				fmt::print(ctx.out,
+                    "imull ${}, %eax\n"
+					    "addb %al, (%rsi)\n",
+                        op.args[0]
+                );
 			}
 
 
@@ -110,8 +119,8 @@ movq %rsp, %rsi
 
 			if (is_looped)
 			{
-				ctx.out <<
-fmt::format(R"(
+				fmt::print(ctx.out,
+R"(
 mov ${}, %rcx
 
 # Write syscall (output character)
@@ -128,8 +137,8 @@ loop bfopcore{}
 			}
 			else
 			{
-				ctx.out <<
-fmt::format(R"(
+				fmt::print(ctx.out,
+R"(
 # Write syscall (output character)
 bfopcore{}:
 movq $1, %rax
@@ -146,62 +155,68 @@ syscall
 			break;*/
 
 		case bf::Opcode::bfJmpZero:
-			ctx.out <<
+			fmt::print(ctx.out,
 				"cmpb $0, (%rsi)\n"
-				"je bfop" << op.args[0] << '\n';
+				"je bfop{}\n",
+                op.args[0]);
 			break;
 
 		case bf::Opcode::bfJmpNotZero:
-			ctx.out <<
+			fmt::print(ctx.out,
 				"cmpb $0, (%rsi)\n"
-				"jne bfop" << op.args[0] << '\n';
+				"jne bfop{}\n",
+                op.args[0]);
 			break;
 
 		case bf::Opcode::bfSet:
-			ctx.out << "movb $" << op.args[0] << ", (%rsi)\n";
+			fmt::print(ctx.out, "movb ${}, (%rsi)\n", op.args[0]);
 			break;
 
 		case bf::Opcode::bfSetOffset:
-			ctx.out << "movb $" << op.args[0] << ", " << op.args[1] << "(%rsi)\n";
+			fmt::print(ctx.out, "movb ${}, {}(%rsi)\n", op.args[0], op.args[1]);
 			break;
 
 		case bf::Opcode::bfShiftUntilZero:
-			ctx.out <<
+            fmt::print(ctx.out,
 				"cmpb $0, (%rsi)\n"
-				"jne bfoplate" << i << "\n";
+				"jne bfoplate{}\n", i);
 
 			make_late_label(i);
 			shift_ptr(op.args[0], late_labels);
-			late_labels <<
+			fmt::print(ctx.out,
 				"cmpb $0, (%rsi)\n"
-				"jne bfoplate" << i << "\n"
-				"jmp bfop" << i + 1 << "\n";
+				"jne bfoplate{}\n"
+				"jmp bfop{}\n",
+                i,
+                i+1
+            );
 
 			break;
 
 		case bf::Opcode::bfEnd:
-			ctx.out <<
+			fmt::print(ctx.out,
 				"# Cleanup stack pointer - unnecessary as proceeding with exit()\n"
 				"# addq $30000, %rsp\n"
 				"\n"
 				"# Exit syscall\n"
 				"movq $60, %rax\n"
 				"movq $0, %rsi\n"
-				"syscall\n";
+				"syscall\n");
 			break;
 
 		default:
-			errout(codegenx8664info) << "Unhandled opcode: " << int(op.opcode) << '\n';
+			fmt::print(errout(codegenx8664info), "Unhandled opcode: {}\n", op.opcode);
 			return false;
 		}
 
 		++i;
 	}
 
-	ctx.out <<
+	fmt::print(ctx.out,
 		"\n# Late labels, reducing unnecessary branching in a few occasions\n"
-		<< late_labels.str() <<
-		'\n';
+        "{}\n",
+        late_labels.str()
+    );
 
 	return true;
 }

@@ -28,7 +28,7 @@ void Disassembler::print_range(std::span<bf::VMOp> range)
 	size_t i = 0;
 	for (const auto& op : range)
 	{
-		std::cout << '+' << ++i << '\t' << (*this)(op) << '\n';
+        fmt::print("+{}\t{}\n", ++i, (*this)(op));
 	}
 }
 

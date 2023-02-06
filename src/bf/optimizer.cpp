@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <fmt/format.h>
+#include <fmt/compile.h>
 #include <functional>
 #include <map>
 #include <sstream>
@@ -30,9 +31,12 @@ const std::string& ProgramState::get_output() const
 	Brainfuck bf;
 	bf.program = program;
 	bf.link();
-	bf::interpret({30000, &ss, &ss}, std::vector<bf::VMCompactOp>(bf.program.begin(), bf.program.end()));
+	bf::interpret(
+        {30000, &ss, &ss},
+        std::vector<bf::VMCompactOp>(bf.program.begin(), bf.program.end())
+    );
 
-	return (cached_output = std::optional<std::string>{ss.str()}).value();
+	return (cached_output = {ss.str()}).value();
 }
 
 void Optimizer::update_state_debug(Program &program)
@@ -48,38 +52,38 @@ bool Optimizer::analyze_debug_states()
 {
 	if (debug_states.size() < 2)
 	{
-		warnout(optimizeinfo) << "No debug state collected, cannot analyze debug states. This may be a bug.\n";
+        fmt::print(warnout(optimizeinfo), "No debug state collected, cannot analyze debug states. This may be a bug.\n");
 	}
 
 	auto &initial_state = debug_states.front();
 	auto &final_state = debug_states.back();
 
-	infoout(optimizeinfo) << "Checking for regressions...\n";
+	fmt::print(infoout(optimizeinfo), "Checking for regressions...\n");
 
 	if (initial_state.get_output() == final_state.get_output())
 	{
-		infoout(optimizeinfo) << "No regression found.\n";
+		fmt::print(infoout(optimizeinfo), "No regression found.\n");
 		return true;
 	}
 
-	infoout(optimizeinfo) << "Regression found. Beginning bisect.\n";
+	fmt::print(infoout(optimizeinfo), "Regression found. Beginning bisect.\n");
 
 	auto culprit_it = std::lower_bound(
 		debug_states.begin() + 1,
 		debug_states.end(),
 		initial_state,
 		[](auto& current_state, auto& initial_state) {
-			infoout(optimizeinfo) << "Testing state #" << current_state.id << "... " << std::flush;
+			fmt::print(infoout(optimizeinfo), "Testing state #{}... ", current_state.id);
 
 			bool good = current_state.get_output() == initial_state.get_output();
 
 			if (good)
 			{
-				infoout.buffer << "good.\n";
+				fmt::print(infoout.buffer, "good.\n");
 			}
 			else
 			{
-				infoout.buffer << "bad.\n";
+				fmt::print(infoout.buffer, "bad.\n");
 			}
 
 			return good;
@@ -89,7 +93,7 @@ bool Optimizer::analyze_debug_states()
 	auto &last_good = *(culprit_it - 1);
 	auto &culprit = *(culprit_it);
 
-	warnout(optimizeinfo) << "Optimization #" << culprit.id << " is bad.\n";
+	fmt::print(warnout(optimizeinfo), "Optimization #{} is bad.\n", culprit.id);
 
 	auto [good_mismatch_begin, bad_mismatch_begin] = std::mismatch(
 		last_good.program.begin(),
@@ -105,10 +109,10 @@ bool Optimizer::analyze_debug_states()
 		culprit.program.rend()
 	);
 
-	warnout(optimizeinfo) << "Last correct assembly:\n";
+	fmt::print(warnout(optimizeinfo), "Last correct assembly:\n");
 	disasm.print_range({good_mismatch_begin, good_mismatch_end.base()});
 
-	warnout(optimizeinfo) << "First bad assembly:\n";
+	fmt::print(warnout(optimizeinfo), "First bad assembly:\n");
 	disasm.print_range({bad_mismatch_begin, bad_mismatch_end.base()});
 
 	return false;
@@ -239,7 +243,7 @@ bool Optimizer::balanced_loop_unrolling(
 	bool expandable = true;
 	bool effective = false;
 	int shift_count = 0;
-	std::map<int, VMOp> operations;
+	std::unordered_map<int, VMOp> operations;
 
 	for (auto i = begin; i != end; ++i)
 	{
@@ -307,7 +311,7 @@ bool Optimizer::balanced_loop_unrolling(
 			auto loopit = operations.find(0);
 			if (loopit == operations.end() || loopit->second.is_nop_like())
 			{
-				warnout(optimizeinfo) << "Infinite loop: Iterator is never modified\n";
+				fmt::print(warnout(optimizeinfo), "Infinite loop: Iterator is never modified\n");
 				continue;
 			}
 
@@ -318,7 +322,7 @@ bool Optimizer::balanced_loop_unrolling(
 
 			if (loopit_op.opcode == bfSet && loopit_op.args[0] != 0)
 			{
-				warnout(optimizeinfo) << "Infinite loop: Iterator is always `" << loopit_op.args[0] << "`\n";
+				fmt::print(warnout(optimizeinfo), "Infinite loop: Iterator is always `{}`\n", loopit_op.args[0]);
 				continue;
 			}
 
@@ -333,14 +337,14 @@ bool Optimizer::balanced_loop_unrolling(
 				// We know how many times the loop runs.
 				if (op_before_loop.args[0] == 0)
 				{
-					warnout(optimizeinfo) << "Loop never runs, iterator is initialized to 0\n";
+					fmt::print(warnout(optimizeinfo), "Loop never runs, iterator is initialized to 0\n");
 					// TODO erase
 					continue;
 				}
 
 				if (op_before_loop.args[0] == 1)
 				{
-					warnout(optimizeinfo) << "Loop runs exactly once\n";
+					fmt::print(warnout(optimizeinfo), "Loop runs exactly once\n");
 				}
 
 				shift_count = 0;
@@ -503,8 +507,7 @@ void Optimizer::optimize(Program& program)
 		{
 			if (pass >= pass_count)
 			{
-				warnout(optimizeinfo) <<
-					"Maximal optimization pass reached for stage " << stage << ". Consider increasing -optimizepasses.\n";
+				fmt::print(warnout(optimizeinfo), "Maximal optimization pass reached for stage {}. Consider increasing -optimizepasses.\n", stage);
 				break;
 			}
 
@@ -512,7 +515,7 @@ void Optimizer::optimize(Program& program)
 
 			if (verbose)
 			{
-				infoout(optimizeinfo) << "Performing pass #" << pass + 1 << '\n';
+				fmt::print(infoout(optimizeinfo), "Performing pass #{}\n", pass + 1);
 			}
 
 			for (auto& task : tasks[stage])
@@ -521,7 +524,7 @@ void Optimizer::optimize(Program& program)
 
 				if (verbose)
 				{
-					infoout(optimizeinfo) << fmt::format("Performed optimization task '{}', effectiveness={}\n", task.name, effective);
+					fmt::print(infoout(optimizeinfo), "Performed optimization task '{}', effectiveness={}\n", task.name, effective);
 				}
 
 				if (effective)
@@ -536,7 +539,7 @@ void Optimizer::optimize(Program& program)
 			{
 				if (verbose)
 				{
-					infoout(optimizeinfo) << "Pass was not effective, optimizations performed\n";
+					fmt::print(infoout(optimizeinfo), "Pass was not effective, optimizations performed\n");
 				}
 
 				break;

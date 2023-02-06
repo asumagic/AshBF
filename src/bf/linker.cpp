@@ -19,7 +19,7 @@ bool Brainfuck::link()
 		case bfLoopEnd:
 			if (jumps.empty())
 			{
-				errout(compileinfo) << "Unexpected ']': missing '['\n";
+				fmt::print(errout(compileinfo), "Unexpected ']': missing '['\n");
 				return false;
 			}
 			program[i].opcode = bfJmpNotZero;
@@ -35,7 +35,7 @@ bool Brainfuck::link()
 
 	if (!jumps.empty())
 	{
-		errout(compileinfo) << "Unexpected '[': missing ']'\n";
+		fmt::print(errout(compileinfo), "Unexpected '[': missing ']'\n");
 		return false;
 	}
 

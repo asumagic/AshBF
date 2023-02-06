@@ -26,7 +26,7 @@ bool Flags::parse_commandline(const std::vector<std::string_view>& args)
 {
 	if (args.size() < 2)
 	{
-		errout(cmdinfo) << "Syntax : ./ashbf <file.bf> (flags)\n";
+		fmt::print(errout(cmdinfo), "Syntax : ./ashbf <file.bf> (flags)\n");
 		return false;
 	}
 
@@ -36,7 +36,7 @@ bool Flags::parse_commandline(const std::vector<std::string_view>& args)
 
 		if (arg.size() < 2 || arg[0] != '-')
 		{
-			warnout(cmdinfo) << "Unknown argument '" << arg << "', flags should be prefixed with '-'\n";
+			fmt::print(warnout(cmdinfo), "Unknown argument '{}', flags should be prefixed with '-'\n", arg);
 			continue;
 		}
 
@@ -57,13 +57,13 @@ bool Flags::parse_commandline(const std::vector<std::string_view>& args)
 
 			if (!flag.has_expected_value())
 			{
-				errout(cmdinfo) << "Passed bad parameter '" << flag.value << "' to flag '" << flag.name << "'\n";
+				fmt::print(errout(cmdinfo), "Passed bad parameter '{}' to flag '{}'\n", flag.value, flag.name);
 				return false;
 			}
 		}
 		else
 		{
-			errout(cmdinfo) << "Invalid flag '" << args[i] << "'\n";
+			fmt::print(errout(cmdinfo), "Invalid flag '{}'\n", args[i]);
 			return false;
 		}
 	}
