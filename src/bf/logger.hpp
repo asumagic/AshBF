@@ -28,10 +28,8 @@ extern std::ostream null_stream;
 
 constexpr std::string_view
 	cmdinfo = "Commandline",
-	bcinfo = "Interpreter",
 	compileinfo = "Compiler",
 	optimizeinfo = "Optimizer",
-	codegeninfo = "CodeGen",
 	codegenx8664info = "CodeGen (x86-64 asm)",
 	codegencinfo = "CodeGen (C source)";
 
