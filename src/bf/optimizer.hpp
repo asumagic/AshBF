@@ -34,7 +34,7 @@ public:
 
 struct Optimizer
 {
-	static constexpr size_t stage_count = 3;
+	static constexpr size_t stage_count = 2;
 
 	// Parameters
 	size_t pass_count = 5;
@@ -89,13 +89,6 @@ struct Optimizer
 	);
 
 	bool simplify_offset_ops(
-		Program& program,
-		ProgramIt begin,
-		ProgramIt end
-	);
-
-	// Stage 3 - turn ops into their variants with offsets
-	bool stage3_transform(
 		Program& program,
 		ProgramIt begin,
 		ProgramIt end

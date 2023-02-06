@@ -87,6 +87,20 @@ void interpret(VmParams params, std::span<const VMCompactOp> compact_program)
 		// the compiler not to be an idiot, which only clang manages.
 		switch (op.opcode())
 		{
+		case Opcode::bfAdd:
+		{
+			*tape_get() += op.a();
+			inc_fetch();
+			break;
+		}
+
+		case Opcode::bfSet:
+		{
+			*tape_get() = op.a();
+			inc_fetch();
+			break;
+		}
+
 		case Opcode::bfAddOffset:
 		{
 			*tape_get(op.b()) += op.a();

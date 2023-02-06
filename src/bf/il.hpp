@@ -10,6 +10,8 @@ namespace bf
 enum Opcode : uint8_t
 {
 	// begin VM ops
+	bfAdd,
+	bfSet,
 	bfAddOffset,
 	bfSetOffset,
 	bfShift,
@@ -25,9 +27,6 @@ enum Opcode : uint8_t
 	bfEnd,
 
 	// begin compiler ops
-	bfAdd,
-	bfSet,
-
 	bfLoopBegin,
 	bfLoopEnd,
 
@@ -49,6 +48,9 @@ struct VMOpInfo
 
 static constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions
 {{
+
+	{"add", bfAdd, 1, true},
+	{"set", bfSet, 1, false},
 	{"addoff", bfAddOffset, 2, false},
 	{"setoff", bfSetOffset, 2, false},
 	{"shift", bfShift, 1, true},
@@ -59,9 +61,6 @@ static constexpr std::array<VMOpInfo, Opcode::bfTOTAL + 2> instructions
 	{"cout", bfCharOut, 1, false},
 	{"cin", bfCharIn, 1, false},
 	{"end", bfEnd, 0, false},
-
-	{"(tmp)add", bfAdd, 1, true},
-	{"(tmp)set", bfSet, 1, false},
 
 	{"(tmp)loopbegin", bfLoopBegin, 0, false},
 	{"(tmp)loopend", bfLoopEnd, 0, false},
