@@ -1,5 +1,5 @@
 #include "logger.hpp"
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fmt/ostream.h>
 
 NullBuf      null_buf;

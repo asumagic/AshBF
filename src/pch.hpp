@@ -13,6 +13,5 @@
 #include <string>
 #include <functional>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fmt/ostream.h>
-#include <fmt/compile.h>

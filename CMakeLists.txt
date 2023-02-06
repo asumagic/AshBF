@@ -3,8 +3,14 @@ project(ashbf)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 
+add_compile_definitions(
+    FMT_USE_FLOAT=0
+    FMT_USE_DOUBLE=0
+    FMT_USE_LONG_DOUBLE=0
+)
+
 # Enable LTO for everything
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=thin -march=x86-64-v2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=thin")
 
 add_subdirectory(vendor/fmt)
 
@@ -42,6 +48,7 @@ target_link_options(ashbf PRIVATE
     "-gsplit-dwarf"
 	"-Wl,--thinlto-cache-dir=${PROJECT_BINARY_DIR}/lto.cache"
     "-Wl,--icf=all"
+    "-Wl,--gc-sections"
 )
 
 target_precompile_headers(ashbf PRIVATE
