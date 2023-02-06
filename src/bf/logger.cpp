@@ -5,22 +5,14 @@
 NullBuf      null_buf;
 std::ostream null_stream(&null_buf);
 
-const std::string_view
-	cmdinfo = "Commandline",
-	bcinfo = "Interpreter",
-	compileinfo = "Compiler",
-	optimizeinfo = "Optimizer",
-	codegeninfo = "CodeGen",
-	codegenx8664info = "CodeGen (x86-64 asm)",
-	codegencinfo = "CodeGen (C source)";
-
 #ifdef ANSICOLOR
-LogLevel warnout{"\033[93mWarning"}, errout{"\033[91mError"}, verbout{"\033[94mVerbose"}, infoout{"\033[90mInfo"};
+const LogLevel warnout{"\033[93mWarning"}, errout{"\033[91mError"}, verbout{"\033[94mVerbose"}, infoout{"\033[90mInfo"};
 #else
-LogLevel warnout{"Warning"}, errout{"Error"}, verbout{"Verbose"}, infoout{"Info"};
+const LogLevel warnout{"Warning"}, errout{"Error"}, verbout{"Verbose"}, infoout{"Info"};
 #endif
 
-std::ostream& LogLevel::operator()(std::string_view sourceinfo)
+[[gnu::noinline, gnu::flatten]]
+std::ostream& LogLevel::operator()(std::string_view sourceinfo) const
 {
 	if (silenced)
 	{
