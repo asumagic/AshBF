@@ -9,8 +9,7 @@ add_compile_definitions(
     FMT_USE_LONG_DOUBLE=0
 )
 
-# Enable LTO for everything
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=thin")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=thin -fno-pic -fno-exceptions -fno-rtti -fno-asynchronous-unwind-tables")
 
 add_subdirectory(vendor/fmt)
 
@@ -30,13 +29,9 @@ add_executable(ashbf
 target_compile_options(ashbf PRIVATE
 	"-Wall"
 	"-Wextra"
-	"-fno-pic"
-	"-fno-exceptions"
-	"-fno-rtti"
 	"-std=c++20"
     "-gsplit-dwarf"
 	"-ggdb"
-	"-mllvm" "-align-all-nofallthru-blocks=7"
 	$<$<CONFIG:RELEASE>:-O3 -DNDEBUG>
 	$<$<CONFIG:DEBUG>:-Og -g>
 )
